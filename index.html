@@ -28,7 +28,7 @@
     .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; transition: all 0.3s; }
     .nav.scrolled { background: rgba(248,245,240,0.96); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
     .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
-    .logo { font-size: 1.35rem; font-weight: 700; color: var(--green-dark); letter-spacing: 0.04em; }
+    .logo { font-size: 1.35rem; font-weight: 700; color: var(--green-dark); letter-spacing: 0.04em; text-align: center; }
     .logo .sub { font-size: 0.62rem; font-weight: 300; color: var(--muted); letter-spacing: 0.1em; display: block; margin-top: -2px; }
     .nav-right { display: flex; align-items: center; gap: 16px; }
     .nav-link { font-size: 0.8rem; color: var(--muted); }
@@ -242,7 +242,7 @@
 <section class="products-section" id="products">
   <div class="products-inner">
     <div class="section-title">신선 상품</div>
-    <div class="section-sub">오늘 아침 제천에서 출발한 신선한 농산물입니다</div>
+    <div class="section-sub">오늘 아침 산지에서 출발한 신선한 농산물입니다</div>
     <div class="category-tabs">
       <button class="tab-btn active" onclick="filterProducts('all',this)">전체</button>
       <button class="tab-btn" onclick="filterProducts('vegetable',this)">🥬 채소</button>
@@ -326,11 +326,16 @@ const DEFAULT_PRODUCTS = [
   { id:'p4',  category:'vegetable', emoji:'🍅', name:'방울토마토',      desc:'달콤한 제천 방울토마토',              price:5500,  unit:'500g',  stock:35, active:true },
   { id:'p5',  category:'vegetable', emoji:'🌿', name:'깻잎',           desc:'향긋한 깻잎 한 단',                  price:3000,  unit:'100g',  stock:45, active:true },
   { id:'p6',  category:'vegetable', emoji:'🫑', name:'애호박',          desc:'부드러운 애호박 2개',                price:3500,  unit:'2개',   stock:30, active:true },
+  { id:'p14', category:'vegetable', emoji:'🧄', name:'마늘',            desc:'알싸한 향의 제천 통마늘',              price:5000,  unit:'300g',  stock:40, active:true },
+  { id:'p15', category:'vegetable', emoji:'🧅', name:'양파',            desc:'달콤한 제천 양파',                     price:4000,  unit:'3개',   stock:50, active:true },
   { id:'p7',  category:'fruit',     emoji:'🍎', name:'사과',           desc:'달콤 새콤한 제천 사과 3kg',          price:12000, unit:'3kg',   stock:25, active:true },
   { id:'p8',  category:'fruit',     emoji:'🍐', name:'배',             desc:'달달한 가을 배 2개',                 price:15000, unit:'2개',   stock:20, active:true },
   { id:'p9',  category:'fruit',     emoji:'🍇', name:'포도',           desc:'탱글탱글 포도 2송이',                price:16000, unit:'2송이', stock:15, active:true },
   { id:'p10', category:'fruit',     emoji:'🍑', name:'복숭아',          desc:'달콤 향긋한 여름 복숭아',             price:18000, unit:'2kg',   stock:0,  active:true },
+  { id:'p16', category:'fruit',     emoji:'🍓', name:'딸기',            desc:'달콤 새콤한 제천 딸기',                price:12000, unit:'500g',  stock:30, active:true },
+  { id:'p17', category:'fruit',     emoji:'🍉', name:'수박',            desc:'시원하고 달콤한 여름 수박',             price:22000, unit:'1통',   stock:15, active:true },
   { id:'p11', category:'set',       emoji:'📦', name:'주간 채소 박스',  desc:'이번 주 신선 채소 5종 혼합 박스',    price:25000, unit:'5종',   stock:20, active:true },
+  { id:'p18', category:'set',       emoji:'🥗', name:'주간 샐러드 박스', desc:'신선한 쌈채소·샐러드용 채소 7종 구성', price:28000, unit:'7종',   stock:20, active:true },
   { id:'p12', category:'set',       emoji:'🎁', name:'과일 혼합 박스',  desc:'제철 과일 4종 혼합 선물 박스',       price:35000, unit:'4종',   stock:15, active:true },
   { id:'p13', category:'set',       emoji:'👑', name:'프리미엄 혼합 박스', desc:'채소+과일 7종 프리미엄 구성',    price:55000, unit:'7종',   stock:10, active:true },
 ];
