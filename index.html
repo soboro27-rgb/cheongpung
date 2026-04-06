@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>청풍상회 — 제천 신선 농산물 직송</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green-dark: #2b5329;
+      --green:      #3d7a38;
+      --green-light:#e8f2e7;
+      --orange:     #e8921a;
+      --bg:         #f8f5f0;
+      --white:      #ffffff;
+      --text:       #1c1c1a;
+      --muted:      #6b6860;
+      --line:       rgba(28,28,26,0.1);
+      --radius:     8px;
+      --shadow:     0 2px 16px rgba(0,0,0,0.08);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+
+    /* NAV */
+    .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; transition: all 0.3s; }
+    .nav.scrolled { background: rgba(248,245,240,0.96); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-size: 1.35rem; font-weight: 700; color: var(--green-dark); letter-spacing: 0.04em; }
+    .logo .sub { font-size: 0.62rem; font-weight: 300; color: var(--muted); letter-spacing: 0.1em; display: block; margin-top: -2px; }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-link { font-size: 0.8rem; color: var(--muted); }
+    .nav-link:hover { color: var(--green-dark); }
+    .cart-btn { position: relative; background: var(--green-dark); color: white; border: none; border-radius: 24px; padding: 9px 22px; font-family: inherit; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; }
+    .cart-btn:hover { background: var(--green); }
+    .cart-badge { background: var(--orange); color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 0.68rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+
+    /* HERO */
+    .hero { background: linear-gradient(135deg, #1e3d1c 0%, #2b5329 50%, #3d7a38 100%); color: white; padding: 140px 24px 100px; text-align: center; position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 70% 30%, rgba(255,255,255,0.04) 0%, transparent 60%); }
+    .hero-content { position: relative; max-width: 680px; margin: 0 auto; }
+    .hero-badge { display: inline-block; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 20px; padding: 6px 18px; font-size: 0.8rem; letter-spacing: 0.1em; margin-bottom: 24px; }
+    .hero h1 { font-size: clamp(2.4rem, 6vw, 3.8rem); font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 20px; }
+    .hero h1 .brand { display: block; font-size: 0.5em; font-weight: 300; letter-spacing: 0.3em; opacity: 0.7; margin-bottom: 10px; }
+    .hero p { font-size: 1.05rem; font-weight: 300; opacity: 0.85; margin-bottom: 40px; line-height: 1.8; }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary { background: var(--orange); color: white; border: none; border-radius: var(--radius); padding: 14px 32px; font-family: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .btn-primary:hover { background: #d4820f; transform: translateY(-1px); }
+    .btn-outline-w { background: transparent; color: white; border: 2px solid rgba(255,255,255,0.45); border-radius: var(--radius); padding: 14px 32px; font-family: inherit; font-size: 1rem; cursor: pointer; transition: all 0.2s; }
+    .btn-outline-w:hover { border-color: white; background: rgba(255,255,255,0.1); }
+
+    /* STEPS */
+    .steps-wrap { padding: 80px 24px; }
+    .steps-inner { max-width: 960px; margin: 0 auto; }
+    .section-title { text-align: center; font-size: 1.7rem; font-weight: 700; margin-bottom: 8px; }
+    .section-sub { text-align: center; color: var(--muted); margin-bottom: 48px; font-size: 0.95rem; }
+    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; }
+    .step-card { text-align: center; padding: 32px 20px; background: white; border-radius: var(--radius); box-shadow: var(--shadow); }
+    .step-icon { font-size: 2.5rem; margin-bottom: 14px; }
+    .step-num { font-size: 0.7rem; font-weight: 700; color: var(--green); letter-spacing: 0.12em; margin-bottom: 8px; }
+    .step-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .step-card p { font-size: 0.83rem; color: var(--muted); line-height: 1.6; }
+
+    /* PRODUCTS */
+    .products-section { padding: 80px 24px; background: white; }
+    .products-inner { max-width: 1200px; margin: 0 auto; }
+    .category-tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 40px; flex-wrap: wrap; }
+    .tab-btn { background: transparent; border: 2px solid var(--line); border-radius: 24px; padding: 8px 20px; font-family: inherit; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; color: var(--muted); }
+    .tab-btn.active { background: var(--green-dark); border-color: var(--green-dark); color: white; }
+    .tab-btn:hover:not(.active) { border-color: var(--green); color: var(--green); }
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+    .product-card { background: var(--bg); border-radius: var(--radius); overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
+    .product-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+    .product-image { background: var(--green-light); height: 150px; display: flex; align-items: center; justify-content: center; font-size: 3.8rem; }
+    .product-image.fruit { background: #fff3e0; }
+    .product-image.set { background: #e8f0fe; }
+    .product-info { padding: 16px; }
+    .product-tag { font-size: 0.7rem; color: var(--green); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .product-name { font-size: 0.98rem; font-weight: 700; margin-bottom: 4px; }
+    .product-desc { font-size: 0.78rem; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
+    .product-footer { display: flex; align-items: center; justify-content: space-between; }
+    .product-price { font-size: 1.05rem; font-weight: 700; color: var(--green-dark); }
+    .product-unit { font-size: 0.72rem; color: var(--muted); font-weight: 400; }
+    .add-btn { background: var(--green-dark); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-family: inherit; font-size: 0.83rem; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+    .add-btn:hover { background: var(--green); }
+    .add-btn:disabled { background: #ccc; cursor: not-allowed; }
+    .out-of-stock-label { font-size: 0.73rem; color: #c0392b; margin-top: 3px; font-weight: 500; }
+
+    /* LOCATIONS */
+    .locations-wrap { padding: 80px 24px; }
+    .locations-inner { max-width: 1200px; margin: 0 auto; }
+    .locations-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+    .location-card { background: white; border-radius: var(--radius); padding: 24px; border-left: 4px solid var(--green); box-shadow: var(--shadow); }
+    .location-name { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .location-address { font-size: 0.83rem; color: var(--muted); margin-bottom: 6px; }
+    .location-hours { font-size: 0.83rem; color: var(--green); font-weight: 500; }
+
+    /* CART DRAWER */
+    .cart-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .cart-overlay.open { opacity: 1; pointer-events: all; }
+    .cart-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100vw); background: white; z-index: 201; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.19,1,0.22,1); display: flex; flex-direction: column; box-shadow: -4px 0 24px rgba(0,0,0,0.12); }
+    .cart-drawer.open { transform: translateX(0); }
+    .cart-header { padding: 20px 24px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+    .cart-header h2 { font-size: 1.05rem; font-weight: 700; }
+    .close-btn { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--muted); line-height: 1; padding: 4px; }
+    .close-btn:hover { color: var(--text); }
+    .cart-items { flex: 1; overflow-y: auto; padding: 12px 24px; }
+    .cart-empty { text-align: center; padding: 60px 0; color: var(--muted); }
+    .cart-empty .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+    .cart-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); align-items: center; }
+    .cart-item-emoji { font-size: 2rem; background: var(--green-light); width: 52px; height: 52px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .cart-item-info { flex: 1; min-width: 0; }
+    .cart-item-name { font-size: 0.88rem; font-weight: 700; margin-bottom: 2px; }
+    .cart-item-price { font-size: 0.83rem; color: var(--green-dark); font-weight: 500; }
+    .qty-ctrl { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .qty-btn { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--line); background: white; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; }
+    .qty-btn:hover { border-color: var(--green); color: var(--green); }
+    .qty-num { font-weight: 700; min-width: 24px; text-align: center; }
+    .cart-footer { padding: 20px 24px; border-top: 1px solid var(--line); }
+    .cart-total { display: flex; justify-content: space-between; font-size: 1.05rem; font-weight: 700; margin-bottom: 14px; }
+    .checkout-btn { width: 100%; background: var(--green-dark); color: white; border: none; border-radius: var(--radius); padding: 16px; font-family: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .checkout-btn:hover { background: var(--green); }
+    .checkout-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: white; border-radius: 12px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; transform: scale(0.95) translateY(12px); transition: transform 0.35s cubic-bezier(0.19,1,0.22,1); }
+    .modal-overlay.open .modal { transform: scale(1) translateY(0); }
+    .modal-header { padding: 22px 24px 18px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-size: 1.05rem; font-weight: 700; }
+    .modal-body { padding: 24px; }
+    .step-indicator { display: flex; gap: 6px; margin-bottom: 28px; }
+    .step-dot { height: 4px; flex: 1; background: var(--line); border-radius: 2px; transition: background 0.3s; }
+    .step-dot.active { background: var(--green); }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 0.82rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.03em; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; border: 2px solid var(--line); border-radius: 8px; padding: 11px 14px; font-family: inherit; font-size: 0.93rem; background: white; color: var(--text); transition: border-color 0.2s; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--green); }
+    .form-group textarea { resize: none; height: 78px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .order-review-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 0.88rem; }
+    .order-review-item:last-child { border-bottom: none; }
+    .order-total-row { display: flex; justify-content: space-between; padding: 14px 0 0; font-size: 1.05rem; font-weight: 700; border-top: 2px solid var(--text); margin-top: 6px; }
+    .pickup-info { background: var(--green-light); border-radius: 8px; padding: 14px 16px; margin-top: 18px; font-size: 0.88rem; line-height: 1.9; }
+    .pickup-info strong { color: var(--green-dark); }
+    .modal-footer { padding: 0 24px 24px; display: flex; gap: 8px; }
+    .btn-back { flex: 1; background: transparent; border: 2px solid var(--line); border-radius: var(--radius); padding: 13px; font-family: inherit; font-size: 0.93rem; cursor: pointer; transition: border-color 0.2s; }
+    .btn-back:hover { border-color: var(--text); }
+    .btn-next { flex: 2; background: var(--green-dark); color: white; border: none; border-radius: var(--radius); padding: 13px; font-family: inherit; font-size: 0.93rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .btn-next:hover { background: var(--green); }
+    .confirmation { text-align: center; padding: 36px 20px 20px; }
+    .confirmation-icon { font-size: 4rem; margin-bottom: 14px; }
+    .confirmation h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+    .confirmation p { color: var(--muted); margin-bottom: 20px; font-size: 0.9rem; line-height: 1.7; }
+    .order-id-box { background: var(--green-light); border-radius: 8px; padding: 16px; font-size: 1.2rem; font-weight: 700; color: var(--green-dark); letter-spacing: 0.12em; }
+
+    /* FOOTER */
+    .footer { background: #1a3320; color: rgba(255,255,255,0.65); padding: 52px 24px 32px; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 32px; }
+    .footer-logo { font-size: 1.25rem; font-weight: 700; color: white; letter-spacing: 0.04em; margin-bottom: 10px; }
+    .footer-brand p { font-size: 0.8rem; line-height: 1.7; }
+    .footer-links a { display: block; font-size: 0.83rem; margin-bottom: 8px; color: rgba(255,255,255,0.55); }
+    .footer-links a:hover { color: white; }
+    .footer-contact { font-size: 0.82rem; line-height: 2; }
+    .footer-bottom { max-width: 1200px; margin: 32px auto 0; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); text-align: center; font-size: 0.73rem; color: rgba(255,255,255,0.3); }
+
+    /* TOAST */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px); background: #1a3320; color: white; padding: 11px 22px; border-radius: 24px; font-size: 0.88rem; opacity: 0; transition: all 0.3s; z-index: 400; pointer-events: none; white-space: nowrap; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 600px) {
+      .hero { padding: 120px 20px 80px; }
+      .form-row { grid-template-columns: 1fr; }
+      .cart-drawer { width: 100vw; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <div class="logo">청풍상회 <span class="sub">CHEONGPUNG MARKET · 제천농협 직송</span></div>
+    <div class="nav-right">
+      <a href="admin.html" class="nav-link">관리자 ↗</a>
+      <button class="cart-btn" onclick="openCart()">
+        🛒 장바구니
+        <span class="cart-badge" id="cartBadge" style="display:none">0</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">🌿 제천농협 직송 · 서울 4개 거점 픽업</div>
+    <h1>
+      <span class="brand">CHEONGPUNG MARKET</span>
+      청풍상회
+    </h1>
+    <p>제천의 신선한 채소와 과일을<br>서울 거점에서 직접 픽업하세요.<br>농장에서 식탁까지, 하루 만에.</p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="scrollTo('products')">지금 주문하기 →</button>
+      <button class="btn-outline-w" onclick="scrollTo('locations')">거점 확인하기</button>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="steps-wrap">
+  <div class="steps-inner">
+    <div class="section-title">이렇게 이용하세요</div>
+    <div class="section-sub">간단한 3단계로 신선한 제천 농산물을 받아보세요</div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-icon">🛒</div>
+        <div class="step-num">STEP 01</div>
+        <h3>온라인 주문</h3>
+        <p>원하는 채소·과일을 골라 장바구니에 담고 주문하세요</p>
+      </div>
+      <div class="step-card">
+        <div class="step-icon">📍</div>
+        <div class="step-num">STEP 02</div>
+        <h3>거점 선택</h3>
+        <p>가까운 거점과 픽업 날짜·시간을 선택하세요</p>
+      </div>
+      <div class="step-card">
+        <div class="step-icon">✅</div>
+        <div class="step-num">STEP 03</div>
+        <h3>신선 픽업</h3>
+        <p>지정한 시간에 거점을 방문해 주문하신 상품을 받아가세요</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTS -->
+<section class="products-section" id="products">
+  <div class="products-inner">
+    <div class="section-title">신선 상품</div>
+    <div class="section-sub">오늘 아침 제천에서 출발한 신선한 농산물입니다</div>
+    <div class="category-tabs">
+      <button class="tab-btn active" onclick="filterProducts('all',this)">전체</button>
+      <button class="tab-btn" onclick="filterProducts('vegetable',this)">🥬 채소</button>
+      <button class="tab-btn" onclick="filterProducts('fruit',this)">🍎 과일</button>
+      <button class="tab-btn" onclick="filterProducts('set',this)">📦 세트</button>
+    </div>
+    <div class="products-grid" id="productsGrid"></div>
+  </div>
+</section>
+
+<!-- LOCATIONS -->
+<section class="locations-wrap" id="locations">
+  <div class="locations-inner">
+    <div class="section-title">픽업 거점</div>
+    <div class="section-sub">서울 4개 거점에서 편리하게 픽업하세요</div>
+    <div class="locations-grid" id="locationsGrid"></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">청풍상회</div>
+      <p>제천농협 연계 신선 농산물<br>서울 직송 픽업 서비스</p>
+    </div>
+    <div class="footer-links">
+      <a href="#products">상품 보기</a>
+      <a href="#locations">픽업 거점</a>
+      <a href="admin.html">관리자 페이지</a>
+    </div>
+    <div class="footer-contact">
+      📞 1588-0000<br>
+      📧 hello@cheongpung.kr<br>
+      🕐 월~토 09:00 – 18:00
+    </div>
+  </div>
+  <div class="footer-bottom">© 2026 청풍상회. All rights reserved.</div>
+</footer>
+
+<!-- CART DRAWER -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-header">
+    <h2>🛒 장바구니</h2>
+    <button class="close-btn" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-footer">
+    <div class="cart-total">
+      <span>합계</span>
+      <span id="cartTotal">0원</span>
+    </div>
+    <button class="checkout-btn" id="checkoutBtn" onclick="openCheckout()">주문하기 →</button>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">주문 정보 입력</div>
+      <button class="close-btn" onclick="closeCheckout()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+const DEFAULT_PRODUCTS = [
+  { id:'p1',  category:'vegetable', emoji:'🥬', name:'제천 상추',      desc:'제천 농협 직송 아삭한 신선 상추',     price:3500,  unit:'200g',  stock:50, active:true },
+  { id:'p2',  category:'vegetable', emoji:'🌶️', name:'청양고추',       desc:'알싸한 매운맛 직송 청양고추',         price:4500,  unit:'300g',  stock:40, active:true },
+  { id:'p3',  category:'vegetable', emoji:'🥒', name:'오이',           desc:'아삭한 청오이 3개',                  price:3000,  unit:'3개',   stock:60, active:true },
+  { id:'p4',  category:'vegetable', emoji:'🍅', name:'방울토마토',      desc:'달콤한 제천 방울토마토',              price:5500,  unit:'500g',  stock:35, active:true },
+  { id:'p5',  category:'vegetable', emoji:'🌿', name:'깻잎',           desc:'향긋한 깻잎 한 단',                  price:3000,  unit:'100g',  stock:45, active:true },
+  { id:'p6',  category:'vegetable', emoji:'🫑', name:'애호박',          desc:'부드러운 애호박 2개',                price:3500,  unit:'2개',   stock:30, active:true },
+  { id:'p7',  category:'fruit',     emoji:'🍎', name:'사과',           desc:'달콤 새콤한 제천 사과 3kg',          price:12000, unit:'3kg',   stock:25, active:true },
+  { id:'p8',  category:'fruit',     emoji:'🍐', name:'배',             desc:'달달한 가을 배 2개',                 price:15000, unit:'2개',   stock:20, active:true },
+  { id:'p9',  category:'fruit',     emoji:'🍇', name:'포도',           desc:'탱글탱글 포도 2송이',                price:16000, unit:'2송이', stock:15, active:true },
+  { id:'p10', category:'fruit',     emoji:'🍑', name:'복숭아',          desc:'달콤 향긋한 여름 복숭아',             price:18000, unit:'2kg',   stock:0,  active:true },
+  { id:'p11', category:'set',       emoji:'📦', name:'주간 채소 박스',  desc:'이번 주 신선 채소 5종 혼합 박스',    price:25000, unit:'5종',   stock:20, active:true },
+  { id:'p12', category:'set',       emoji:'🎁', name:'과일 혼합 박스',  desc:'제철 과일 4종 혼합 선물 박스',       price:35000, unit:'4종',   stock:15, active:true },
+  { id:'p13', category:'set',       emoji:'👑', name:'프리미엄 혼합 박스', desc:'채소+과일 7종 프리미엄 구성',    price:55000, unit:'7종',   stock:10, active:true },
+];
+
+const DEFAULT_LOCATIONS = [
+  { id:'l1', name:'마포 거점',  address:'서울시 마포구 합정동 375-1',     hours:'월~토 09:00 – 18:00', active:true },
+  { id:'l2', name:'성동 거점',  address:'서울시 성동구 성수동1가 685-1',  hours:'월~토 09:00 – 18:00', active:true },
+  { id:'l3', name:'송파 거점',  address:'서울시 송파구 잠실동 8-1',       hours:'월~토 09:00 – 18:00', active:true },
+  { id:'l4', name:'강동 거점',  address:'서울시 강동구 천호동 452-1',     hours:'월~토 09:00 – 18:00', active:true },
+];
+
+const getProducts  = () => { try { return JSON.parse(localStorage.getItem('cps_products'))  || DEFAULT_PRODUCTS;  } catch { return DEFAULT_PRODUCTS;  } };
+const getLocations = () => { try { return JSON.parse(localStorage.getItem('cps_locations')) || DEFAULT_LOCATIONS; } catch { return DEFAULT_LOCATIONS; } };
+const getOrders    = () => { try { return JSON.parse(localStorage.getItem('cps_orders'))    || [];                } catch { return [];                } };
+const saveOrders   = (o) => localStorage.setItem('cps_orders', JSON.stringify(o));
+
+// ══════════════════════════════════════════
+// CART
+// ══════════════════════════════════════════
+let cart = [];
+
+function addToCart(pid) {
+  const p = getProducts().find(x => x.id === pid);
+  if (!p || p.stock === 0) return;
+  const ex = cart.find(x => x.id === pid);
+  if (ex) ex.qty++;
+  else cart.push({ id:p.id, name:p.name, emoji:p.emoji, price:p.price, unit:p.unit, qty:1 });
+  updateCartUI();
+  showToast(`${p.name}이(가) 장바구니에 담겼습니다 🛒`);
+}
+
+function changeQty(pid, d) {
+  const item = cart.find(x => x.id === pid);
+  if (!item) return;
+  item.qty += d;
+  if (item.qty <= 0) cart = cart.filter(x => x.id !== pid);
+  updateCartUI();
+}
+
+const cartTotal = () => cart.reduce((s,i) => s + i.price * i.qty, 0);
+const cartCount = () => cart.reduce((s,i) => s + i.qty, 0);
+
+function updateCartUI() {
+  const n = cartCount();
+  const badge = document.getElementById('cartBadge');
+  badge.style.display = n > 0 ? 'flex' : 'none';
+  badge.textContent = n;
+  document.getElementById('cartTotal').textContent = cartTotal().toLocaleString() + '원';
+  document.getElementById('checkoutBtn').disabled = cart.length === 0;
+  renderCartItems();
+}
+
+function renderCartItems() {
+  const el = document.getElementById('cartItems');
+  if (!cart.length) {
+    el.innerHTML = `<div class="cart-empty"><div class="empty-icon">🛒</div><p>장바구니가 비어있습니다</p></div>`;
+    return;
+  }
+  el.innerHTML = cart.map(i => `
+    <div class="cart-item">
+      <div class="cart-item-emoji">${i.emoji}</div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${i.name}</div>
+        <div class="cart-item-price">${(i.price*i.qty).toLocaleString()}원 · ${i.unit}</div>
+      </div>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="changeQty('${i.id}',-1)">−</button>
+        <span class="qty-num">${i.qty}</span>
+        <button class="qty-btn" onclick="changeQty('${i.id}',1)">+</button>
+      </div>
+    </div>`).join('');
+}
+
+function openCart()  { document.getElementById('cartOverlay').classList.add('open'); document.getElementById('cartDrawer').classList.add('open'); renderCartItems(); }
+function closeCart() { document.getElementById('cartOverlay').classList.remove('open'); document.getElementById('cartDrawer').classList.remove('open'); }
+
+// ══════════════════════════════════════════
+// PRODUCTS
+// ══════════════════════════════════════════
+let curCategory = 'all';
+
+function filterProducts(cat, btn) {
+  curCategory = cat;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderProducts();
+}
+
+function renderProducts() {
+  const all = getProducts().filter(p => p.active);
+  const list = curCategory === 'all' ? all : all.filter(p => p.category === curCategory);
+  const catLabel = { vegetable:'채소', fruit:'과일', set:'세트' };
+  const imgCls   = { vegetable:'', fruit:'fruit', set:'set' };
+  document.getElementById('productsGrid').innerHTML = list.map(p => `
+    <div class="product-card">
+      <div class="product-image ${imgCls[p.category]}">${p.emoji}</div>
+      <div class="product-info">
+        <div class="product-tag">${catLabel[p.category]}</div>
+        <div class="product-name">${p.name}</div>
+        <div class="product-desc">${p.desc}</div>
+        ${p.stock === 0 ? '<div class="out-of-stock-label">품절</div>' : ''}
+        <div class="product-footer">
+          <div>
+            <div class="product-price">${p.price.toLocaleString()}원</div>
+            <div class="product-unit">${p.unit}</div>
+          </div>
+          <button class="add-btn" onclick="addToCart('${p.id}')" ${p.stock===0?'disabled':''}>
+            ${p.stock===0?'품절':'담기'}
+          </button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════
+// LOCATIONS
+// ══════════════════════════════════════════
+function renderLocations() {
+  const icons = ['🏪','🏬','🏢','🏪'];
+  document.getElementById('locationsGrid').innerHTML =
+    getLocations().filter(l=>l.active).map((l,i) => `
+      <div class="location-card">
+        <div class="location-name">${icons[i%4]} ${l.name}</div>
+        <div class="location-address">📍 ${l.address}</div>
+        <div class="location-hours">🕐 ${l.hours}</div>
+      </div>`).join('');
+}
+
+// ══════════════════════════════════════════
+// CHECKOUT
+// ══════════════════════════════════════════
+let step = 1;
+let cd   = {};  // checkout data
+
+function openCheckout() {
+  if (!cart.length) return;
+  step = 1; cd = {};
+  closeCart();
+  renderStep();
+  document.getElementById('checkoutModal').classList.add('open');
+}
+function closeCheckout() { document.getElementById('checkoutModal').classList.remove('open'); }
+
+function dots() {
+  return [1,2,3].map(i=>`<div class="step-dot ${step>=i?'active':''}"></div>`).join('');
+}
+
+function renderStep() {
+  const titles = ['','고객 정보','픽업 선택','주문 확인','주문 완료'];
+  document.getElementById('modalTitle').textContent = titles[step];
+
+  const body   = document.getElementById('modalBody');
+  const footer = document.getElementById('modalFooter');
+
+  if (step === 1) {
+    body.innerHTML = `
+      <div class="step-indicator">${dots()}</div>
+      <div class="form-group"><label>이름 *</label><input type="text" id="f_name" placeholder="홍길동" value="${cd.name||''}"></div>
+      <div class="form-group"><label>연락처 *</label><input type="tel" id="f_phone" placeholder="010-0000-0000" value="${cd.phone||''}"></div>
+      <div class="form-group"><label>요청사항</label><textarea id="f_memo" placeholder="픽업 관련 요청사항">${cd.memo||''}</textarea></div>`;
+    footer.innerHTML = `<button class="btn-back" onclick="closeCheckout()">취소</button><button class="btn-next" onclick="s1Next()">다음 →</button>`;
+
+  } else if (step === 2) {
+    const locs = getLocations().filter(l=>l.active);
+    const locOpts = locs.map(l=>`<option value="${l.id}" ${cd.locId===l.id?'selected':''}>${l.name} — ${l.address}</option>`).join('');
+    const times = [];
+    for (let h=9;h<=17;h++) { times.push(`${String(h).padStart(2,'0')}:00`); if(h<17) times.push(`${String(h).padStart(2,'0')}:30`); }
+    const timeOpts = times.map(t=>`<option value="${t}" ${cd.time===t?'selected':''}>${t}</option>`).join('');
+    const tom = new Date(); tom.setDate(tom.getDate()+1);
+    const minD = tom.toISOString().slice(0,10);
+    body.innerHTML = `
+      <div class="step-indicator">${dots()}</div>
+      <div class="form-group"><label>픽업 거점 *</label><select id="f_loc">${locOpts}</select></div>
+      <div class="form-row">
+        <div class="form-group"><label>픽업 날짜 *</label><input type="date" id="f_date" min="${minD}" value="${cd.date||minD}"></div>
+        <div class="form-group"><label>픽업 시간 *</label><select id="f_time">${timeOpts}</select></div>
+      </div>`;
+    footer.innerHTML = `<button class="btn-back" onclick="step--;renderStep()">← 이전</button><button class="btn-next" onclick="s2Next()">다음 →</button>`;
+
+  } else if (step === 3) {
+    const loc = getLocations().find(l=>l.id===cd.locId);
+    const rows = cart.map(i=>`
+      <div class="order-review-item">
+        <span>${i.emoji} ${i.name} × ${i.qty}</span>
+        <span>${(i.price*i.qty).toLocaleString()}원</span>
+      </div>`).join('');
+    body.innerHTML = `
+      <div class="step-indicator">${dots()}</div>
+      ${rows}
+      <div class="order-total-row"><span>총 결제금액</span><span>${cartTotal().toLocaleString()}원</span></div>
+      <div class="pickup-info">
+        <div>👤 <strong>${cd.name}</strong> · ${cd.phone}</div>
+        <div>📍 <strong>${loc?.name||''}</strong></div>
+        <div>🕐 ${cd.date} ${cd.time}</div>
+        ${cd.memo?`<div>📝 ${cd.memo}</div>`:''}
+      </div>`;
+    footer.innerHTML = `<button class="btn-back" onclick="step--;renderStep()">← 이전</button><button class="btn-next" onclick="submitOrder()">주문 확정 →</button>`;
+
+  } else if (step === 4) {
+    body.innerHTML = `
+      <div class="confirmation">
+        <div class="confirmation-icon">✅</div>
+        <h2>주문이 완료되었습니다!</h2>
+        <p>픽업 당일 거점을 방문해주세요.<br>주문 번호를 보여주시면 바로 받으실 수 있습니다.</p>
+        <div class="order-id-box">${cd.orderId}</div>
+        <p style="margin-top:14px;font-size:0.82rem;color:var(--muted)">이 번호를 저장해두세요</p>
+      </div>`;
+    footer.innerHTML = `<button class="btn-next" onclick="closeCheckout();cart=[];updateCartUI()">확인</button>`;
+  }
+}
+
+function s1Next() {
+  const name = document.getElementById('f_name').value.trim();
+  const phone = document.getElementById('f_phone').value.trim();
+  if (!name||!phone) { showToast('이름과 연락처를 입력해주세요'); return; }
+  cd.name = name; cd.phone = phone; cd.memo = document.getElementById('f_memo').value.trim();
+  step = 2; renderStep();
+}
+
+function s2Next() {
+  cd.locId = document.getElementById('f_loc').value;
+  cd.date  = document.getElementById('f_date').value;
+  cd.time  = document.getElementById('f_time').value;
+  if (!cd.locId||!cd.date||!cd.time) { showToast('모든 항목을 선택해주세요'); return; }
+  step = 3; renderStep();
+}
+
+function submitOrder() {
+  const now     = new Date();
+  const dateStr = now.toISOString().slice(0,10).replace(/-/g,'');
+  const orders  = getOrders();
+  const seq     = String(orders.filter(o=>o.id.includes(dateStr)).length + 1).padStart(3,'0');
+  const orderId = `CPL-${dateStr}-${seq}`;
+  const loc     = getLocations().find(l=>l.id===cd.locId);
+
+  orders.push({
+    id: orderId,
+    customerName: cd.name, customerPhone: cd.phone,
+    locationId: cd.locId,  locationName: loc?.name||'',
+    pickupDate: cd.date,   pickupTime: cd.time,
+    items: cart.map(i=>({...i})),
+    totalAmount: cartTotal(),
+    status: 'pending',
+    memo: cd.memo||'',
+    createdAt: now.toISOString(),
+  });
+  saveOrders(orders);
+  cd.orderId = orderId;
+  step = 4; renderStep();
+}
+
+// ══════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2600);
+}
+
+function scrollTo(id) { document.getElementById(id).scrollIntoView({behavior:'smooth'}); }
+
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 20);
+});
+
+// INIT
+renderProducts();
+renderLocations();
+updateCartUI();
+</script>
+</body>
+</html>

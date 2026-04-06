@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>청풍상회 — 관리자</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sidebar: #1a3320;
+      --sidebar-hover: #2b5329;
+      --green: #3d7a38;
+      --green-dark: #2b5329;
+      --green-light: #e8f2e7;
+      --orange: #e8921a;
+      --bg: #f0f4f0;
+      --white: #ffffff;
+      --text: #1c1c1a;
+      --muted: #6b6860;
+      --line: rgba(28,28,26,0.1);
+      --radius: 8px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); }
+    button { cursor: pointer; font-family: inherit; }
+
+    /* ── LOGIN ── */
+    .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e3d1c, #2b5329); }
+    .login-box { background: white; border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 8px 40px rgba(0,0,0,0.2); }
+    .login-logo { font-size: 1.8rem; font-weight: 700; color: var(--green-dark); letter-spacing: 0.04em; margin-bottom: 4px; }
+    .login-sub { font-size: 0.78rem; color: var(--muted); letter-spacing: 0.08em; margin-bottom: 36px; }
+    .login-box label { display: block; text-align: left; font-size: 0.8rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+    .login-box input { width: 100%; border: 2px solid var(--line); border-radius: 8px; padding: 12px 14px; font-family: inherit; font-size: 0.95rem; transition: border-color 0.2s; margin-bottom: 16px; }
+    .login-box input:focus { outline: none; border-color: var(--green); }
+    .login-btn { width: 100%; background: var(--green-dark); color: white; border: none; border-radius: 8px; padding: 14px; font-size: 0.98rem; font-weight: 700; transition: background 0.2s; }
+    .login-btn:hover { background: var(--green); }
+    .login-err { color: #c0392b; font-size: 0.82rem; margin-top: -8px; margin-bottom: 12px; text-align: left; }
+
+    /* ── LAYOUT ── */
+    .app { display: none; min-height: 100vh; }
+    .app.visible { display: flex; }
+    .sidebar { width: 240px; background: var(--sidebar); color: rgba(255,255,255,0.75); flex-shrink: 0; display: flex; flex-direction: column; min-height: 100vh; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; }
+    .sidebar-brand { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: white; letter-spacing: 0.04em; }
+    .sidebar-sub { font-size: 0.68rem; color: rgba(255,255,255,0.4); letter-spacing: 0.08em; margin-top: 2px; }
+    .sidebar-nav { flex: 1; padding: 16px 0; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 24px; font-size: 0.88rem; cursor: pointer; transition: all 0.18s; border-left: 3px solid transparent; }
+    .nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
+    .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: #6aaa63; }
+    .nav-icon { font-size: 1.1rem; width: 22px; text-align: center; }
+    .sidebar-footer { padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.78rem; color: rgba(255,255,255,0.35); }
+    .logout-btn { display: block; width: 100%; margin-top: 8px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.6); border-radius: 6px; padding: 8px; font-size: 0.82rem; transition: all 0.2s; }
+    .logout-btn:hover { background: rgba(255,255,255,0.12); color: white; }
+    .main { margin-left: 240px; flex: 1; }
+    .topbar { background: white; border-bottom: 1px solid var(--line); padding: 0 28px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
+    .topbar-title { font-size: 1rem; font-weight: 700; }
+    .topbar-right { display: flex; gap: 12px; align-items: center; }
+    .page-content { padding: 28px; display: none; }
+    .page-content.active { display: block; }
+
+    /* ── CARDS ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: white; border-radius: var(--radius); padding: 20px 24px; box-shadow: var(--shadow); }
+    .stat-label { font-size: 0.78rem; color: var(--muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .stat-value { font-size: 1.8rem; font-weight: 700; line-height: 1; }
+    .stat-sub { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+    .stat-card.green .stat-value { color: var(--green-dark); }
+    .stat-card.orange .stat-value { color: var(--orange); }
+    .stat-card.blue .stat-value { color: #2563eb; }
+
+    /* ── TABLE ── */
+    .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 24px; }
+    .card-header { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .card-title { font-size: 0.95rem; font-weight: 700; }
+    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .filter-select { border: 1.5px solid var(--line); border-radius: 6px; padding: 6px 10px; font-family: inherit; font-size: 0.82rem; background: white; }
+    .filter-input { border: 1.5px solid var(--line); border-radius: 6px; padding: 6px 10px; font-family: inherit; font-size: 0.82rem; width: 160px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 0.75rem; font-weight: 700; color: var(--muted); padding: 10px 16px; background: #f8faf8; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    td { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: 0.85rem; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8faf8; }
+    .empty-row td { text-align: center; padding: 40px; color: var(--muted); }
+
+    /* ── BADGES ── */
+    .badge { display: inline-block; border-radius: 20px; padding: 3px 10px; font-size: 0.72rem; font-weight: 700; white-space: nowrap; }
+    .badge-pending   { background: #fef3c7; color: #92400e; }
+    .badge-preparing { background: #dbeafe; color: #1d4ed8; }
+    .badge-ready     { background: #d1fae5; color: #065f46; }
+    .badge-completed { background: #f3f4f6; color: #374151; }
+    .badge-cancelled { background: #fee2e2; color: #991b1b; }
+
+    /* ── BUTTONS ── */
+    .btn { border: none; border-radius: 6px; padding: 7px 14px; font-size: 0.8rem; font-weight: 700; transition: all 0.18s; }
+    .btn-green  { background: var(--green-dark); color: white; }
+    .btn-green:hover  { background: var(--green); }
+    .btn-gray   { background: #f3f4f6; color: var(--text); }
+    .btn-gray:hover   { background: #e5e7eb; }
+    .btn-red    { background: #fee2e2; color: #991b1b; }
+    .btn-red:hover    { background: #fecaca; }
+    .btn-orange { background: #fff7ed; color: #92400e; }
+    .btn-orange:hover { background: #ffedd5; }
+    .btn-sm { padding: 5px 10px; font-size: 0.75rem; }
+    .btn-row { display: flex; gap: 4px; flex-wrap: wrap; }
+    .btn-add { background: var(--green-dark); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-size: 0.85rem; font-weight: 700; transition: background 0.2s; }
+    .btn-add:hover { background: var(--green); }
+
+    /* ── PRODUCTS ADMIN ── */
+    .product-admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; padding: 20px; }
+    .product-admin-card { border: 1.5px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .product-admin-card.inactive { opacity: 0.5; }
+    .pa-image { background: var(--green-light); height: 90px; display: flex; align-items: center; justify-content: center; font-size: 2.8rem; }
+    .pa-image.fruit { background: #fff3e0; }
+    .pa-image.set   { background: #e8f0fe; }
+    .pa-body { padding: 12px; }
+    .pa-name { font-size: 0.9rem; font-weight: 700; margin-bottom: 2px; }
+    .pa-price { font-size: 0.85rem; color: var(--green-dark); font-weight: 500; margin-bottom: 8px; }
+    .pa-stock { font-size: 0.75rem; color: var(--muted); margin-bottom: 10px; }
+    .pa-stock span { font-weight: 700; color: var(--text); }
+    .pa-actions { display: flex; gap: 4px; }
+
+    /* ── MODAL ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: white; border-radius: 12px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.25s cubic-bezier(0.19,1,0.22,1); }
+    .modal-overlay.open .modal { transform: scale(1); }
+    .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 1rem; font-weight: 700; }
+    .modal-close { background: none; border: none; font-size: 1.3rem; color: var(--muted); cursor: pointer; }
+    .modal-body { padding: 24px; }
+    .modal-footer { padding: 0 24px 24px; display: flex; gap: 8px; justify-content: flex-end; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--muted); margin-bottom: 5px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; border: 2px solid var(--line); border-radius: 8px; padding: 10px 13px; font-family: inherit; font-size: 0.92rem; background: white; color: var(--text); transition: border-color 0.2s; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--green); }
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-group textarea { resize: none; height: 70px; }
+
+    /* ── ORDER DETAIL ── */
+    .order-detail { font-size: 0.88rem; }
+    .detail-row { display: flex; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { font-weight: 700; color: var(--muted); min-width: 80px; }
+    .detail-items { margin-top: 12px; }
+    .detail-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--line); }
+    .detail-total { display: flex; justify-content: space-between; padding: 10px 0; font-weight: 700; font-size: 1rem; }
+
+    /* ── LOCATIONS ── */
+    .loc-list { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .loc-card { border: 1.5px solid var(--line); border-radius: var(--radius); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .loc-card.inactive { opacity: 0.5; }
+    .loc-info { flex: 1; }
+    .loc-name { font-weight: 700; margin-bottom: 4px; }
+    .loc-addr { font-size: 0.82rem; color: var(--muted); }
+    .loc-hours { font-size: 0.82rem; color: var(--green); font-weight: 500; margin-top: 2px; }
+
+    /* ── TOAST ── */
+    .toast { position: fixed; bottom: 24px; right: 24px; background: #1a3320; color: white; padding: 11px 20px; border-radius: 8px; font-size: 0.85rem; opacity: 0; transform: translateY(8px); transition: all 0.3s; z-index: 500; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ── SETTINGS ── */
+    .settings-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; max-width: 460px; }
+    .settings-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 18px; }
+
+    @media (max-width: 768px) {
+      .sidebar { width: 200px; }
+      .main { margin-left: 200px; }
+      .stat-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 560px) {
+      .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="login-logo">청풍상회</div>
+    <div class="login-sub">ADMIN PANEL</div>
+    <div>
+      <label>비밀번호</label>
+      <input type="password" id="pwInput" placeholder="관리자 비밀번호" onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="login-err" id="loginErr" style="display:none">비밀번호가 올바르지 않습니다.</div>
+      <button class="login-btn" onclick="doLogin()">로그인</button>
+    </div>
+    <div style="margin-top:20px;font-size:0.75rem;color:var(--muted)">
+      기본 비밀번호: <strong>cheongpung2026</strong>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div class="app" id="appWrap">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">청풍상회</div>
+      <div class="sidebar-sub">ADMIN · 관리자</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="goTab('dash',this)">   <span class="nav-icon">📊</span> 대시보드</div>
+      <div class="nav-item" onclick="goTab('orders',this)">        <span class="nav-icon">📋</span> 주문 관리</div>
+      <div class="nav-item" onclick="goTab('products',this)">      <span class="nav-icon">🥬</span> 상품 관리</div>
+      <div class="nav-item" onclick="goTab('locations',this)">     <span class="nav-icon">📍</span> 픽업 거점</div>
+      <div class="nav-item" onclick="goTab('settings',this)">      <span class="nav-icon">⚙️</span> 설정</div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="index.html" style="color:rgba(255,255,255,0.4);font-size:0.78rem;">← 고객 페이지</a>
+      <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbarTitle">대시보드</div>
+      <div class="topbar-right">
+        <span style="font-size:0.8rem;color:var(--muted)" id="topbarDate"></span>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="page-content active" id="page-dash">
+      <div class="stat-grid" id="statGrid"></div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">최근 주문</div></div>
+        <div style="overflow-x:auto"><table id="recentOrdersTable">
+          <thead><tr><th>주문번호</th><th>고객명</th><th>거점</th><th>픽업일시</th><th>금액</th><th>상태</th></tr></thead>
+          <tbody id="recentOrdersTbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="page-content" id="page-orders">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">주문 목록</div>
+          <div class="filter-row">
+            <select class="filter-select" id="filterStatus" onchange="renderOrdersTable()">
+              <option value="">전체 상태</option>
+              <option value="pending">주문접수</option>
+              <option value="preparing">준비중</option>
+              <option value="ready">픽업대기</option>
+              <option value="completed">완료</option>
+              <option value="cancelled">취소</option>
+            </select>
+            <select class="filter-select" id="filterLoc" onchange="renderOrdersTable()">
+              <option value="">전체 거점</option>
+            </select>
+            <input class="filter-input" id="filterSearch" placeholder="이름/주문번호 검색" oninput="renderOrdersTable()">
+          </div>
+        </div>
+        <div style="overflow-x:auto"><table>
+          <thead><tr><th>주문번호</th><th>고객</th><th>연락처</th><th>거점</th><th>픽업일시</th><th>금액</th><th>상태</th><th>액션</th></tr></thead>
+          <tbody id="ordersTbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="page-content" id="page-products">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-header">
+          <div class="card-title">상품 목록</div>
+          <button class="btn-add" onclick="openProductModal()">+ 상품 추가</button>
+        </div>
+        <div class="product-admin-grid" id="productAdminGrid"></div>
+      </div>
+    </div>
+
+    <!-- LOCATIONS -->
+    <div class="page-content" id="page-locations">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-header">
+          <div class="card-title">픽업 거점 관리</div>
+          <button class="btn-add" onclick="openLocModal()">+ 거점 추가</button>
+        </div>
+        <div class="loc-list" id="locList"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page-content" id="page-settings">
+      <div class="settings-card">
+        <h3>🔐 비밀번호 변경</h3>
+        <div class="form-group"><label>현재 비밀번호</label><input type="password" id="s_old" placeholder="현재 비밀번호"></div>
+        <div class="form-group"><label>새 비밀번호</label><input type="password" id="s_new" placeholder="새 비밀번호 (6자 이상)"></div>
+        <div class="form-group"><label>새 비밀번호 확인</label><input type="password" id="s_new2" placeholder="새 비밀번호 재입력"></div>
+        <button class="btn btn-green" onclick="changePassword()">비밀번호 변경</button>
+      </div>
+      <br>
+      <div class="settings-card">
+        <h3>🗑️ 데이터 관리</h3>
+        <p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px;">주의: 삭제한 데이터는 복구되지 않습니다.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-orange" onclick="clearCompletedOrders()">완료 주문 정리</button>
+          <button class="btn btn-red" onclick="resetProducts()">상품 기본값 복원</button>
+          <button class="btn btn-red" onclick="resetLocations()">거점 기본값 복원</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ORDER DETAIL MODAL -->
+<div class="modal-overlay" id="orderModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="orderModalTitle">주문 상세</div><button class="modal-close" onclick="closeModal('orderModal')">✕</button></div>
+    <div class="modal-body" id="orderModalBody"></div>
+    <div class="modal-footer" id="orderModalFooter"></div>
+  </div>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="productModalTitle">상품 추가</div><button class="modal-close" onclick="closeModal('productModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row-2">
+        <div class="form-group"><label>카테고리</label>
+          <select id="pm_cat">
+            <option value="vegetable">채소</option><option value="fruit">과일</option><option value="set">세트</option>
+          </select>
+        </div>
+        <div class="form-group"><label>이모지</label><input type="text" id="pm_emoji" placeholder="🥬" maxlength="2"></div>
+      </div>
+      <div class="form-group"><label>상품명</label><input type="text" id="pm_name" placeholder="상품명"></div>
+      <div class="form-group"><label>설명</label><textarea id="pm_desc" placeholder="상품 설명"></textarea></div>
+      <div class="form-row-2">
+        <div class="form-group"><label>가격 (원)</label><input type="number" id="pm_price" placeholder="5000" min="0"></div>
+        <div class="form-group"><label>단위</label><input type="text" id="pm_unit" placeholder="200g"></div>
+      </div>
+      <div class="form-group"><label>재고 수량</label><input type="number" id="pm_stock" placeholder="50" min="0"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal('productModal')">취소</button>
+      <button class="btn btn-green" onclick="saveProduct()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOCATION MODAL -->
+<div class="modal-overlay" id="locModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="locModalTitle">거점 추가</div><button class="modal-close" onclick="closeModal('locModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>거점명</label><input type="text" id="lm_name" placeholder="마포 거점"></div>
+      <div class="form-group"><label>주소</label><input type="text" id="lm_addr" placeholder="서울시 마포구 합정동 000-0"></div>
+      <div class="form-group"><label>운영 시간</label><input type="text" id="lm_hours" placeholder="월~토 09:00 – 18:00"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal('locModal')">취소</button>
+      <button class="btn btn-green" onclick="saveLoc()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// DATA HELPERS
+// ══════════════════════════════════════════
+const DEFAULT_PRODUCTS = [
+  { id:'p1',  category:'vegetable', emoji:'🥬', name:'제천 상추',         desc:'제천 농협 직송 아삭한 신선 상추',    price:3500,  unit:'200g',  stock:50, active:true },
+  { id:'p2',  category:'vegetable', emoji:'🌶️', name:'청양고추',          desc:'알싸한 매운맛 직송 청양고추',        price:4500,  unit:'300g',  stock:40, active:true },
+  { id:'p3',  category:'vegetable', emoji:'🥒', name:'오이',              desc:'아삭한 청오이 3개',                 price:3000,  unit:'3개',   stock:60, active:true },
+  { id:'p4',  category:'vegetable', emoji:'🍅', name:'방울토마토',         desc:'달콤한 제천 방울토마토',             price:5500,  unit:'500g',  stock:35, active:true },
+  { id:'p5',  category:'vegetable', emoji:'🌿', name:'깻잎',              desc:'향긋한 깻잎 한 단',                 price:3000,  unit:'100g',  stock:45, active:true },
+  { id:'p6',  category:'vegetable', emoji:'🫑', name:'애호박',            desc:'부드러운 애호박 2개',               price:3500,  unit:'2개',   stock:30, active:true },
+  { id:'p7',  category:'fruit',     emoji:'🍎', name:'사과',              desc:'달콤 새콤한 제천 사과',              price:12000, unit:'3kg',   stock:25, active:true },
+  { id:'p8',  category:'fruit',     emoji:'🍐', name:'배',                desc:'달달한 가을 배 2개',                price:15000, unit:'2개',   stock:20, active:true },
+  { id:'p9',  category:'fruit',     emoji:'🍇', name:'포도',              desc:'탱글탱글 포도 2송이',               price:16000, unit:'2송이', stock:15, active:true },
+  { id:'p10', category:'fruit',     emoji:'🍑', name:'복숭아',            desc:'달콤 향긋한 여름 복숭아',            price:18000, unit:'2kg',   stock:0,  active:true },
+  { id:'p11', category:'set',       emoji:'📦', name:'주간 채소 박스',    desc:'신선 채소 5종 혼합 박스',            price:25000, unit:'5종',   stock:20, active:true },
+  { id:'p12', category:'set',       emoji:'🎁', name:'과일 혼합 박스',    desc:'제철 과일 4종 혼합 선물 박스',       price:35000, unit:'4종',   stock:15, active:true },
+  { id:'p13', category:'set',       emoji:'👑', name:'프리미엄 혼합 박스', desc:'채소+과일 7종 프리미엄 구성',       price:55000, unit:'7종',   stock:10, active:true },
+];
+const DEFAULT_LOCATIONS = [
+  { id:'l1', name:'마포 거점', address:'서울시 마포구 합정동 375-1',    hours:'월~토 09:00 – 18:00', active:true },
+  { id:'l2', name:'성동 거점', address:'서울시 성동구 성수동1가 685-1', hours:'월~토 09:00 – 18:00', active:true },
+  { id:'l3', name:'송파 거점', address:'서울시 송파구 잠실동 8-1',      hours:'월~토 09:00 – 18:00', active:true },
+  { id:'l4', name:'강동 거점', address:'서울시 강동구 천호동 452-1',    hours:'월~토 09:00 – 18:00', active:true },
+];
+const DEFAULT_PASS = 'cheongpung2026';
+
+const getProducts  = () => { try { return JSON.parse(localStorage.getItem('cps_products'))  || DEFAULT_PRODUCTS;  } catch { return DEFAULT_PRODUCTS;  } };
+const getLocations = () => { try { return JSON.parse(localStorage.getItem('cps_locations')) || DEFAULT_LOCATIONS; } catch { return DEFAULT_LOCATIONS; } };
+const getOrders    = () => { try { return JSON.parse(localStorage.getItem('cps_orders'))    || [];                } catch { return [];                } };
+const getPass      = ()  => localStorage.getItem('cps_admin_pass') || DEFAULT_PASS;
+
+const saveProducts  = (d) => localStorage.setItem('cps_products',  JSON.stringify(d));
+const saveLocations = (d) => localStorage.setItem('cps_locations', JSON.stringify(d));
+const saveOrders    = (d) => localStorage.setItem('cps_orders',    JSON.stringify(d));
+
+// ══════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════
+function doLogin() {
+  const pw = document.getElementById('pwInput').value;
+  if (pw === getPass()) {
+    document.getElementById('loginWrap').style.display = 'none';
+    document.getElementById('appWrap').classList.add('visible');
+    initApp();
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+  }
+}
+
+function doLogout() {
+  document.getElementById('appWrap').classList.remove('visible');
+  document.getElementById('loginWrap').style.display = '';
+  document.getElementById('pwInput').value = '';
+  document.getElementById('loginErr').style.display = 'none';
+}
+
+function changePassword() {
+  const old  = document.getElementById('s_old').value;
+  const nw   = document.getElementById('s_new').value;
+  const nw2  = document.getElementById('s_new2').value;
+  if (old !== getPass())  { toast('현재 비밀번호가 틀렸습니다'); return; }
+  if (nw.length < 6)      { toast('새 비밀번호는 6자 이상이어야 합니다'); return; }
+  if (nw !== nw2)         { toast('새 비밀번호가 일치하지 않습니다'); return; }
+  localStorage.setItem('cps_admin_pass', nw);
+  ['s_old','s_new','s_new2'].forEach(id => document.getElementById(id).value = '');
+  toast('비밀번호가 변경되었습니다 ✅');
+}
+
+// ══════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════
+const tabTitles = { dash:'대시보드', orders:'주문 관리', products:'상품 관리', locations:'픽업 거점', settings:'설정' };
+
+function goTab(tab, el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  document.getElementById('topbarTitle').textContent = tabTitles[tab];
+  if (tab === 'dash')      renderDash();
+  if (tab === 'orders')    renderOrdersTable();
+  if (tab === 'products')  renderProductsAdmin();
+  if (tab === 'locations') renderLocList();
+}
+
+// ══════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════
+function renderDash() {
+  const orders = getOrders();
+  const today  = new Date().toISOString().slice(0,10);
+  const todayO = orders.filter(o => o.createdAt.slice(0,10) === today);
+  const pending = orders.filter(o => o.status === 'pending').length;
+  const ready   = orders.filter(o => o.status === 'ready').length;
+  const revenue = orders.filter(o => o.status !== 'cancelled').reduce((s,o) => s + o.totalAmount, 0);
+
+  document.getElementById('statGrid').innerHTML = `
+    <div class="stat-card green">
+      <div class="stat-label">오늘 주문</div>
+      <div class="stat-value">${todayO.length}</div>
+      <div class="stat-sub">건</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-label">주문접수 대기</div>
+      <div class="stat-value">${pending}</div>
+      <div class="stat-sub">처리 필요</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">픽업 대기</div>
+      <div class="stat-value">${ready}</div>
+      <div class="stat-sub">방문 예정</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">누적 매출</div>
+      <div class="stat-value" style="font-size:1.4rem">${revenue.toLocaleString()}</div>
+      <div class="stat-sub">원 (취소 제외)</div>
+    </div>`;
+
+  // recent orders (latest 8)
+  const recent = [...orders].sort((a,b) => b.createdAt.localeCompare(a.createdAt)).slice(0,8);
+  document.getElementById('recentOrdersTbody').innerHTML = recent.length
+    ? recent.map(o => `<tr>
+        <td><strong>${o.id}</strong></td>
+        <td>${o.customerName}</td>
+        <td>${o.locationName}</td>
+        <td>${o.pickupDate} ${o.pickupTime}</td>
+        <td>${o.totalAmount.toLocaleString()}원</td>
+        <td>${statusBadge(o.status)}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="6" class="empty-row">주문이 없습니다</td></tr>`;
+}
+
+// ══════════════════════════════════════════
+// ORDERS
+// ══════════════════════════════════════════
+function statusBadge(s) {
+  const map = { pending:'주문접수', preparing:'준비중', ready:'픽업대기', completed:'완료', cancelled:'취소' };
+  return `<span class="badge badge-${s}">${map[s]||s}</span>`;
+}
+
+function renderOrdersTable() {
+  const statusF = document.getElementById('filterStatus')?.value || '';
+  const locF    = document.getElementById('filterLoc')?.value    || '';
+  const search  = (document.getElementById('filterSearch')?.value || '').toLowerCase();
+
+  // populate loc filter options
+  const locSel = document.getElementById('filterLoc');
+  if (locSel && locSel.options.length === 1) {
+    getLocations().forEach(l => {
+      const o = document.createElement('option'); o.value = l.id; o.textContent = l.name; locSel.appendChild(o);
+    });
+  }
+
+  let orders = getOrders();
+  if (statusF) orders = orders.filter(o => o.status === statusF);
+  if (locF)    orders = orders.filter(o => o.locationId === locF);
+  if (search)  orders = orders.filter(o =>
+    o.customerName.toLowerCase().includes(search) || o.id.toLowerCase().includes(search)
+  );
+  orders.sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+
+  document.getElementById('ordersTbody').innerHTML = orders.length
+    ? orders.map(o => `<tr>
+        <td><strong>${o.id}</strong></td>
+        <td>${o.customerName}</td>
+        <td>${o.customerPhone}</td>
+        <td>${o.locationName}</td>
+        <td style="white-space:nowrap">${o.pickupDate} ${o.pickupTime}</td>
+        <td>${o.totalAmount.toLocaleString()}원</td>
+        <td>${statusBadge(o.status)}</td>
+        <td>
+          <div class="btn-row">
+            <button class="btn btn-gray btn-sm" onclick="openOrderDetail('${o.id}')">상세</button>
+            ${o.status==='pending'    ? `<button class="btn btn-orange btn-sm" onclick="updateStatus('${o.id}','preparing')">준비시작</button>` : ''}
+            ${o.status==='preparing' ? `<button class="btn btn-green btn-sm"  onclick="updateStatus('${o.id}','ready')">픽업대기</button>` : ''}
+            ${o.status==='ready'     ? `<button class="btn btn-green btn-sm"  onclick="updateStatus('${o.id}','completed')">완료</button>` : ''}
+            ${['pending','preparing','ready'].includes(o.status) ? `<button class="btn btn-red btn-sm" onclick="updateStatus('${o.id}','cancelled')">취소</button>` : ''}
+          </div>
+        </td>
+      </tr>`).join('')
+    : `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted)">주문이 없습니다</td></tr>`;
+}
+
+function updateStatus(id, newStatus) {
+  const orders = getOrders();
+  const idx = orders.findIndex(o => o.id === id);
+  if (idx < 0) return;
+  orders[idx].status = newStatus;
+  saveOrders(orders);
+  renderOrdersTable();
+  if (document.getElementById('page-dash').classList.contains('active')) renderDash();
+  const map = { preparing:'준비중으로 변경', ready:'픽업대기로 변경', completed:'완료 처리', cancelled:'취소 처리' };
+  toast(`${id} — ${map[newStatus]||newStatus} ✅`);
+}
+
+function openOrderDetail(id) {
+  const o = getOrders().find(x => x.id === id);
+  if (!o) return;
+  document.getElementById('orderModalTitle').textContent = `주문 상세 — ${o.id}`;
+  document.getElementById('orderModalBody').innerHTML = `
+    <div class="order-detail">
+      <div class="detail-row"><span class="detail-label">고객명</span><span>${o.customerName}</span></div>
+      <div class="detail-row"><span class="detail-label">연락처</span><span>${o.customerPhone}</span></div>
+      <div class="detail-row"><span class="detail-label">픽업 거점</span><span>${o.locationName}</span></div>
+      <div class="detail-row"><span class="detail-label">픽업 일시</span><span>${o.pickupDate} ${o.pickupTime}</span></div>
+      <div class="detail-row"><span class="detail-label">주문 상태</span><span>${statusBadge(o.status)}</span></div>
+      <div class="detail-row"><span class="detail-label">주문 시각</span><span>${new Date(o.createdAt).toLocaleString('ko-KR')}</span></div>
+      ${o.memo ? `<div class="detail-row"><span class="detail-label">요청사항</span><span>${o.memo}</span></div>` : ''}
+    </div>
+    <div class="detail-items" style="margin-top:20px">
+      <div style="font-weight:700;font-size:0.85rem;margin-bottom:8px;">주문 상품</div>
+      ${o.items.map(i=>`<div class="detail-item"><span>${i.emoji} ${i.name} × ${i.qty} (${i.unit})</span><span>${(i.price*i.qty).toLocaleString()}원</span></div>`).join('')}
+      <div class="detail-total"><span>합계</span><span>${o.totalAmount.toLocaleString()}원</span></div>
+    </div>`;
+  document.getElementById('orderModalFooter').innerHTML = `
+    ${o.status==='pending'    ? `<button class="btn btn-orange" onclick="updateStatus('${o.id}','preparing');closeModal('orderModal')">준비 시작</button>` : ''}
+    ${o.status==='preparing'  ? `<button class="btn btn-green"  onclick="updateStatus('${o.id}','ready');closeModal('orderModal')">픽업 대기</button>` : ''}
+    ${o.status==='ready'      ? `<button class="btn btn-green"  onclick="updateStatus('${o.id}','completed');closeModal('orderModal')">완료 처리</button>` : ''}
+    ${['pending','preparing','ready'].includes(o.status) ? `<button class="btn btn-red" onclick="updateStatus('${o.id}','cancelled');closeModal('orderModal')">취소</button>` : ''}
+    <button class="btn btn-gray" onclick="closeModal('orderModal')">닫기</button>`;
+  openModal('orderModal');
+}
+
+// ══════════════════════════════════════════
+// PRODUCTS ADMIN
+// ══════════════════════════════════════════
+let editProdId = null;
+const catLabel = { vegetable:'채소', fruit:'과일', set:'세트' };
+const imgCls   = { vegetable:'', fruit:'fruit', set:'set' };
+
+function renderProductsAdmin() {
+  const products = getProducts();
+  document.getElementById('productAdminGrid').innerHTML = products.map(p => `
+    <div class="product-admin-card ${p.active?'':'inactive'}">
+      <div class="pa-image ${imgCls[p.category]}">${p.emoji}</div>
+      <div class="pa-body">
+        <div class="pa-name">${p.name}</div>
+        <div class="pa-price">${p.price.toLocaleString()}원 / ${p.unit}</div>
+        <div class="pa-stock">재고: <span>${p.stock}</span>개 · ${catLabel[p.category]}</div>
+        <div class="pa-actions">
+          <button class="btn btn-gray btn-sm" onclick="openProductModal('${p.id}')">수정</button>
+          <button class="btn ${p.active?'btn-orange':'btn-green'} btn-sm" onclick="toggleProduct('${p.id}')">
+            ${p.active?'숨기기':'표시'}
+          </button>
+          <button class="btn btn-red btn-sm" onclick="deleteProduct('${p.id}')">삭제</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function openProductModal(id) {
+  editProdId = id || null;
+  document.getElementById('productModalTitle').textContent = id ? '상품 수정' : '상품 추가';
+  if (id) {
+    const p = getProducts().find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('pm_cat').value   = p.category;
+    document.getElementById('pm_emoji').value = p.emoji;
+    document.getElementById('pm_name').value  = p.name;
+    document.getElementById('pm_desc').value  = p.desc;
+    document.getElementById('pm_price').value = p.price;
+    document.getElementById('pm_unit').value  = p.unit;
+    document.getElementById('pm_stock').value = p.stock;
+  } else {
+    ['pm_cat','pm_emoji','pm_name','pm_desc','pm_price','pm_unit','pm_stock'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el.tagName === 'SELECT') el.value = 'vegetable'; else el.value = '';
+    });
+  }
+  openModal('productModal');
+}
+
+function saveProduct() {
+  const name  = document.getElementById('pm_name').value.trim();
+  const price = parseInt(document.getElementById('pm_price').value);
+  const stock = parseInt(document.getElementById('pm_stock').value);
+  if (!name || isNaN(price) || isNaN(stock)) { toast('필수 항목을 모두 입력해주세요'); return; }
+
+  const products = getProducts();
+  const data = {
+    category: document.getElementById('pm_cat').value,
+    emoji:    document.getElementById('pm_emoji').value || '🌿',
+    name, desc: document.getElementById('pm_desc').value.trim(),
+    price, unit: document.getElementById('pm_unit').value.trim() || '1개',
+    stock, active: true,
+  };
+
+  if (editProdId) {
+    const idx = products.findIndex(p => p.id === editProdId);
+    if (idx >= 0) products[idx] = { ...products[idx], ...data };
+  } else {
+    data.id = 'p' + Date.now();
+    products.push(data);
+  }
+  saveProducts(products);
+  closeModal('productModal');
+  renderProductsAdmin();
+  toast(editProdId ? '상품이 수정되었습니다 ✅' : '상품이 추가되었습니다 ✅');
+}
+
+function toggleProduct(id) {
+  const products = getProducts();
+  const idx = products.findIndex(p => p.id === id);
+  if (idx < 0) return;
+  products[idx].active = !products[idx].active;
+  saveProducts(products);
+  renderProductsAdmin();
+}
+
+function deleteProduct(id) {
+  if (!confirm('이 상품을 삭제하시겠습니까?')) return;
+  saveProducts(getProducts().filter(p => p.id !== id));
+  renderProductsAdmin();
+  toast('상품이 삭제되었습니다');
+}
+
+function resetProducts() {
+  if (!confirm('상품 목록을 기본값으로 복원하시겠습니까?')) return;
+  saveProducts(DEFAULT_PRODUCTS);
+  renderProductsAdmin();
+  toast('상품 기본값이 복원되었습니다');
+}
+
+// ══════════════════════════════════════════
+// LOCATIONS ADMIN
+// ══════════════════════════════════════════
+let editLocId = null;
+
+function renderLocList() {
+  document.getElementById('locList').innerHTML = getLocations().map(l => `
+    <div class="loc-card ${l.active?'':'inactive'}">
+      <div class="loc-info">
+        <div class="loc-name">📍 ${l.name} ${l.active?'':'<span style="font-size:0.72rem;color:#999">(숨김)</span>'}</div>
+        <div class="loc-addr">${l.address}</div>
+        <div class="loc-hours">${l.hours}</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-gray btn-sm" onclick="openLocModal('${l.id}')">수정</button>
+        <button class="btn ${l.active?'btn-orange':'btn-green'} btn-sm" onclick="toggleLoc('${l.id}')">
+          ${l.active?'숨기기':'표시'}
+        </button>
+        <button class="btn btn-red btn-sm" onclick="deleteLoc('${l.id}')">삭제</button>
+      </div>
+    </div>`).join('');
+}
+
+function openLocModal(id) {
+  editLocId = id || null;
+  document.getElementById('locModalTitle').textContent = id ? '거점 수정' : '거점 추가';
+  if (id) {
+    const l = getLocations().find(x => x.id === id);
+    if (!l) return;
+    document.getElementById('lm_name').value  = l.name;
+    document.getElementById('lm_addr').value  = l.address;
+    document.getElementById('lm_hours').value = l.hours;
+  } else {
+    ['lm_name','lm_addr','lm_hours'].forEach(id => document.getElementById(id).value = '');
+  }
+  openModal('locModal');
+}
+
+function saveLoc() {
+  const name  = document.getElementById('lm_name').value.trim();
+  const addr  = document.getElementById('lm_addr').value.trim();
+  const hours = document.getElementById('lm_hours').value.trim();
+  if (!name || !addr) { toast('거점명과 주소를 입력해주세요'); return; }
+
+  const locs = getLocations();
+  const data = { name, address: addr, hours: hours || '09:00 – 18:00', active: true };
+
+  if (editLocId) {
+    const idx = locs.findIndex(l => l.id === editLocId);
+    if (idx >= 0) locs[idx] = { ...locs[idx], ...data };
+  } else {
+    data.id = 'l' + Date.now();
+    locs.push(data);
+  }
+  saveLocations(locs);
+  closeModal('locModal');
+  renderLocList();
+  toast(editLocId ? '거점이 수정되었습니다 ✅' : '거점이 추가되었습니다 ✅');
+}
+
+function toggleLoc(id) {
+  const locs = getLocations();
+  const idx  = locs.findIndex(l => l.id === id);
+  if (idx < 0) return;
+  locs[idx].active = !locs[idx].active;
+  saveLocations(locs);
+  renderLocList();
+}
+
+function deleteLoc(id) {
+  if (!confirm('이 거점을 삭제하시겠습니까?')) return;
+  saveLocations(getLocations().filter(l => l.id !== id));
+  renderLocList();
+  toast('거점이 삭제되었습니다');
+}
+
+function resetLocations() {
+  if (!confirm('거점을 기본값으로 복원하시겠습니까?')) return;
+  saveLocations(DEFAULT_LOCATIONS);
+  renderLocList();
+  toast('거점 기본값이 복원되었습니다');
+}
+
+// ══════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════
+function clearCompletedOrders() {
+  if (!confirm('완료/취소 주문을 모두 삭제하시겠습니까?')) return;
+  const remaining = getOrders().filter(o => !['completed','cancelled'].includes(o.status));
+  saveOrders(remaining);
+  toast('완료/취소 주문이 정리되었습니다');
+}
+
+// ══════════════════════════════════════════
+// MODAL UTILS
+// ══════════════════════════════════════════
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+// ══════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+function initApp() {
+  document.getElementById('topbarDate').textContent =
+    new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+  renderDash();
+}
+</script>
+</body>
+</html>
