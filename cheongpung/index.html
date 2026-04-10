@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+오늘<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -38,9 +38,16 @@
     .cart-badge { background: var(--orange); color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 0.68rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
 
     /* HERO */
-    .hero { background: linear-gradient(135deg, #1e3d1c 0%, #2b5329 50%, #3d7a38 100%); color: white; padding: 140px 24px 100px; text-align: center; position: relative; overflow: hidden; }
-    .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 70% 30%, rgba(255,255,255,0.04) 0%, transparent 60%); }
-    .hero-content { position: relative; max-width: 680px; margin: 0 auto; }
+    .hero { color: white; padding: 140px 24px 100px; text-align: center; position: relative; overflow: hidden; background: #1a3a52; }
+    .hero-bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .hero-bg svg { width: 100%; height: 100%; }
+    .layer-sky   { animation: driftSky  60s linear infinite; }
+    .layer-mist  { animation: driftMist 40s linear infinite alternate; }
+    .layer-cloud { animation: driftCloud 70s linear infinite; }
+    @keyframes driftSky   { 0%,100%{transform:translateX(0)} 50%{transform:translateX(-1%)} }
+    @keyframes driftMist  { 0%{opacity:.55;transform:translateY(0)} 100%{opacity:.75;transform:translateY(-4px)} }
+    @keyframes driftCloud { 0%{transform:translateX(0)} 100%{transform:translateX(-3%)} }
+    .hero-content { position: relative; z-index: 10; max-width: 680px; margin: 0 auto; }
     .hero-badge { display: inline-block; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 20px; padding: 6px 18px; font-size: 0.8rem; letter-spacing: 0.1em; margin-bottom: 24px; }
     .hero h1 { font-size: clamp(2.4rem, 6vw, 3.8rem); font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 20px; }
     .hero h1 .brand { display: block; font-size: 0.5em; font-weight: 300; letter-spacing: 0.3em; opacity: 0.7; margin-bottom: 10px; }
@@ -73,9 +80,12 @@
     .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
     .product-card { background: var(--bg); border-radius: var(--radius); overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
     .product-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
-    .product-image { background: var(--green-light); height: 150px; display: flex; align-items: center; justify-content: center; font-size: 3.8rem; }
-    .product-image.fruit { background: #fff3e0; }
-    .product-image.set { background: #e8f0fe; }
+    .product-image { height: 200px; overflow: hidden; position: relative; }
+    .product-image svg { width: 100%; height: 100%; display: block; }
+    .product-emoji-badge { position: absolute; bottom: 10px; right: 10px; font-size: 2rem; background: rgba(255,255,255,0.88); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+    /* landscape panel */
+    .landscape-panel { width: 100%; overflow: hidden; background: #e8f2f6; }
+    .landscape-panel svg { display: block; width: 100%; }
     .product-info { padding: 16px; }
     .product-tag { font-size: 0.7rem; color: var(--green); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 4px; }
     .product-name { font-size: 0.98rem; font-weight: 700; margin-bottom: 4px; }
@@ -196,6 +206,76 @@
 
 <!-- HERO -->
 <section class="hero">
+  <div class="hero-bg">
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1a3a52"/>
+          <stop offset="35%" stop-color="#2e6080"/>
+          <stop offset="65%" stop-color="#5b92ad"/>
+          <stop offset="100%" stop-color="#8fb8cc"/>
+        </linearGradient>
+        <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2e6080" stop-opacity="0.95"/>
+          <stop offset="100%" stop-color="#1a3a52" stop-opacity="1"/>
+        </linearGradient>
+        <linearGradient id="mistGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#8fb8cc" stop-opacity="0"/>
+          <stop offset="50%" stop-color="#c8dde8" stop-opacity="0.7"/>
+          <stop offset="100%" stop-color="#d8e8ef" stop-opacity="0.5"/>
+        </linearGradient>
+        <filter id="softBlur"><feGaussianBlur stdDeviation="2"/></filter>
+        <clipPath id="heroClip"><rect width="1440" height="900"/></clipPath>
+      </defs>
+      <rect width="1440" height="900" fill="url(#skyGrad)"/>
+      <circle cx="200" cy="80" r="1.5" fill="rgba(255,255,255,0.4)"/>
+      <circle cx="380" cy="50" r="1" fill="rgba(255,255,255,0.35)"/>
+      <circle cx="560" cy="110" r="1.2" fill="rgba(255,255,255,0.3)"/>
+      <circle cx="800" cy="60" r="1" fill="rgba(255,255,255,0.4)"/>
+      <circle cx="1050" cy="90" r="1.5" fill="rgba(255,255,255,0.3)"/>
+      <circle cx="1250" cy="55" r="1" fill="rgba(255,255,255,0.35)"/>
+      <g class="layer-cloud" opacity="0.35">
+        <ellipse cx="180" cy="160" rx="120" ry="28" fill="#c8dde8"/>
+        <ellipse cx="260" cy="148" rx="70" ry="22" fill="#d8eaf2"/>
+        <ellipse cx="900" cy="140" rx="160" ry="30" fill="#c0d8e8"/>
+        <ellipse cx="1000" cy="128" rx="90" ry="20" fill="#d0e4ee"/>
+        <ellipse cx="1300" cy="170" rx="110" ry="24" fill="#bcd6e6"/>
+      </g>
+      <g filter="url(#softBlur)" class="layer-sky">
+        <path d="M0 520 Q120 420 280 440 Q400 450 520 410 Q640 370 760 390 Q880 410 1000 380 Q1100 360 1200 385 Q1320 410 1440 390 L1440 900 L0 900 Z" fill="#2a5870" opacity="0.6"/>
+      </g>
+      <path d="M0 560 Q80 490 200 510 Q320 530 440 480 Q520 455 620 465 Q720 475 820 445 Q920 420 1040 450 Q1160 480 1280 455 Q1360 440 1440 460 L1440 900 L0 900 Z" fill="#236280" opacity="0.75"/>
+      <path d="M-20 640 Q60 570 140 580 Q200 588 250 555 Q290 530 320 540 Q360 552 400 520 Q430 498 460 508 L490 490 Q510 478 530 485 Q560 494 600 470 Q640 448 680 462 Q720 476 760 452 Q800 432 840 448 Q880 462 920 438 Q960 416 1000 435 Q1040 454 1080 440 Q1120 427 1160 445 Q1200 462 1240 450 Q1300 435 1360 455 Q1410 468 1460 450 L1460 900 L-20 900 Z" fill="#1e4d64"/>
+      <path d="M-20 700 Q80 660 180 672 Q260 682 320 655 Q380 630 440 645 Q500 658 560 638 Q620 620 680 635 Q740 650 800 630 Q860 612 920 628 Q980 644 1040 625 Q1100 607 1160 620 Q1220 632 1280 618 Q1360 600 1460 615 L1460 900 L-20 900 Z" fill="#163a4e"/>
+      <path d="M0 750 Q240 730 480 745 Q720 758 960 740 Q1200 724 1440 738 L1440 900 L0 900 Z" fill="url(#waterGrad)"/>
+      <g opacity="0.35" filter="url(#softBlur)">
+        <path d="M0 760 Q200 740 400 755 Q600 768 800 750 Q1000 734 1200 748 Q1320 756 1440 748 L1440 820 Q1200 838 960 828 Q720 818 480 832 Q240 845 0 830 Z" fill="#3a7a9a"/>
+      </g>
+      <g opacity="0.4">
+        <ellipse cx="300" cy="782" rx="60" ry="3" fill="#7ab8d0"/>
+        <ellipse cx="700" cy="770" rx="80" ry="3" fill="#7ab8d0"/>
+        <ellipse cx="1100" cy="778" rx="70" ry="3" fill="#7ab8d0"/>
+      </g>
+      <g class="layer-mist">
+        <path d="M0 680 Q180 660 360 672 Q540 684 720 668 Q900 654 1080 666 Q1260 678 1440 662 L1440 730 Q1260 722 1080 734 Q900 744 720 730 Q540 718 360 730 Q180 740 0 732 Z" fill="url(#mistGrad)" opacity="0.65"/>
+      </g>
+      <g transform="translate(640, 750)" opacity="0.7">
+        <path d="M-40 10 Q0 -5 40 10 L35 22 L-35 22 Z" fill="#0d2d3e"/>
+        <rect x="-2" y="-30" width="3" height="38" fill="#0d2d3e"/>
+        <path d="M1 -28 L30 -8 L1 -5 Z" fill="#1a4558" opacity="0.8"/>
+      </g>
+      <g transform="translate(60, 730)" opacity="0.7">
+        <line x1="0" y1="80" x2="-8" y2="0" stroke="#4a3520" stroke-width="2"/>
+        <ellipse cx="-8" cy="-6" rx="4" ry="14" fill="#6b4a28"/>
+        <line x1="20" y1="90" x2="14" y2="10" stroke="#4a3520" stroke-width="1.5"/>
+        <ellipse cx="14" cy="4" rx="3" ry="11" fill="#7a5532"/>
+        <line x1="40" y1="85" x2="35" y2="5" stroke="#4a3520" stroke-width="2"/>
+        <ellipse cx="35" cy="-1" rx="4" ry="13" fill="#6b4a28"/>
+      </g>
+      <ellipse cx="720" cy="520" rx="280" ry="60" fill="#f0c070" opacity="0.12" filter="url(#softBlur)"/>
+      <ellipse cx="720" cy="540" rx="180" ry="30" fill="#f0d080" opacity="0.15" filter="url(#softBlur)"/>
+    </svg>
+  </div>
   <div class="hero-content">
     <div class="hero-badge">🌿 제천농협 직송 · 서울 4개 거점 픽업</div>
     <h1>
@@ -237,6 +317,58 @@
     </div>
   </div>
 </section>
+
+<!-- 4계절 풍경 패널 -->
+<div class="landscape-panel">
+  <svg viewBox="0 0 1440 280" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="360" height="280" fill="#dceef4"/>
+    <rect x="360" y="0" width="360" height="280" fill="#d4eadc"/>
+    <rect x="720" y="0" width="360" height="280" fill="#f0e0c8"/>
+    <rect x="1080" y="0" width="360" height="280" fill="#e4eef4"/>
+    <!-- 봄 -->
+    <path d="M0 180 Q60 150 120 158 Q180 165 240 145 Q300 128 360 140 L360 280 L0 280Z" fill="#6a9e88" opacity="0.7"/>
+    <path d="M0 200 Q90 185 180 192 Q270 198 360 188 L360 280 L0 280Z" fill="#4a7e68"/>
+    <circle cx="80" cy="148" r="18" fill="#f2b8c8" opacity="0.75"/>
+    <circle cx="100" cy="138" r="14" fill="#f8ccd8" opacity="0.7"/>
+    <circle cx="200" cy="138" r="16" fill="#f2b8c8" opacity="0.75"/>
+    <circle cx="220" cy="128" r="12" fill="#f8ccd8" opacity="0.7"/>
+    <circle cx="300" cy="132" r="15" fill="#f2b8c8" opacity="0.75"/>
+    <path d="M0 230 Q180 220 360 228 L360 280 L0 280Z" fill="#8ab4c8" opacity="0.6"/>
+    <ellipse cx="180" cy="210" rx="180" ry="14" fill="rgba(255,255,255,0.4)"/>
+    <text x="30" y="260" font-family="serif" font-size="13" fill="rgba(80,50,30,0.6)" letter-spacing="4">봄</text>
+    <!-- 여름 -->
+    <path d="M360 170 Q420 138 480 148 Q540 158 600 135 Q660 115 720 128 L720 280 L360 280Z" fill="#3a7848" opacity="0.8"/>
+    <path d="M360 195 Q440 180 520 188 Q600 196 680 182 Q700 178 720 180 L720 280 L360 280Z" fill="#2a5e38"/>
+    <path d="M360 235 Q540 225 720 230 L720 280 L360 280Z" fill="#2e6e8a" opacity="0.7"/>
+    <ellipse cx="540" cy="218" rx="180" ry="12" fill="rgba(200,230,210,0.35)"/>
+    <text x="390" y="260" font-family="serif" font-size="13" fill="rgba(80,50,30,0.6)" letter-spacing="4">여름</text>
+    <!-- 가을 -->
+    <path d="M720 175 Q780 145 840 155 Q900 165 960 142 Q1020 122 1080 138 L1080 280 L720 280Z" fill="#c86820" opacity="0.7"/>
+    <path d="M720 198 Q800 183 880 192 Q960 200 1040 185 Q1060 180 1080 182 L1080 280 L720 280Z" fill="#a84e18"/>
+    <circle cx="800" cy="155" r="20" fill="#d88030" opacity="0.75"/>
+    <circle cx="820" cy="143" r="15" fill="#e8a040" opacity="0.7"/>
+    <circle cx="940" cy="145" r="18" fill="#c06820" opacity="0.75"/>
+    <circle cx="960" cy="133" r="13" fill="#d87830" opacity="0.7"/>
+    <path d="M720 232 Q900 222 1080 228 L1080 280 L720 280Z" fill="#4a7a9a" opacity="0.65"/>
+    <ellipse cx="900" cy="215" rx="180" ry="12" fill="rgba(240,200,160,0.3)"/>
+    <text x="750" y="260" font-family="serif" font-size="13" fill="rgba(80,50,30,0.6)" letter-spacing="4">가을</text>
+    <!-- 겨울 -->
+    <path d="M1080 178 Q1140 145 1200 155 Q1260 162 1320 142 Q1380 125 1440 138 L1440 280 L1080 280Z" fill="#6890a8" opacity="0.6"/>
+    <path d="M1080 178 Q1140 145 1200 155 Q1260 162 1320 142 Q1380 125 1440 138 L1440 165 Q1380 148 1320 158 Q1260 170 1200 170 Q1140 162 1080 190Z" fill="rgba(240,248,255,0.7)"/>
+    <path d="M1080 200 Q1160 188 1240 196 Q1320 203 1400 190 Q1420 186 1440 188 L1440 280 L1080 280Z" fill="#4e6e88"/>
+    <path d="M1080 238 Q1260 226 1440 232 L1440 280 L1080 280Z" fill="#5a8aac" opacity="0.7"/>
+    <circle cx="1180" cy="155" r="4" fill="rgba(240,250,255,0.6)"/>
+    <circle cx="1280" cy="148" r="3" fill="rgba(240,250,255,0.6)"/>
+    <circle cx="1370" cy="158" r="4" fill="rgba(240,250,255,0.6)"/>
+    <ellipse cx="1260" cy="222" rx="180" ry="11" fill="rgba(220,235,245,0.4)"/>
+    <text x="1110" y="260" font-family="serif" font-size="13" fill="rgba(80,50,30,0.6)" letter-spacing="4">겨울</text>
+    <!-- 구분선 -->
+    <line x1="360" y1="0" x2="360" y2="280" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+    <line x1="720" y1="0" x2="720" y2="280" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+    <line x1="1080" y1="0" x2="1080" y2="280" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+    <text x="720" y="36" font-family="serif" font-size="15" font-weight="600" fill="rgba(40,25,10,0.5)" text-anchor="middle" letter-spacing="8">제천 사계</text>
+  </svg>
+</div>
 
 <!-- PRODUCTS -->
 <section class="products-section" id="products">
@@ -419,14 +551,81 @@ function filterProducts(cat, btn) {
   renderProducts();
 }
 
+function getCategoryIllust(category) {
+  if (category === 'vegetable') {
+    return `<svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+      <rect width="400" height="200" fill="#e8f0d8"/>
+      <path d="M0 0 L400 0 L400 100 Q200 90 0 100Z" fill="#d8eaf0"/>
+      <circle cx="340" cy="40" r="22" fill="#f0c84a" opacity="0.9"/>
+      <path d="M0 95 Q100 65 200 75 Q300 82 400 68 L400 135 L0 135Z" fill="#8aaa78" opacity="0.45"/>
+      <rect x="0" y="130" width="400" height="70" fill="#8ab870"/>
+      <g fill="#5a9840">
+        <ellipse cx="50" cy="134" rx="30" ry="22"/><ellipse cx="130" cy="129" rx="28" ry="20"/>
+        <ellipse cx="210" cy="135" rx="32" ry="23"/><ellipse cx="290" cy="127" rx="26" ry="19"/>
+        <ellipse cx="368" cy="133" rx="28" ry="21"/>
+      </g>
+      <g fill="#78b858" opacity="0.8">
+        <ellipse cx="50" cy="131" rx="22" ry="16"/><ellipse cx="130" cy="126" rx="20" ry="14"/>
+        <ellipse cx="210" cy="132" rx="24" ry="17"/><ellipse cx="290" cy="124" rx="18" ry="13"/>
+        <ellipse cx="368" cy="130" rx="20" ry="15"/>
+      </g>
+    </svg>`;
+  } else if (category === 'fruit') {
+    return `<svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+      <rect width="400" height="200" fill="#f8ece0"/>
+      <path d="M0 0 L400 0 L400 90 Q200 80 0 90Z" fill="#c8dde8" opacity="0.8"/>
+      <rect x="0" y="150" width="400" height="50" fill="#c8a878"/>
+      <g>
+        <rect x="57" y="85" width="8" height="68" fill="#7a5030"/>
+        <circle cx="61" cy="76" r="34" fill="#4a8838"/>
+        <circle cx="44" cy="72" r="22" fill="#5a9848" opacity="0.8"/>
+        <circle cx="80" cy="68" r="20" fill="#5a9848" opacity="0.8"/>
+        <circle cx="52" cy="84" r="7" fill="#e04030"/>
+        <circle cx="72" cy="78" r="6" fill="#d83828"/>
+      </g>
+      <g>
+        <rect x="197" y="88" width="8" height="65" fill="#7a5030"/>
+        <circle cx="201" cy="78" r="36" fill="#4a8838"/>
+        <circle cx="182" cy="74" r="24" fill="#5a9848" opacity="0.8"/>
+        <circle cx="222" cy="70" r="21" fill="#5a9848" opacity="0.8"/>
+        <circle cx="190" cy="84" r="7" fill="#e04030"/>
+        <circle cx="212" cy="79" r="6" fill="#d83828"/>
+        <circle cx="200" cy="94" r="7" fill="#e04030"/>
+      </g>
+      <g>
+        <rect x="333" y="90" width="8" height="63" fill="#7a5030"/>
+        <circle cx="337" cy="80" r="32" fill="#4a8838"/>
+        <circle cx="320" cy="76" r="20" fill="#5a9848" opacity="0.8"/>
+        <circle cx="356" cy="74" r="19" fill="#5a9848" opacity="0.8"/>
+        <circle cx="328" cy="86" r="6" fill="#e04030"/>
+        <circle cx="348" cy="82" r="7" fill="#d83828"/>
+      </g>
+    </svg>`;
+  } else {
+    return `<svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+      <rect width="400" height="200" fill="#e8f0fe"/>
+      <path d="M0 0 L400 0 L400 115 Q300 105 200 110 Q100 115 0 105Z" fill="#c8dde8" opacity="0.55"/>
+      <path d="M0 162 Q100 152 200 157 Q300 162 400 150 L400 200 L0 200Z" fill="#8aaa78" opacity="0.45"/>
+      <rect x="148" y="90" width="104" height="80" rx="6" fill="#c8a060"/>
+      <rect x="148" y="90" width="104" height="22" rx="6" fill="#b08840"/>
+      <rect x="186" y="74" width="28" height="38" rx="4" fill="#d4b870"/>
+      <ellipse cx="200" cy="74" rx="14" ry="10" fill="#e8cc88"/>
+      <g opacity="0.5">
+        <ellipse cx="90" cy="160" rx="28" ry="18" fill="#5a9840"/>
+        <ellipse cx="310" cy="158" rx="26" ry="16" fill="#5a9840"/>
+        <ellipse cx="200" cy="175" rx="32" ry="16" fill="#8ab870"/>
+      </g>
+    </svg>`;
+  }
+}
+
 function renderProducts() {
   const all = getProducts().filter(p => p.active);
   const list = curCategory === 'all' ? all : all.filter(p => p.category === curCategory);
   const catLabel = { vegetable:'채소', fruit:'과일', set:'세트' };
-  const imgCls   = { vegetable:'', fruit:'fruit', set:'set' };
   document.getElementById('productsGrid').innerHTML = list.map(p => `
     <div class="product-card">
-      <div class="product-image ${imgCls[p.category]}">${p.emoji}</div>
+      <div class="product-image">${getCategoryIllust(p.category)}<span class="product-emoji-badge">${p.emoji}</span></div>
       <div class="product-info">
         <div class="product-tag">${catLabel[p.category]}</div>
         <div class="product-name">${p.name}</div>
