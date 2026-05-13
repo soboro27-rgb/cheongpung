@@ -7,7 +7,7 @@ const session = require('express-session');
 const path = require('path');
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -23,6 +23,10 @@ app.use(session({
   cookie: { maxAge: 8 * 60 * 60 * 1000 }
 }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/', (req, res) => {
+  res.redirect('/login.html');
+});
 
 const auth = (req, res, next) => {
   if (!req.session.user) return res.status(401).json({ error: '로그인 필요' });
