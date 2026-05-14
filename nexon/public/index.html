@@ -305,9 +305,9 @@
     <div class="table-card">
       <table>
         <thead>
-          <tr><th>이름</th><th>아이디</th><th>권한</th><th>등록일</th></tr>
+          <tr><th>이름</th><th>아이디</th><th>권한</th><th>등록일</th><th style="width:120px"></th></tr>
         </thead>
-        <tbody id="users-tbody"><tr><td colspan="4" style="text-align:center; padding:30px; color:#475569;">로딩 중...</td></tr></tbody>
+        <tbody id="users-tbody"><tr><td colspan="5" style="text-align:center; padding:30px; color:#475569;">로딩 중...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -371,6 +371,27 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="document.getElementById('user-modal').classList.remove('open')">취소</button>
       <button class="btn btn-primary" onclick="saveUser()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 점검자 수정 모달 -->
+<div class="modal-overlay" id="edit-user-modal">
+  <div class="modal">
+    <div class="modal-title">점검자 수정</div>
+    <input type="hidden" id="edit-user-uid">
+    <div class="form-group"><label>이름</label><input type="text" id="edit-user-name"></div>
+    <div class="form-group">
+      <label>권한</label>
+      <select id="edit-user-role">
+        <option value="inspector">점검자</option>
+        <option value="admin">관리자</option>
+      </select>
+    </div>
+    <div class="form-group"><label>비밀번호 변경 (선택)</label><input type="password" id="edit-user-pw" placeholder="변경 시에만 입력"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="document.getElementById('edit-user-modal').classList.remove('open')">취소</button>
+      <button class="btn btn-primary" onclick="updateUser()">저장</button>
     </div>
   </div>
 </div>
@@ -611,6 +632,10 @@
         <td style="color:#475569">${u.username}</td>
         <td><span class="badge ${u.role === 'admin' ? 'badge-blue' : 'badge-gray'}">${u.role === 'admin' ? '관리자' : '점검자'}</span></td>
         <td style="color:#475569">${u.created_at?.slice(0,10) || '—'}</td>
+        <td style="text-align:right">
+          <button class="btn btn-outline" style="font-size:11px;padding:4px 10px;margin-right:4px" onclick="openEditUserModal(${u.id},'${u.name.replace(/'/g,"\\'")}','${u.role}')">수정</button>
+          <button class="btn btn-danger" style="font-size:11px;padding:4px 10px" onclick="deleteUser(${u.id},'${u.name.replace(/'/g,"\\'")}')">삭제</button>
+        </td>
       </tr>`).join('');
   }
 
@@ -630,6 +655,37 @@
       document.getElementById('user-modal').classList.remove('open');
       loadUsers();
     } else { const d = await res.json(); alert(d.error); }
+  }
+
+  function openEditUserModal(id, name, role) {
+    document.getElementById('edit-user-uid').value = id;
+    document.getElementById('edit-user-name').value = name;
+    document.getElementById('edit-user-role').value = role;
+    document.getElementById('edit-user-pw').value = '';
+    document.getElementById('edit-user-modal').classList.add('open');
+  }
+
+  async function updateUser() {
+    const id = document.getElementById('edit-user-uid').value;
+    const body = {
+      name: document.getElementById('edit-user-name').value,
+      role: document.getElementById('edit-user-role').value,
+      password: document.getElementById('edit-user-pw').value || undefined,
+    };
+    const res = await fetch(`/api/users/${id}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
+    if (res.ok) {
+      document.getElementById('edit-user-modal').classList.remove('open');
+      loadUsers();
+    } else { const d = await res.json(); alert(d.error); }
+  }
+
+  async function deleteUser(id, name) {
+    if (!confirm(`'${name}' 계정을 삭제하시겠습니까?`)) return;
+    const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+    if (res.ok) { loadUsers(); }
+    else { const d = await res.json(); alert(d.error); }
   }
 
   async function logout() {

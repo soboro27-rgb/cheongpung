@@ -411,6 +411,23 @@ app.post('/api/users', adminOnly, async (req, res) => {
   res.json({ success: true, id: data.id });
 });
 
+app.put('/api/users/:id', adminOnly, async (req, res) => {
+  const { name, role, password } = req.body;
+  const update = { name, role };
+  if (password) update.password_hash = bcrypt.hashSync(password, 10);
+  const { error } = await supabase.from('insp_users').update(update).eq('id', req.params.id);
+  if (error) return res.status(400).json({ error: '수정 실패' });
+  res.json({ success: true });
+});
+
+app.delete('/api/users/:id', adminOnly, async (req, res) => {
+  const myId = req.session.userId;
+  if (String(myId) === String(req.params.id)) return res.status(400).json({ error: '본인 계정은 삭제할 수 없습니다' });
+  const { error } = await supabase.from('insp_users').delete().eq('id', req.params.id);
+  if (error) return res.status(400).json({ error: '삭제 실패' });
+  res.json({ success: true });
+});
+
 // ── Migration: PC 대수 증설 ──────────────────────────
 async function migrateAddMissingPCs() {
   const { data: locations } = await supabase.from('insp_locations').select('id, building, name');
