@@ -89,7 +89,7 @@ async function seedIfEmpty() {
     if (i % 3 === 0) eqs.push({ equipment_code:`NK-CAM-${String(Math.ceil(i/3)).padStart(3,'0')}`, name:'화상 카메라', type:'CAMERA', location_id:id, model:'Logitech Brio', installed_at:'2023-03-15' });
   }
   const nkPcId = getLocId('NK', 'B1 컴퓨터교실');
-  for (let i = 1; i <= 20; i++)
+  for (let i = 1; i <= 50; i++)
     eqs.push({ equipment_code:`NK-PC-B1-${String(i).padStart(3,'0')}`, name:`노하드PC ${i}번`, type:'PC', location_id:nkPcId, model:'NComputing', installed_at:'2021-06-10' });
 
   const nkDidId = getLocId('NK', '엘리베이터 DID (B1F~10F)');
@@ -109,7 +109,7 @@ async function seedIfEmpty() {
     eqs.push({ equipment_code:`GB1-STP-${String(i).padStart(3,'0')}`, name:`셋탑박스 ${i}`, type:'SETTOP', location_id:nexdaId, model:'EZ Canvas', installed_at:'2022-08-20' });
   }
   const nekId = getLocId('GB1', '11층 넥방');
-  for (let i = 1; i <= 10; i++)
+  for (let i = 1; i <= 105; i++)
     eqs.push({ equipment_code:`GB1-PC-11-${String(i).padStart(3,'0')}`, name:`노하드PC ${i}번`, type:'PC', location_id:nekId, model:'NComputing', installed_at:'2021-06-10' });
   for (let i = 1; i <= 5; i++) {
     const id = getLocId('GB2', `회의실 ${i}호`);
@@ -411,9 +411,54 @@ app.post('/api/users', adminOnly, async (req, res) => {
   res.json({ success: true, id: data.id });
 });
 
+// ── Migration: PC 대수 증설 ──────────────────────────
+async function migrateAddMissingPCs() {
+  const { data: locations } = await supabase.from('insp_locations').select('id, building, name');
+  if (!locations?.length) return;
+
+  const getLocId = (b, n) => locations.find(l => l.building === b && l.name === n)?.id;
+
+  // NK B1 컴퓨터교실: 50대 (기존 20대 → +30대)
+  const nkPcId = getLocId('NK', 'B1 컴퓨터교실');
+  if (nkPcId) {
+    const { data: existing } = await supabase.from('insp_equipment')
+      .select('equipment_code').eq('location_id', nkPcId).like('equipment_code', 'NK-PC-B1-%');
+    const existingCodes = new Set(existing?.map(e => e.equipment_code) || []);
+    const toAdd = [];
+    for (let i = 1; i <= 50; i++) {
+      const code = `NK-PC-B1-${String(i).padStart(3,'0')}`;
+      if (!existingCodes.has(code))
+        toAdd.push({ equipment_code:code, name:`노하드PC ${i}번`, type:'PC', location_id:nkPcId, model:'NComputing', installed_at:'2021-06-10' });
+    }
+    if (toAdd.length > 0) {
+      await supabase.from('insp_equipment').insert(toAdd);
+      console.log(`NK B1 컴퓨터교실 PC ${toAdd.length}대 추가 완료 (총 50대)`);
+    }
+  }
+
+  // GB1 11층 넥방: 105대 (기존 10대 → +95대)
+  const nekId = getLocId('GB1', '11층 넥방');
+  if (nekId) {
+    const { data: existing } = await supabase.from('insp_equipment')
+      .select('equipment_code').eq('location_id', nekId).like('equipment_code', 'GB1-PC-11-%');
+    const existingCodes = new Set(existing?.map(e => e.equipment_code) || []);
+    const toAdd = [];
+    for (let i = 1; i <= 105; i++) {
+      const code = `GB1-PC-11-${String(i).padStart(3,'0')}`;
+      if (!existingCodes.has(code))
+        toAdd.push({ equipment_code:code, name:`노하드PC ${i}번`, type:'PC', location_id:nekId, model:'NComputing', installed_at:'2021-06-10' });
+    }
+    if (toAdd.length > 0) {
+      await supabase.from('insp_equipment').insert(toAdd);
+      console.log(`GB1 11층 넥방 노하드PC ${toAdd.length}대 추가 완료 (총 105대)`);
+    }
+  }
+}
+
 // ── Start ────────────────────────────────────────────
 app.listen(PORT, async () => {
   console.log(`\n넥슨코리아 공용부 점검 플랫폼`);
   console.log(`http://localhost:${PORT}\n`);
   await seedIfEmpty();
+  await migrateAddMissingPCs();
 });
