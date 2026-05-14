@@ -109,6 +109,35 @@
     .complete-banner .sub { font-size: 12px; color: #16a34a; margin-top: 2px; }
 
     .saving-indicator { font-size: 12px; color: #22c55e; display: none; }
+
+    /* 모바일 장소 드로어 */
+    .loc-toggle {
+      display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      z-index: 97; background: #22c55e; color: #000; border: none;
+      border-radius: 24px; padding: 10px 20px; font-size: 13px; font-weight: 700;
+      cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+      align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .loc-overlay {
+      display: none; position: fixed; inset: 0; top: 56px;
+      background: rgba(0,0,0,0.55); z-index: 98;
+    }
+    .loc-overlay.open { display: block; }
+
+    @media (max-width: 768px) {
+      .layout { grid-template-columns: 1fr; }
+      .location-panel {
+        position: fixed; top: 56px; left: 0; bottom: 0; width: 280px;
+        transform: translateX(-100%); transition: transform 0.25s ease;
+        z-index: 99;
+      }
+      .location-panel.open { transform: translateX(0); }
+      .loc-toggle { display: flex; }
+      .inspect-panel { padding: 16px 14px 80px; }
+      .eq-grid { grid-template-columns: 1fr !important; }
+      .checklist { grid-template-columns: 1fr; }
+      .header-logo h1 { font-size: 13px; }
+    }
   </style>
 </head>
 <body>
@@ -125,9 +154,12 @@
   </div>
 </header>
 
+<div class="loc-overlay" id="loc-overlay" onclick="closeLoc()"></div>
+<button class="loc-toggle" onclick="toggleLoc()">📍 장소 선택</button>
+
 <div class="layout">
   <!-- 장소 선택 패널 -->
-  <div class="location-panel">
+  <div class="location-panel" id="location-panel">
     <div class="panel-header">📍 점검 장소</div>
     <div id="location-list"><div style="padding:20px;color:#475569;font-size:13px;">로딩 중...</div></div>
   </div>
@@ -199,10 +231,19 @@
     document.getElementById('location-list').innerHTML = html;
   }
 
+  function toggleLoc() {
+    document.getElementById('location-panel').classList.toggle('open');
+    document.getElementById('loc-overlay').classList.toggle('open');
+  }
+  function closeLoc() {
+    document.getElementById('location-panel').classList.remove('open');
+    document.getElementById('loc-overlay').classList.remove('open');
+  }
+
   async function selectLocation(locationId, locationName) {
-    // 선택 표시
     document.querySelectorAll('.location-item').forEach(el => el.classList.remove('selected'));
     document.getElementById('loc-' + locationId)?.classList.add('selected');
+    if (window.innerWidth <= 768) closeLoc();
 
     document.getElementById('inspect-panel').innerHTML = '<div class="empty-panel"><div style="font-size:24px">⏳</div><div>장비 목록 로딩 중...</div></div>';
 

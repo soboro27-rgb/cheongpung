@@ -97,12 +97,39 @@
     .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
     .loading { text-align: center; padding: 40px; color: #475569; }
     select.filter-select { background: #1e293b; border: 1px solid #334155; color: #cbd5e1; padding: 8px 12px; border-radius: 8px; font-size: 13px; }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .hamburger { display: none; background: none; border: none; color: #94a3b8; font-size: 22px; cursor: pointer; padding: 4px 8px; line-height: 1; }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 99; }
+    .sidebar-overlay.open { display: block; }
+
+    @media (max-width: 768px) {
+      .header { padding: 0 14px; }
+      .header-logo h1 { font-size: 13px; }
+      .user-info { display: none; }
+      .hamburger { display: block; }
+      .sidebar { transform: translateX(-220px); transition: transform 0.25s ease; z-index: 100; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; padding: 16px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .two-col { grid-template-columns: 1fr; }
+      .modal { width: calc(100vw - 32px); padding: 20px; }
+      .page-title { font-size: 18px; }
+      .filter-row { flex-wrap: wrap; gap: 8px; }
+      .filter-row > * { flex: 1 1 auto; min-width: 120px; }
+      select.filter-select { font-size: 14px; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .stat-value { font-size: 22px; }
+      .header-logo h1 { display: none; }
+    }
   </style>
 </head>
 <body>
 
 <header class="header">
   <div class="header-logo">
+    <button class="hamburger" onclick="toggleSidebar()">☰</button>
     <span class="nexon-badge">NEXON</span>
     <h1>공용부 점검 플랫폼</h1>
   </div>
@@ -111,6 +138,7 @@
     <button class="btn btn-outline" style="font-size:12px" onclick="logout()">로그아웃</button>
   </div>
 </header>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
 <nav class="sidebar">
   <div class="nav-section">
@@ -205,8 +233,8 @@
     <div class="page-title">장비 마스터 관리</div>
     <div class="page-subtitle">점검 대상 장비 등록 및 관리</div>
 
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-      <div style="display:flex; gap:8px;">
+    <div class="filter-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <select class="filter-select" id="eq-location-filter" onchange="loadEquipment()">
           <option value="">전체 장소</option>
         </select>
@@ -224,7 +252,7 @@
       <button class="btn btn-primary" onclick="openEqModal()">+ 장비 추가</button>
     </div>
 
-    <div class="table-card">
+    <div class="table-card table-scroll">
       <table>
         <thead>
           <tr>
@@ -242,8 +270,8 @@
     <div class="page-title">점검 결과 리포트</div>
     <div class="page-subtitle">월간 점검 결과 확인 및 내보내기</div>
 
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-      <div style="display:flex; gap:8px;">
+    <div class="filter-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:8px;">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <select class="filter-select" id="rep-year"></select>
         <select class="filter-select" id="rep-month">
           <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option>
@@ -257,7 +285,7 @@
         <button class="btn btn-outline" onclick="loadReport()">조회</button>
       </div>
       <div style="display:flex; gap:8px;">
-        <button class="btn btn-outline" onclick="exportCsv()">📥 CSV 다운로드</button>
+        <button class="btn btn-outline" onclick="exportCsv()">📥 CSV</button>
       </div>
     </div>
 
@@ -280,7 +308,7 @@
       </div>
     </div>
 
-    <div class="table-card">
+    <div class="table-card table-scroll">
       <table>
         <thead>
           <tr>
@@ -693,6 +721,11 @@
     location.href = '/login.html';
   }
 
+  function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('open');
+  }
+
   function goPage(id, el) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -700,6 +733,10 @@
     el?.classList.add('active');
     if (id === 'equipment') loadEquipment();
     if (id === 'users') loadUsers();
+    if (window.innerWidth <= 768) {
+      document.querySelector('.sidebar').classList.remove('open');
+      document.getElementById('sidebar-overlay').classList.remove('open');
+    }
   }
 
   init();

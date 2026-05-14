@@ -19,7 +19,11 @@
       border: 1px solid #334155;
       border-radius: 16px;
       padding: 40px;
-      width: 360px;
+      width: min(360px, calc(100% - 32px));
+    }
+    @media (max-width: 400px) {
+      .login-box { padding: 28px 20px; border-radius: 12px; }
+      input, .btn-login { font-size: 16px; } /* iOS 줌 방지 */
     }
     .logo {
       text-align: center;
