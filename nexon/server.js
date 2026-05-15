@@ -40,7 +40,8 @@ const adminOnly = (req, res, next) => {
 
 // ── 초기 데이터 세팅 ────────────────────────────────
 async function seedIfEmpty() {
-  const { count } = await supabase.from('insp_users').select('*', { count: 'exact', head: true });
+  const { count, error: countErr } = await supabase.from('insp_users').select('*', { count: 'exact', head: true });
+  if (countErr) { console.error('DB 연결 오류 (테이블 미존재 가능):', countErr.message); return; }
   if (count > 0) return;
 
   console.log('초기 데이터 생성 중...');
@@ -76,7 +77,8 @@ async function seedIfEmpty() {
     { building:'GB2', name:'회의실 4호',             sort_order:4  },
     { building:'GB2', name:'회의실 5호',             sort_order:5  },
   ];
-  const { data: locRows } = await supabase.from('insp_locations').insert(locs).select();
+  const { data: locRows, error: locErr } = await supabase.from('insp_locations').insert(locs).select();
+  if (locErr || !locRows) { console.error('장소 데이터 생성 실패:', locErr?.message); return; }
 
   const getLocId = (b, n) => locRows.find(l => l.building === b && l.name === n)?.id;
 
