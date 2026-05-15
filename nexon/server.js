@@ -337,6 +337,20 @@ app.put('/api/sessions/:id/complete', auth, async (req, res) => {
   res.json({ success: true });
 });
 
+app.delete('/api/sessions', auth, adminOnly, async (req, res) => {
+  const year = parseInt(req.query.year);
+  const month = parseInt(req.query.month);
+  if (!year || !month) return res.status(400).json({ error: 'year, month 파라미터 필요' });
+
+  const { data: sessions } = await supabase.from('insp_sessions').select('id').eq('year', year).eq('month', month);
+  if (sessions?.length) {
+    const ids = sessions.map(s => s.id);
+    await supabase.from('insp_results').delete().in('session_id', ids);
+    await supabase.from('insp_sessions').delete().in('id', ids);
+  }
+  res.json({ success: true, deleted: sessions?.length || 0 });
+});
+
 // ── Report ───────────────────────────────────────────
 app.get('/api/report', auth, async (req, res) => {
   const now = new Date();
