@@ -1,7 +1,8 @@
 "use client";
 
-import { useFieldArray, type Control, Controller } from "react-hook-form";
-import { Trash2, Plus } from "lucide-react";
+import { useFieldArray, type Control, Controller, useWatch } from "react-hook-form";
+import { useEffect, useRef, useState } from "react";
+import { Trash2, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,6 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { NewQuotationFormValues } from "./new-quotation-form";
+import { parseCpuInfo } from "@/lib/matching/cpu-parser";
+import type { ModelLookupResponse } from "@/app/api/model-lookup/route";
 
 const CATEGORY_LABELS = {
   LAPTOP: "노트북",
@@ -32,11 +35,118 @@ const GRADE_LABELS = {
   UNKNOWN: "미상",
 } as const;
 
+// CPU 검색이 의미 있는 카테고리
+const CPU_SEARCH_CATEGORIES = new Set(["LAPTOP", "DESKTOP", "SERVER"]);
+
 interface AssetTableProps {
   control: Control<NewQuotationFormValues>;
+  setValue: (name: `assets.${number}.cpuClock` | `assets.${number}.ram`, value: string | null) => void;
 }
 
-export function AssetTable({ control }: AssetTableProps) {
+/** 모델명 입력 셀 — 800ms 디바운스 후 /api/model-lookup 호출, cpuClock/ram 자동 채움 */
+function ModelNameCell({
+  control,
+  index,
+  setValue,
+}: {
+  control: Control<NewQuotationFormValues>;
+  index: number;
+  setValue: AssetTableProps["setValue"];
+}) {
+  const category = useWatch({ control, name: `assets.${index}.category` });
+  const [searching, setSearching] = useState(false);
+  const [autoDetected, setAutoDetected] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    // react-hook-form 기본 onChange 실행
+    control.register(`assets.${index}.rawModelName`).onChange(e);
+
+    if (!CPU_SEARCH_CATEGORIES.has(category)) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setAutoDetected(false);
+
+    if (value.trim().length < 5) return;
+
+    timerRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(`/api/model-lookup?q=${encodeURIComponent(value.trim())}`);
+        if (!res.ok) return;
+        const data = (await res.json()) as ModelLookupResponse;
+        if (data.cpuClock) {
+          setValue(`assets.${index}.cpuClock`, data.cpuClock);
+          setAutoDetected(true);
+        }
+        if (data.ram) {
+          setValue(`assets.${index}.ram`, data.ram);
+        }
+      } catch {
+        // 검색 실패는 무시 — 사용자가 수동 입력 가능
+      } finally {
+        setSearching(false);
+      }
+    }, 800);
+  }
+
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+
+  return (
+    <div className="space-y-0.5">
+      <div className="relative">
+        <Input
+          className="h-8 text-sm pr-6"
+          placeholder="모델명 입력"
+          {...control.register(`assets.${index}.rawModelName`)}
+          onChange={handleChange}
+        />
+        {searching && (
+          <Loader2 className="absolute right-1.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-muted-foreground" />
+        )}
+      </div>
+      {autoDetected && (
+        <span className="inline-block rounded px-1 py-0.5 text-[10px] font-medium bg-green-100 text-green-700">
+          스펙 자동감지
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** CPU 입력 + 세대 뱃지 셀 */
+function CpuCell({
+  control,
+  index,
+}: {
+  control: Control<NewQuotationFormValues>;
+  index: number;
+}) {
+  const cpuClock = useWatch({ control, name: `assets.${index}.cpuClock` });
+  const cpuInfo = cpuClock ? parseCpuInfo(cpuClock) : null;
+
+  return (
+    <div className="space-y-0.5">
+      <Input
+        className="h-8 text-xs font-mono"
+        placeholder="i5-1235U"
+        {...control.register(`assets.${index}.cpuClock`)}
+      />
+      {cpuInfo ? (
+        <span className="inline-block rounded px-1 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-700">
+          {cpuInfo.tier} {cpuInfo.generationStr}
+        </span>
+      ) : cpuClock?.trim() ? (
+        <span className="inline-block rounded px-1 py-0.5 text-[10px] text-muted-foreground">
+          세대 미인식
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+export function AssetTable({ control, setValue }: AssetTableProps) {
   const { fields, append, remove } = useFieldArray({
     control,
     name: "assets",
@@ -69,7 +179,10 @@ export function AssetTable({ control }: AssetTableProps) {
           <thead className="border-b bg-muted/50">
             <tr>
               <th className="px-3 py-2 text-left font-medium text-muted-foreground w-[90px]">분류</th>
-              <th className="px-3 py-2 text-left font-medium text-muted-foreground">모델/스펙</th>
+              <th className="px-3 py-2 text-left font-medium text-muted-foreground">
+                모델/스펙
+                <span className="ml-1 text-xs font-normal text-green-600">자동검색</span>
+              </th>
               <th className="px-3 py-2 text-left font-medium text-muted-foreground w-[120px]">
                 CPU 클럭
                 <span className="ml-1 text-xs font-normal text-blue-500">우선매칭</span>
@@ -106,18 +219,10 @@ export function AssetTable({ control }: AssetTableProps) {
                   />
                 </td>
                 <td className="px-2 py-1.5">
-                  <Input
-                    className="h-8 text-sm"
-                    placeholder="모델명 입력"
-                    {...control.register(`assets.${index}.rawModelName`)}
-                  />
+                  <ModelNameCell control={control} index={index} setValue={setValue} />
                 </td>
                 <td className="px-2 py-1.5">
-                  <Input
-                    className="h-8 text-xs font-mono"
-                    placeholder="i5-1235U"
-                    {...control.register(`assets.${index}.cpuClock`)}
-                  />
+                  <CpuCell control={control} index={index} />
                 </td>
                 <td className="px-2 py-1.5">
                   <Input

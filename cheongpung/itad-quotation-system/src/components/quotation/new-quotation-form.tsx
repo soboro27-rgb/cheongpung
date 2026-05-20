@@ -72,7 +72,7 @@ export function NewQuotationForm() {
     },
   });
 
-  const { control, handleSubmit, watch, formState: { errors } } = form;
+  const { control, handleSubmit, watch, setValue, formState: { errors } } = form;
   const marginRate = watch("targetMarginRate");
   const riskRate = watch("riskBufferRate");
 
@@ -247,7 +247,7 @@ export function NewQuotationForm() {
           <CardTitle className="text-base">매각 자산 목록</CardTitle>
         </CardHeader>
         <CardContent>
-          <AssetTable control={control} />
+          <AssetTable control={control} setValue={setValue} />
           {errors.assets && (
             <p className="text-xs text-destructive mt-2">
               {typeof errors.assets.message === "string" ? errors.assets.message : "자산 정보를 확인하세요"}

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { AssetCategory, MatchStatus } from "@/generated/prisma";
+import { parseCpuInfo, normalizeRam } from "./cpu-parser";
 
 export interface MatchResult {
   assetMasterId: bigint | null;
@@ -9,7 +10,8 @@ export interface MatchResult {
 }
 
 /**
- * 1순위: cpuClock + ram 두 값이 모두 있으면 specSummary로 매칭
+ * 0순위: CPU 세대 파싱 → (N세대) 패턴 매칭 (i5-1235U → 12세대)
+ * 1순위: cpuClock + ram 두 값이 모두 있으면 specSummary 직접 포함 매칭
  * 2순위: modelCode 정확 매칭
  * 3순위: aliases 포함 매칭
  * 4순위: modelDisplayName 부분 매칭
@@ -21,6 +23,51 @@ export async function matchAssetLine(
   cpuClock?: string | null,
   ram?: string | null
 ): Promise<MatchResult> {
+  // ── 0순위: CPU 세대 파싱 → specSummary (N세대) 패턴 매칭 ──
+  if (cpuClock?.trim()) {
+    const cpuInfo = parseCpuInfo(cpuClock);
+    if (cpuInfo) {
+      const genPattern = `(${cpuInfo.generationStr})`;
+
+      const byGen = await prisma.assetMaster.findMany({
+        where: {
+          category,
+          specSummary: { contains: genPattern, mode: "insensitive" },
+        },
+      });
+
+      // tier 필터 (i5, i7 등)
+      const tierFiltered = byGen.filter((a) =>
+        a.specSummary?.toLowerCase().includes(cpuInfo.tier.toLowerCase())
+      );
+
+      if (tierFiltered.length > 0) {
+        // RAM도 있으면 추가 필터
+        if (ram?.trim()) {
+          const ramNorm = normalizeRam(ram);
+          const ramFiltered = tierFiltered.filter((a) =>
+            a.specSummary?.toLowerCase().includes(ramNorm.toLowerCase())
+          );
+          if (ramFiltered.length >= 1) {
+            return {
+              assetMasterId: ramFiltered[0].id,
+              matchStatus: "EXACT",
+              matchScore: 0.95,
+              matchNote: `CPU ${cpuInfo.tier} ${cpuInfo.generationStr} + RAM(${ramNorm}) 세대 매칭`,
+            };
+          }
+        }
+
+        return {
+          assetMasterId: tierFiltered[0].id,
+          matchStatus: tierFiltered.length === 1 ? "EXACT" : "SIMILAR",
+          matchScore: tierFiltered.length === 1 ? 0.9 : 0.8,
+          matchNote: `CPU ${cpuInfo.tier} ${cpuInfo.generationStr} 세대 매칭 (${tierFiltered.length}건)`,
+        };
+      }
+    }
+  }
+
   // ── 1순위: CPU_CLOCK + RAM 동시 매칭 ───────────────────
   if (cpuClock?.trim() && ram?.trim()) {
     const cpuNorm = cpuClock.trim();
