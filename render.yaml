@@ -1,22 +1,19 @@
 services:
   - type: web
     name: it-asset-platform
-    runtime: node
-    repo: https://github.com/soboro27-rgb/cheongpung
-    branch: main
-    rootDir: cheongpung/itad-quotation-system
-    buildCommand: npm install -g pnpm@9 && pnpm install --no-frozen-lockfile && pnpm exec prisma generate && pnpm build
-    startCommand: pnpm start
-    plan: starter
-    region: oregon
+    env: python
+    rootDir: mgit-platform
+    buildCommand: pip install -r requirements.txt
+    startCommand: python init_data.py && uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
-        sync: false
-      - key: NAVER_CLIENT_ID
-        sync: false
-      - key: NAVER_CLIENT_SECRET
-        sync: false
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 10000
+        fromDatabase:
+          name: mgit-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+
+databases:
+  - name: mgit-db
+    databaseName: mgit
+    user: mgit_user
