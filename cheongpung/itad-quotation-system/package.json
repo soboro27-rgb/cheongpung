@@ -2,12 +2,15 @@
   "name": "itad-quotation-system",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
-    "postinstall": "prisma generate",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "db:generate": "prisma generate",
     "db:seed": "tsx prisma/seed.ts",
     "db:import-wm": "tsx prisma/import-wm.ts"
   },
