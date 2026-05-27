@@ -123,6 +123,35 @@
       .stat-value { font-size: 22px; }
       .header-logo h1 { display: none; }
     }
+    @media print {
+      .header, .sidebar, .sidebar-overlay, nav { display: none !important; }
+      .main { margin-left: 0 !important; margin-top: 0 !important; padding: 16px !important; }
+      body { background: #fff !important; color: #000 !important; }
+      .page { display: none !important; }
+      #page-report { display: block !important; }
+      .page-title { color: #000 !important; font-size: 18px !important; }
+      .page-subtitle { color: #555 !important; }
+      .filter-row, .btn { display: none !important; }
+      .stats-grid { border-bottom: 1px solid #ddd; padding-bottom: 12px; margin-bottom: 12px; }
+      .stat-card { background: #f8f8f8 !important; border: 1px solid #ddd !important; }
+      .stat-label { color: #555 !important; }
+      .stat-value { color: #000 !important; font-size: 18px !important; }
+      .stat-value.green, .stat-value.red, .stat-value.amber { color: #000 !important; }
+      .table-card { border: 1px solid #ddd !important; background: #fff !important; }
+      .table-header { background: #f0f0f0 !important; border-bottom: 1px solid #ddd !important; }
+      .table-title { color: #000 !important; }
+      table { border-collapse: collapse; width: 100%; font-size: 11px; }
+      thead th { background: #eee !important; color: #333 !important; border: 1px solid #ccc; padding: 6px 8px !important; }
+      tbody td { color: #000 !important; border: 1px solid #ddd; padding: 5px 8px !important; }
+      tbody tr:hover { background: none !important; }
+      .badge { border: 1px solid #aaa !important; color: #000 !important; background: #f0f0f0 !important; }
+      #rep-location-panel { display: block !important; }
+      #rep-location-body span { color: #000 !important; background: #eee !important; border: 1px solid #aaa !important; }
+      .print-header { display: block !important; }
+    }
+    .print-header { display: none; text-align: center; margin-bottom: 16px; }
+    .print-header h2 { font-size: 18px; color: #000; }
+    .print-header p { font-size: 12px; color: #555; margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -267,6 +296,10 @@
 
   <!-- ③ 결과 리포트 -->
   <div class="page" id="page-report">
+    <div class="print-header">
+      <h2>넥슨코리아 공용부 점검 결과 보고서</h2>
+      <p id="print-header-subtitle"></p>
+    </div>
     <div class="page-title">점검 결과 리포트</div>
     <div class="page-subtitle">월간 점검 결과 확인 및 내보내기</div>
 
@@ -285,12 +318,13 @@
         <button class="btn btn-outline" onclick="loadReport()">조회</button>
       </div>
       <div style="display:flex; gap:8px;">
+        <button class="btn btn-outline" onclick="printReport()">🖨 인쇄</button>
         <button class="btn btn-outline" onclick="exportCsv()">📥 CSV</button>
         <button class="btn btn-danger" onclick="resetSessions()">🗑 점검 초기화</button>
       </div>
     </div>
 
-    <div class="stats-grid" style="margin-bottom:20px;">
+    <div class="stats-grid" style="margin-bottom:16px;">
       <div class="stat-card">
         <div class="stat-label">전체 점검 완료율</div>
         <div class="stat-value green" id="rep-rate">—</div>
@@ -307,6 +341,15 @@
         <div class="stat-label">점검 완료 장소</div>
         <div class="stat-value" id="rep-completed">—</div>
       </div>
+    </div>
+
+    <!-- 점검 완료 장소 목록 -->
+    <div class="table-card" id="rep-location-panel" style="margin-bottom:20px; display:none;">
+      <div class="table-header" style="cursor:pointer;" onclick="toggleLocationPanel()">
+        <div class="table-title">✅ 점검 완료 장소 목록</div>
+        <span id="rep-location-toggle" style="font-size:12px; color:#64748b;">접기 ▲</span>
+      </div>
+      <div id="rep-location-body" style="padding:16px 20px; display:flex; flex-wrap:wrap; gap:8px;"></div>
     </div>
 
     <div class="table-card table-scroll">
@@ -621,12 +664,33 @@
       fetch(`/api/dashboard?year=${year}&month=${month}`)
     ]);
     const { results } = await repRes.json();
-    const { stats } = await dashRes.json();
+    const data = await dashRes.json();
+    const { stats } = data;
 
     document.getElementById('rep-rate').textContent = `${stats.completionRate}%`;
     document.getElementById('rep-issues').textContent = `${stats.issueCount}건`;
     document.getElementById('rep-as').textContent = `${stats.asCount}건`;
     document.getElementById('rep-completed').textContent = `${stats.completedSessions}개소`;
+
+    // 점검 완료 장소 목록 패널
+    const completedLocs = (data.locationStatus || []).filter(l => l.session_status === 'completed');
+    const locPanel = document.getElementById('rep-location-panel');
+    const locBody = document.getElementById('rep-location-body');
+    if (completedLocs.length) {
+      const buildings = [...new Set(completedLocs.map(l => l.building))];
+      locBody.innerHTML = buildings.map(b => {
+        const items = completedLocs.filter(l => l.building === b);
+        return `<div style="margin-right:20px; margin-bottom:4px;">
+          <div style="font-size:10px; font-weight:700; color:#475569; letter-spacing:1px; margin-bottom:6px;">${b}</div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px;">
+            ${items.map(l => `<span class="badge badge-green">${l.name}</span>`).join('')}
+          </div>
+        </div>`;
+      }).join('');
+      locPanel.style.display = '';
+    } else {
+      locPanel.style.display = 'none';
+    }
 
     const tbody = document.getElementById('report-tbody');
     if (!results.length) {
@@ -644,6 +708,21 @@
         <td style="font-size:12px;color:${r.no_issues ? '#475569' : '#f87171'}">${r.issue_description || '—'}</td>
         <td><span class="badge ${STATUS_BADGE[r.action_status] || 'badge-gray'}">${STATUS_LABEL[r.action_status] || '—'}</span></td>
       </tr>`).join('');
+  }
+
+  function toggleLocationPanel() {
+    const body = document.getElementById('rep-location-body');
+    const toggle = document.getElementById('rep-location-toggle');
+    const collapsed = body.style.display === 'none';
+    body.style.display = collapsed ? 'flex' : 'none';
+    toggle.textContent = collapsed ? '접기 ▲' : '펼치기 ▼';
+  }
+
+  function printReport() {
+    const year = document.getElementById('rep-year').value;
+    const month = document.getElementById('rep-month').value;
+    document.getElementById('print-header-subtitle').textContent = `${year}년 ${month}월 | 출력일: ${new Date().toLocaleDateString('ko-KR')}`;
+    window.print();
   }
 
   async function exportCsv() {

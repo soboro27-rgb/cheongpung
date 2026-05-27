@@ -382,14 +382,37 @@ app.get('/api/report/csv', auth, async (req, res) => {
   const year = parseInt(req.query.year) || now.getFullYear();
   const month = parseInt(req.query.month) || now.getMonth() + 1;
 
-  const { data } = await supabase.from('insp_results')
-    .select('*, insp_sessions!inner(year, month, completed_at, insp_users(name)), insp_equipment(equipment_code, name, type, insp_locations(building, name))')
-    .eq('insp_sessions.year', year).eq('insp_sessions.month', month);
+  const [
+    { data },
+    { count: totalLocations },
+    { data: sessions },
+  ] = await Promise.all([
+    supabase.from('insp_results')
+      .select('*, insp_sessions!inner(year, month, completed_at, insp_users(name)), insp_equipment(equipment_code, name, type, insp_locations(building, name, sort_order))')
+      .eq('insp_sessions.year', year).eq('insp_sessions.month', month),
+    supabase.from('insp_locations').select('*', { count: 'exact', head: true }),
+    supabase.from('insp_sessions')
+      .select('*, insp_locations(building, name, sort_order)')
+      .eq('year', year).eq('month', month),
+  ]);
 
   if (!data?.length) return res.status(404).json({ error: '데이터 없음' });
 
+  // 서머리 계산
+  const completedSessions = sessions?.filter(s => s.status === 'completed') || [];
+  const completionRate = totalLocations > 0 ? Math.round((completedSessions.length / totalLocations) * 100) : 0;
+  const issueCount = data.filter(r => !r.no_issues).length;
+  const asCount = data.filter(r => r.action_status === 'as_request').length;
+  const completedLocationNames = completedSessions
+    .sort((a, b) => {
+      const ba = a.insp_locations?.building || '', bb = b.insp_locations?.building || '';
+      if (ba !== bb) return ba.localeCompare(bb);
+      return (a.insp_locations?.sort_order || 0) - (b.insp_locations?.sort_order || 0);
+    })
+    .map(s => `${s.insp_locations?.building} ${s.insp_locations?.name}`);
+
   const ACTION = { normal:'해당없음', issue:'확인중', as_request:'AS접수', completed:'조치완료' };
-  const rows = data.map(r => ({
+  const detailRows = data.map(r => ({
     '장비ID': r.insp_equipment?.equipment_code || '',
     '장비명': r.insp_equipment?.name || '',
     '구분': r.insp_equipment?.type || '',
@@ -401,16 +424,27 @@ app.get('/api/report/csv', auth, async (req, res) => {
     '조치상태': ACTION[r.action_status] || '-',
   }));
 
-  const headers = Object.keys(rows[0]);
-  const csv = [
+  const detailHeaders = Object.keys(detailRows[0]);
+  const q = (v) => `"${(v||'').toString().replace(/"/g,'""')}"`;
+
+  const summaryLines = [
     `넥슨코리아 공용부 점검 결과 - ${year}년 ${month}월`,
-    headers.join(','),
-    ...rows.map(r => headers.map(h => `"${(r[h]||'').replace(/"/g,'""')}"`).join(','))
-  ].join('\n');
+    '',
+    '[요약]',
+    `전체 점검 완료율,${completionRate}%`,
+    `이상 발생 건수,${issueCount}건`,
+    `AS 접수,${asCount}건`,
+    `점검 완료 장소,${completedSessions.length}개소 / 전체 ${totalLocations}개소`,
+    `점검 완료 장소 목록,${q(completedLocationNames.join(' · '))}`,
+    '',
+    '[세부 내역]',
+    detailHeaders.join(','),
+    ...detailRows.map(r => detailHeaders.map(h => q(r[h])).join(',')),
+  ];
 
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="nexon_inspection_${year}${String(month).padStart(2,'0')}.csv"`);
-  res.send('﻿' + csv);
+  res.send('﻿' + summaryLines.join('\n'));
 });
 
 // ── Users ────────────────────────────────────────────
@@ -488,10 +522,75 @@ async function migrateAddMissingPCs() {
   }
 }
 
+// ── Migration: DID SW 장소 및 장비 추가 ─────────────
+async function migrateAddDidSwLocations() {
+  const { data: check } = await supabase.from('insp_locations')
+    .select('id').eq('building', 'NK').eq('name', 'A존 B1층 DID').limit(1);
+  if (check?.length) return;
+
+  console.log('DID SW 장소 데이터 추가 중...');
+
+  const locDefs = [
+    { building: 'NK', name: 'A존 B1층 DID',  sort_order: 20 },
+    { building: 'NK', name: 'A존 1층 DID',   sort_order: 21 },
+    { building: 'NK', name: 'A존 2층 DID',   sort_order: 22 },
+    { building: 'NK', name: 'A존 3층 DID',   sort_order: 23 },
+    { building: 'NK', name: 'A존 4층 DID',   sort_order: 24 },
+    { building: 'NK', name: 'A존 5층 DID',   sort_order: 25 },
+    { building: 'NK', name: 'A존 6층 DID',   sort_order: 26 },
+    { building: 'NK', name: 'A존 7층 DID',   sort_order: 27 },
+    { building: 'NK', name: 'A존 8층 DID',   sort_order: 28 },
+    { building: 'NK', name: 'A존 9층 DID',   sort_order: 29 },
+    { building: 'NK', name: 'A존 10층 DID',  sort_order: 30 },
+    { building: 'NK', name: 'G/B구역 DID',   sort_order: 31 },
+  ];
+
+  const { data: locRows, error } = await supabase.from('insp_locations').insert(locDefs).select();
+  if (error || !locRows) { console.error('DID SW 장소 추가 실패:', error?.message); return; }
+
+  const getLocId = (n) => locRows.find(l => l.name === n)?.id;
+  const eqs = [];
+
+  // A존 B1층: G/G, A, M
+  const b1Id = getLocId('A존 B1층 DID');
+  [['GG','G/G'], ['A','A'], ['M','M']].forEach(([code, label]) => {
+    eqs.push({ equipment_code: `NK-DID-AB1-${code}`, name: `DID A존B1-${label}`, type: 'DID', location_id: b1Id, model: 'LG 55UH5F', installed_at: '2022-11-01' });
+  });
+
+  // A존 1층: G, A, M, E
+  const f1Id = getLocId('A존 1층 DID');
+  [['G','G'], ['A','A'], ['M','M'], ['E','E']].forEach(([code, label]) => {
+    eqs.push({ equipment_code: `NK-DID-A1F-${code}`, name: `DID A존1F-${label}`, type: 'DID', location_id: f1Id, model: 'LG 55UH5F', installed_at: '2022-11-01' });
+  });
+
+  // A존 2층~10층: G, A, M, E
+  for (let fl = 2; fl <= 10; fl++) {
+    const locId = getLocId(`A존 ${fl}층 DID`);
+    [['G','G'], ['A','A'], ['M','M'], ['E','E']].forEach(([code, label]) => {
+      eqs.push({ equipment_code: `NK-DID-A${fl}F-${code}`, name: `DID A존${fl}F-${label}`, type: 'DID', location_id: locId, model: 'LG 55UH5F', installed_at: '2022-11-01' });
+    });
+  }
+
+  // G/B구역
+  const gbId = getLocId('G/B구역 DID');
+  [
+    { equipment_code: 'NK-DID-GB-LEDPC',  name: 'LED PC',       model: 'DID Server PC'  },
+    { equipment_code: 'NK-DID-GB-LEDSTP', name: 'LED 셋탑박스', model: 'R4X PRO2'       },
+    { equipment_code: 'NK-DID-GB-MONPC',  name: '모니터링 PC',  model: 'DID Monitor PC' },
+    { equipment_code: 'NK-DID-GB-STP1',   name: '셋탑박스-1',   model: 'R4X PRO2'       },
+  ].forEach(item => {
+    eqs.push({ ...item, type: 'DID', location_id: gbId, installed_at: '2022-11-01' });
+  });
+
+  await supabase.from('insp_equipment').insert(eqs);
+  console.log('DID SW 장소 및 장비 추가 완료');
+}
+
 // ── Start ────────────────────────────────────────────
 app.listen(PORT, async () => {
   console.log(`\n넥슨코리아 공용부 점검 플랫폼`);
   console.log(`http://localhost:${PORT}\n`);
   await seedIfEmpty();
   await migrateAddMissingPCs();
+  await migrateAddDidSwLocations();
 });
