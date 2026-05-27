@@ -522,6 +522,30 @@ async function migrateAddMissingPCs() {
   }
 }
 
+// ── Migration: 엘리베이터 DID 장소 및 장비 삭제 ──────
+async function migrateDeleteElevatorDid() {
+  const { data: loc } = await supabase.from('insp_locations')
+    .select('id').eq('building', 'NK').eq('name', '엘리베이터 DID (B1F~10F)').limit(1);
+  if (!loc?.length) return;
+
+  console.log('엘리베이터 DID (B1F~10F) 삭제 중...');
+  const locId = loc[0].id;
+
+  const { data: eqs } = await supabase.from('insp_equipment').select('id').eq('location_id', locId);
+  const eqIds = eqs?.map(e => e.id) || [];
+
+  const { data: sessions } = await supabase.from('insp_sessions').select('id').eq('location_id', locId);
+  const sessIds = sessions?.map(s => s.id) || [];
+
+  if (sessIds.length) await supabase.from('insp_results').delete().in('session_id', sessIds);
+  if (eqIds.length)   await supabase.from('insp_results').delete().in('equipment_id', eqIds);
+  if (sessIds.length) await supabase.from('insp_sessions').delete().in('id', sessIds);
+  if (eqIds.length)   await supabase.from('insp_equipment').delete().in('id', eqIds);
+  await supabase.from('insp_locations').delete().eq('id', locId);
+
+  console.log('엘리베이터 DID (B1F~10F) 장소 및 장비 삭제 완료');
+}
+
 // ── Migration: DID SW 장소 및 장비 추가 ─────────────
 async function migrateAddDidSwLocations() {
   const { data: check } = await supabase.from('insp_locations')
@@ -592,5 +616,6 @@ app.listen(PORT, async () => {
   console.log(`http://localhost:${PORT}\n`);
   await seedIfEmpty();
   await migrateAddMissingPCs();
+  await migrateDeleteElevatorDid();
   await migrateAddDidSwLocations();
 });
