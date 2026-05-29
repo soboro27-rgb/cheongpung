@@ -282,9 +282,10 @@ app.post('/api/sessions', auth, async (req, res) => {
   const month = now.getMonth() + 1;
   const inspector_id = req.session.user.id;
 
+  // 장소+월 기준으로 기존 세션 조회 (inspector 무관) — 중복 세션 방지
   let { data: existing } = await supabase.from('insp_sessions')
     .select('*').eq('location_id', location_id).eq('year', year).eq('month', month)
-    .eq('inspector_id', inspector_id).limit(1);
+    .order('id', { ascending: false }).limit(1);
   let sess = existing?.[0];
 
   if (!sess) {

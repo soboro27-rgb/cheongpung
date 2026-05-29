@@ -838,6 +838,7 @@
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('page-' + id).classList.add('active');
     el?.classList.add('active');
+    if (id === 'dashboard') loadDashboard();
     if (id === 'equipment') loadEquipment();
     if (id === 'users') loadUsers();
     if (window.innerWidth <= 768) {
