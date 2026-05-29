@@ -651,7 +651,32 @@ app.listen(PORT, async () => {
   await migrateNkRoom2Equipment();
   await migrateRenameNkRoom2();
   await migrateNkRoom6And8();
+  await migrateCreateNkB1Class();
 });
+
+// ── Migration: NK B1교실 장소 및 장비 생성 ────────────────
+async function migrateCreateNkB1Class() {
+  const { data: existing } = await supabase.from('insp_locations')
+    .select('id').eq('building', 'NK').eq('name', 'B1교실').limit(1);
+  if (existing?.length) return;
+
+  console.log('NK B1교실 생성 중...');
+
+  const { data: loc, error: locErr } = await supabase.from('insp_locations')
+    .insert({ building: 'NK', name: 'B1교실', sort_order: 13 }).select().single();
+  if (locErr || !loc) { console.error('B1교실 장소 생성 오류:', locErr?.message); return; }
+
+  const eqs = [
+    { equipment_code: 'NK-B1CL-PROJ1', name: '빔프로젝터 1번', type: 'PROJECTOR', location_id: loc.id, model: 'Epson EB-2265U', installed_at: '2023-03-15' },
+    { equipment_code: 'NK-B1CL-PROJ2', name: '빔프로젝터 2번', type: 'PROJECTOR', location_id: loc.id, model: 'Epson EB-2265U', installed_at: '2023-03-15' },
+    { equipment_code: 'NK-B1CL-PROJ3', name: '빔프로젝터 3번', type: 'PROJECTOR', location_id: loc.id, model: 'Epson EB-2265U', installed_at: '2023-03-15' },
+    { equipment_code: 'NK-B1CL-MIC',   name: '마이크',         type: 'MIC',       location_id: loc.id, model: 'Shure MX393',   installed_at: '2023-03-15' },
+    { equipment_code: 'NK-B1CL-SPK',   name: '스피커',         type: 'SPEAKER',   location_id: loc.id, model: 'Bose DS16F',    installed_at: '2023-03-15' },
+  ];
+  const { error: eqErr } = await supabase.from('insp_equipment').insert(eqs);
+  if (eqErr) { console.error('B1교실 장비 생성 오류:', eqErr.message); return; }
+  console.log('NK B1교실 생성 완료 (장비 5개)');
+}
 
 // ── Migration: NK 회의실 6호→G1 6F, 8호→G 18F + 장비 재구성 ──
 async function migrateNkRoom6And8() {
