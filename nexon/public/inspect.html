@@ -452,10 +452,17 @@
     }
 
     const res = await fetch(`/api/sessions/${sessionId}/complete`, { method: 'PUT' });
-    if (res.ok) {
-      ind.style.display = 'none';
-      loadLocations();
-      alert('점검이 완료되었습니다.');
+    if (!res.ok) {
+      ind.style.color = '#ef4444';
+      ind.textContent = '⚠ 완료 처리 실패 — 다시 시도하세요';
+      return;
+    }
+    ind.style.display = 'none';
+    loadLocations();
+    // 완료 후 현재 장소를 다시 로드하여 완료 상태로 갱신
+    if (currentSession) {
+      await selectLocation(currentSession.location_id,
+        document.querySelector('.inspect-title')?.textContent || '');
     }
   }
 

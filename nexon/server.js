@@ -322,14 +322,15 @@ app.post('/api/sessions/:sessionId/results', auth, async (req, res) => {
           no_issues, issue_description, action_taken, action_status } = req.body;
   const session_id = parseInt(req.params.sessionId);
 
-  await supabase.from('insp_results').upsert({
+  const { error } = await supabase.from('insp_results').upsert({
     session_id, equipment_id,
     power_ok: !!power_ok, screen_ok: !!screen_ok, network_ok: !!network_ok,
     cable_ok: !!cable_ok, content_ok: !!content_ok, no_issues: !!no_issues,
-    issue_description: issue_description || null,
+    issue_description: no_issues ? null : (issue_description || null),
     action_taken: action_taken || null,
-    action_status: action_status || 'normal',
+    action_status: no_issues ? 'normal' : (action_status || 'normal'),
   }, { onConflict: 'session_id,equipment_id', ignoreDuplicates: false });
+  if (error) { console.error('results upsert 오류:', error.message); return res.status(500).json({ error: error.message }); }
   res.json({ success: true });
 });
 
