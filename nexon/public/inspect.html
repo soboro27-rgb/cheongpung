@@ -382,15 +382,26 @@
     };
 
     const ind = document.getElementById('saving-indicator');
+    ind.style.color = '#94a3b8';
+    ind.textContent = '저장 중...';
     ind.style.display = 'inline';
 
-    await fetch(`/api/sessions/${sessionId}/results`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-
-    setTimeout(() => { ind.style.display = 'none'; }, 1000);
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}/results`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      ind.style.color = '#22c55e';
+      ind.textContent = '✓ 저장됨';
+    } catch (e) {
+      ind.style.color = '#ef4444';
+      ind.textContent = '⚠ 저장 실패 — 다시 시도하세요';
+      console.error('saveResult 오류:', e);
+      return;
+    }
+    setTimeout(() => { ind.style.display = 'none'; }, 2000);
   }
 
   async function reopenSession(sessionId) {
@@ -402,17 +413,41 @@
   }
 
   async function completeSession(sessionId) {
-    // 미저장 결과 일괄 저장
+    const ind = document.getElementById('saving-indicator');
+    ind.style.color = '#94a3b8';
+    ind.textContent = '전체 저장 중...';
+    ind.style.display = 'inline';
+
     const cards = document.querySelectorAll('.eq-card');
     for (const card of cards) {
       const checksEl = card.querySelector('[id^="checks-"]');
       if (!checksEl) continue;
-      const eqId = checksEl.id.replace('checks-', '');
-      await saveResult(sessionId, parseInt(eqId));
+      const eqId = parseInt(checksEl.id.replace('checks-', ''));
+      const checks = card.querySelectorAll('input[type=checkbox]');
+      const values = Array.from(checks).map(c => c.checked);
+      const body = {
+        equipment_id: eqId,
+        power_ok: values[0], screen_ok: values[1], network_ok: values[2],
+        cable_ok: values[3], content_ok: values[4], no_issues: values[5],
+        issue_description: document.getElementById('desc-' + eqId)?.value || null,
+        action_taken: null,
+        action_status: document.getElementById('action-' + eqId)?.value || 'normal',
+      };
+      try {
+        const r = await fetch(`/api/sessions/${sessionId}/results`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      } catch (e) {
+        ind.style.color = '#ef4444';
+        ind.textContent = `⚠ 저장 실패 (장비 ID: ${eqId}) — 다시 시도하세요`;
+        return;
+      }
     }
 
     const res = await fetch(`/api/sessions/${sessionId}/complete`, { method: 'PUT' });
     if (res.ok) {
+      ind.style.display = 'none';
       loadLocations();
       alert('점검이 완료되었습니다.');
     }
