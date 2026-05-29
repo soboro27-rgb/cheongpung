@@ -610,6 +610,36 @@ async function migrateAddDidSwLocations() {
   console.log('DID SW 장소 및 장비 추가 완료');
 }
 
+// ── Migration: NK 회의실 2호 장비 재구성 ─────────────────
+async function migrateNkRoom2Equipment() {
+  const { data: locations } = await supabase.from('insp_locations').select('id, building, name');
+  const locId = locations?.find(l => l.building === 'NK' && (l.name === '회의실 2호' || l.name === '메인 회의실'))?.id;
+  if (!locId) return;
+
+  const { data: check } = await supabase.from('insp_equipment')
+    .select('id').eq('location_id', locId).eq('type', 'VIDEO_CONF').eq('is_active', true).limit(1);
+  if (check?.length) return;
+
+  console.log('NK 회의실 2호 장비 재구성 중...');
+
+  await supabase.from('insp_equipment').update({ is_active: false }).eq('location_id', locId);
+
+  const eqs = [
+    { equipment_code: 'NK-R02-VCONF', name: '화상회의',     type: 'VIDEO_CONF', location_id: locId, model: 'Logitech Rally Plus', installed_at: '2023-03-15' },
+    { equipment_code: 'NK-R02-CAM',   name: '카메라',       type: 'CAMERA',     location_id: locId, model: 'Logitech Brio',        installed_at: '2023-03-15' },
+    { equipment_code: 'NK-R02-MIC',   name: '마이크',       type: 'MIC',        location_id: locId, model: 'Shure MX393',          installed_at: '2023-03-15' },
+    { equipment_code: 'NK-R02-SPK',   name: '스피커',       type: 'SPEAKER',    location_id: locId, model: 'Bose DS16F',           installed_at: '2023-03-15' },
+    { equipment_code: 'NK-R02-DGL',   name: '무선동글',     type: 'DONGLE',     location_id: locId, model: 'ClickShare CX-50',     installed_at: '2023-03-15' },
+    { equipment_code: 'NK-R02-TV1',   name: '65인치 1번',   type: 'TV',         location_id: locId, model: 'Samsung QE65Q80B',     installed_at: '2023-03-15' },
+    { equipment_code: 'NK-R02-TV2',   name: '65인치 2번',   type: 'TV',         location_id: locId, model: 'Samsung QE65Q80B',     installed_at: '2023-03-15' },
+    { equipment_code: 'NK-R02-TV3',   name: '65인치 3번',   type: 'TV',         location_id: locId, model: 'Samsung QE65Q80B',     installed_at: '2023-03-15' },
+    { equipment_code: 'NK-R02-LEDW',  name: '메인전광판',   type: 'LED_WALL',   location_id: locId, model: 'LED Wall Panel',       installed_at: '2023-03-15' },
+  ];
+  const { error: insErr } = await supabase.from('insp_equipment').insert(eqs);
+  if (insErr) { console.error('NK 회의실 2호 장비 insert 오류:', insErr.message); return; }
+  console.log('NK 회의실 2호 장비 재구성 완료 (총 9개)');
+}
+
 // ── Start ────────────────────────────────────────────
 app.listen(PORT, async () => {
   console.log(`\n넥슨코리아 공용부 점검 플랫폼`);
@@ -618,4 +648,54 @@ app.listen(PORT, async () => {
   await migrateAddMissingPCs();
   await migrateDeleteElevatorDid();
   await migrateAddDidSwLocations();
+  await migrateNkRoom2Equipment();
+  await migrateRenameNkRoom2();
+  await migrateNkRoom6And8();
 });
+
+// ── Migration: NK 회의실 6호→G1 6F, 8호→G 18F + 장비 재구성 ──
+async function migrateNkRoom6And8() {
+  const { data: locations } = await supabase.from('insp_locations').select('id, building, name');
+
+  const targets = [
+    { oldName: '회의실 6호', newName: 'G1 6F',  prefix: 'NK-G16F'  },
+    { oldName: '회의실 8호', newName: 'G 18F',  prefix: 'NK-G18F'  },
+  ];
+
+  for (const t of targets) {
+    const loc = locations?.find(l => l.building === 'NK' && (l.name === t.oldName || l.name === t.newName));
+    if (!loc) continue;
+
+    const { data: existing } = await supabase.from('insp_equipment')
+      .select('id').eq('location_id', loc.id).eq('type', 'PROJECTOR').eq('is_active', true).limit(1);
+    if (existing?.length) continue;
+
+    console.log(`NK ${t.oldName} → ${t.newName} 재구성 중...`);
+
+    if (loc.name !== t.newName)
+      await supabase.from('insp_locations').update({ name: t.newName }).eq('id', loc.id);
+
+    await supabase.from('insp_equipment').update({ is_active: false }).eq('location_id', loc.id);
+
+    const eqs = [
+      { equipment_code: `${t.prefix}-TV`,   name: '75인치 TV',   type: 'TV',        location_id: loc.id, model: 'Samsung QE75Q80B',  installed_at: '2023-03-15' },
+      { equipment_code: `${t.prefix}-PROJ`, name: '빔프로젝터',  type: 'PROJECTOR', location_id: loc.id, model: 'Epson EB-2265U',    installed_at: '2023-03-15' },
+      { equipment_code: `${t.prefix}-SPK`,  name: '스피커',      type: 'SPEAKER',   location_id: loc.id, model: 'Bose DS16F',         installed_at: '2023-03-15' },
+      { equipment_code: `${t.prefix}-CAM`,  name: '카메라',      type: 'CAMERA',    location_id: loc.id, model: 'Logitech Brio',      installed_at: '2023-03-15' },
+      { equipment_code: `${t.prefix}-MIC`,  name: '마이크',      type: 'MIC',       location_id: loc.id, model: 'Shure MX393',        installed_at: '2023-03-15' },
+      { equipment_code: `${t.prefix}-DGL`,  name: '유선동글',    type: 'DONGLE',    location_id: loc.id, model: 'ClickShare Button',  installed_at: '2023-03-15' },
+    ];
+    const { error } = await supabase.from('insp_equipment').insert(eqs);
+    if (error) { console.error(`${t.newName} 장비 insert 오류:`, error.message); continue; }
+    console.log(`${t.newName} 재구성 완료 (총 6개)`);
+  }
+}
+
+// ── Migration: NK 회의실 2호 → 메인 회의실 ────────────────
+async function migrateRenameNkRoom2() {
+  const { data: loc } = await supabase.from('insp_locations')
+    .select('id').eq('building', 'NK').eq('name', '회의실 2호').limit(1);
+  if (!loc?.length) return;
+  await supabase.from('insp_locations').update({ name: '메인 회의실' }).eq('id', loc[0].id);
+  console.log('NK 회의실 2호 → 메인 회의실 이름 변경 완료');
+}
