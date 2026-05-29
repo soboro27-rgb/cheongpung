@@ -273,6 +273,8 @@
           <div class="text">점검 완료</div>
           <div class="sub">완료일시: ${session.completed_at}</div>
         </div>
+        <button class="btn btn-outline" style="margin-left:auto;font-size:12px;padding:6px 14px;color:#f59e0b;border-color:#f59e0b;"
+          onclick="reopenSession(${session.id})">↩ 점검 재개 (미완료로 변경)</button>
       </div>` : '';
 
     const eqCards = equipment.map(eq => {
@@ -389,6 +391,14 @@
     });
 
     setTimeout(() => { ind.style.display = 'none'; }, 1000);
+  }
+
+  async function reopenSession(sessionId) {
+    if (!confirm('점검 완료를 취소하고 미완료 상태로 변경하시겠습니까?')) return;
+    const res = await fetch(`/api/sessions/${sessionId}/reopen`, { method: 'PUT' });
+    if (res.ok && currentSession) {
+      await selectLocation(currentSession.location_id, document.querySelector('.inspect-title')?.textContent || '');
+    }
   }
 
   async function completeSession(sessionId) {

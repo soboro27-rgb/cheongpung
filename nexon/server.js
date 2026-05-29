@@ -337,6 +337,11 @@ app.put('/api/sessions/:id/complete', auth, async (req, res) => {
   res.json({ success: true });
 });
 
+app.put('/api/sessions/:id/reopen', auth, async (req, res) => {
+  await supabase.from('insp_sessions').update({ status: 'in_progress', completed_at: null }).eq('id', req.params.id);
+  res.json({ success: true });
+});
+
 app.delete('/api/sessions', auth, adminOnly, async (req, res) => {
   const year = parseInt(req.query.year);
   const month = parseInt(req.query.month);

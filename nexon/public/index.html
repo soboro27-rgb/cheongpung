@@ -531,6 +531,13 @@
     });
   }
 
+  async function toggleSessionStatus(sessionId, action) {
+    const label = action === 'complete' ? '정상(완료)으로 변경' : '미완료로 변경';
+    if (!confirm(`이 장소의 점검 상태를 "${label}" 하시겠습니까?`)) return;
+    await fetch(`/api/sessions/${sessionId}/${action === 'complete' ? 'complete' : 'reopen'}`, { method: 'PUT' });
+    loadDashboard();
+  }
+
   async function loadDashboard() {
     const year = document.getElementById('dash-year').value;
     const month = document.getElementById('dash-month').value;
@@ -567,13 +574,18 @@
           : loc.session_status === 'in_progress' ? '#f59e0b' : '#ef4444';
         const label = loc.session_status === 'completed' ? `${pct}%`
           : loc.session_status === 'in_progress' ? '진행중' : '미완료';
+        const toggleBtn = loc.session_id
+          ? (loc.session_status === 'completed'
+            ? `<button onclick="toggleSessionStatus(${loc.session_id},'reopen')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid #f59e0b;background:transparent;color:#f59e0b;cursor:pointer;margin-left:6px;" title="미완료로 변경">↩</button>`
+            : `<button onclick="toggleSessionStatus(${loc.session_id},'complete')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid #22c55e;background:transparent;color:#22c55e;cursor:pointer;margin-left:6px;" title="정상(완료)으로 변경">✓</button>`)
+          : '';
         return `<div class="location-item">
           <div>
             <div class="location-name">${loc.name}</div>
             <div class="location-detail">장비 ${loc.total_equipment}개${loc.inspector_name ? ' · ' + loc.inspector_name : ''}</div>
           </div>
           <div class="location-track"><div class="location-fill ${fillClass}" style="width:${pct}%"></div></div>
-          <div class="location-pct" style="color:${pctColor}">${label}</div>
+          <div class="location-pct" style="color:${pctColor};display:flex;align-items:center;">${label}${toggleBtn}</div>
         </div>`;
       }).join('');
     }).join('');
