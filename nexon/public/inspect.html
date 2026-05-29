@@ -397,12 +397,16 @@
         ind.textContent = '⚠ 로그인이 만료되었습니다 — 페이지를 새로고침 후 다시 로그인하세요';
         return;
       }
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        let errMsg = `HTTP ${res.status}`;
+        try { const d = await res.json(); errMsg = d.error || errMsg; } catch(_) {}
+        throw new Error(errMsg);
+      }
       ind.style.color = '#22c55e';
       ind.textContent = '✓ 저장됨';
     } catch (e) {
       ind.style.color = '#ef4444';
-      ind.textContent = '⚠ 저장 실패 — 네트워크를 확인하고 다시 시도하세요';
+      ind.textContent = `⚠ 저장 실패 (${e.message}) — 새로고침 후 재시도하세요`;
       console.error('saveResult 오류:', e);
       return;
     }

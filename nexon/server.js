@@ -303,7 +303,8 @@ app.post('/api/sessions', auth, async (req, res) => {
   const resultMap = {};
   resultRows?.forEach(r => { resultMap[r.equipment_id] = r; });
 
-  const equipment = eqRows?.map(e => ({ ...e, ...resultMap[e.id], result_id: resultMap[e.id]?.id }));
+  // result를 먼저 펼치고 equipment를 덮어써서 e.id(장비ID)가 보존되도록 함
+  const equipment = eqRows?.map(e => ({ ...resultMap[e.id], ...e, result_id: resultMap[e.id]?.id }));
   res.json({ session: sess, equipment });
 });
 
