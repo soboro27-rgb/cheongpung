@@ -652,7 +652,36 @@ app.listen(PORT, async () => {
   await migrateRenameNkRoom2();
   await migrateNkRoom6And8();
   await migrateCreateNkB1Class();
+  await migrateNekbangAddEquipment();
 });
+
+// ── Migration: 넥방 오디오·TV 장비 추가 ──────────────────
+async function migrateNekbangAddEquipment() {
+  const { data: loc } = await supabase.from('insp_locations')
+    .select('id').eq('building', 'GB1').eq('name', '11층 넥방').limit(1);
+  if (!loc?.length) return;
+  const locId = loc[0].id;
+
+  const { data: existing } = await supabase.from('insp_equipment')
+    .select('id').eq('location_id', locId).eq('type', 'AUDIO').eq('is_active', true).limit(1);
+  if (existing?.length) return;
+
+  console.log('넥방 오디오·TV 장비 추가 중...');
+
+  const eqs = [];
+  for (let i = 1; i <= 6; i++)
+    eqs.push({ equipment_code: `GB1-NEK-AUD${i}`, name: `오디오 ${i}번`, type: 'AUDIO', location_id: locId, model: 'Yamaha', installed_at: '2023-03-15' });
+
+  eqs.push({ equipment_code: 'GB1-NEK-MTV',  name: '비디오 메인TV',  type: 'TV', location_id: locId, model: 'Samsung QE75Q80B', installed_at: '2023-03-15' });
+  eqs.push({ equipment_code: 'GB1-NEK-STV',  name: '스탠드TV',       type: 'TV', location_id: locId, model: 'Samsung QE55Q80B', installed_at: '2023-03-15' });
+
+  for (let i = 1; i <= 14; i++)
+    eqs.push({ equipment_code: `GB1-NEK-CTV${String(i).padStart(2,'0')}`, name: `천장형TV ${i}번`, type: 'TV', location_id: locId, model: 'LG 43UP7750', installed_at: '2023-03-15' });
+
+  const { error } = await supabase.from('insp_equipment').insert(eqs);
+  if (error) { console.error('넥방 장비 추가 오류:', error.message); return; }
+  console.log(`넥방 장비 추가 완료 (총 ${eqs.length}개)`);
+}
 
 // ── Migration: NK B1교실 장소 및 장비 생성 ────────────────
 async function migrateCreateNkB1Class() {
