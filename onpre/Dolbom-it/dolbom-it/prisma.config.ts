@@ -1,7 +1,7 @@
 import { defineConfig } from "prisma/config";
 
 function fixDbUrl(raw: string): string {
-  const s = raw.trim();
+  const s = raw.replace(/\s+/g, "").trim();
   if (!s) return s;
 
   const schemeMatch = s.match(/^(postgresql?:\/\/)/);
