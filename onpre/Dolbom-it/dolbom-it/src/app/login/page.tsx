@@ -1,9 +1,8 @@
 "use client"
 
-import { signIn } from "next-auth/react"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
+import { loginAction } from "./actions"
 
 const TEST_ACCOUNTS = [
   { email: "parent@test.com",  name: "김부모 (부모)",             role: "PARENT" },
@@ -16,26 +15,20 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState("")
-  const router = useRouter()
 
   async function handleLogin(loginEmail: string) {
     setLoading(loginEmail)
     setError("")
     try {
-      const res = await signIn("credentials", {
-        email: loginEmail,
-        password: "",
-        redirect: false,
-      })
-      setLoading(null)
-      if (res?.ok) {
-        window.location.href = "/swipe"
-      } else {
-        setError(res?.error ?? "등록되지 않은 이메일입니다")
+      const result = await loginAction(loginEmail)
+      if (result?.error) {
+        setLoading(null)
+        setError(result.error)
       }
-    } catch (e) {
+      // 성공 시 loginAction이 redirect를 throw → Next.js가 /swipe로 이동
+    } catch {
       setLoading(null)
-      setError("오류: " + String(e))
+      setError("로그인 중 오류가 발생했습니다")
     }
   }
 
