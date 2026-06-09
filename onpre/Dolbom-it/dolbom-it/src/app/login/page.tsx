@@ -29,8 +29,7 @@ export default function LoginPage() {
       })
       setLoading(null)
       if (res?.ok) {
-        router.push("/swipe")
-        router.refresh()
+        window.location.href = "/swipe"
       } else {
         setError(res?.error ?? "등록되지 않은 이메일입니다")
       }
