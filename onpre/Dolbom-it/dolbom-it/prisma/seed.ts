@@ -1,12 +1,10 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-require("dotenv").config()
-
 import { PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import pg from "pg"
 
+const connectionString = (process.env.DATABASE_URL ?? "").replace(/\s+/g, "")
 const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString,
   ssl: process.env.DATABASE_URL?.includes("render.com")
     ? { rejectUnauthorized: false }
     : undefined,
