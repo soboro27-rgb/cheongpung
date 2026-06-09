@@ -21,17 +21,22 @@ export default function LoginPage() {
   async function handleLogin(loginEmail: string) {
     setLoading(loginEmail)
     setError("")
-    const res = await signIn("credentials", {
-      email: loginEmail,
-      password: "",
-      redirect: false,
-    })
-    setLoading(null)
-    if (res?.ok) {
-      router.push("/swipe")
-      router.refresh()
-    } else {
-      setError("등록되지 않은 이메일입니다")
+    try {
+      const res = await signIn("credentials", {
+        email: loginEmail,
+        password: "",
+        redirect: false,
+      })
+      setLoading(null)
+      if (res?.ok) {
+        router.push("/swipe")
+        router.refresh()
+      } else {
+        setError(res?.error ?? "등록되지 않은 이메일입니다")
+      }
+    } catch (e) {
+      setLoading(null)
+      setError("오류: " + String(e))
     }
   }
 
