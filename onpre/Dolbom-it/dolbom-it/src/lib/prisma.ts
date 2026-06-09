@@ -3,8 +3,9 @@ import { PrismaPg } from "@prisma/adapter-pg"
 import pg from "pg"
 
 function createPrismaClient() {
+  const connectionString = (process.env.DATABASE_URL ?? "").replace(/\s+/g, "")
   const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString,
     ssl: process.env.DATABASE_URL?.includes("render.com")
       ? { rejectUnauthorized: false }
       : undefined,
