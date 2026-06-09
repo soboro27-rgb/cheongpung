@@ -1,41 +1,20 @@
 import { defineConfig } from "prisma/config";
 
-// Prisma's Rust URL parser is strict about RFC 3986 — special chars in
-// passwords (e.g. +, =, /) must be percent-encoded. pg is lenient but Prisma isn't.
-function encodeDbUrl(raw: string): string {
-  if (!raw) return raw;
+const raw = process.env.DATABASE_URL ?? "";
 
-  const schemeMatch = raw.match(/^(postgresql?:\/\/)/);
-  if (!schemeMatch) return raw;
-
-  const scheme = schemeMatch[1];
-  const withoutScheme = raw.slice(scheme.length);
-
-  // Use lastIndexOf so passwords containing '@' are handled correctly
-  const lastAt = withoutScheme.lastIndexOf("@");
-  if (lastAt === -1) return raw;
-
-  const userinfo = withoutScheme.slice(0, lastAt);
-  const hostAndDb = withoutScheme.slice(lastAt + 1);
-
-  const colonIdx = userinfo.indexOf(":");
-  if (colonIdx === -1) return raw;
-
-  const user = userinfo.slice(0, colonIdx);
-  const password = userinfo.slice(colonIdx + 1);
-
-  // Decode first to avoid double-encoding, then re-encode
-  let encodedPassword: string;
-  try {
-    encodedPassword = encodeURIComponent(decodeURIComponent(password));
-  } catch {
-    encodedPassword = encodeURIComponent(password);
-  }
-
-  return `${scheme}${encodeURIComponent(user)}:${encodedPassword}@${hostAndDb}`;
+// Debug: URL 구조 확인 (비밀번호 제외)
+try {
+  const parsed = new URL(raw);
+  console.log("[prisma.config] protocol:", parsed.protocol);
+  console.log("[prisma.config] host:", parsed.host);
+  console.log("[prisma.config] pathname:", parsed.pathname);
+  console.log("[prisma.config] username:", parsed.username);
+  console.log("[prisma.config] hasPassword:", !!parsed.password);
+} catch (e) {
+  console.error("[prisma.config] URL parse FAILED:", e);
+  console.log("[prisma.config] raw length:", raw.length);
+  console.log("[prisma.config] raw preview:", raw.slice(0, 20) + "...");
 }
-
-const url = encodeDbUrl(process.env.DATABASE_URL ?? "");
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -43,6 +22,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url,
+    url: raw,
   },
 });
