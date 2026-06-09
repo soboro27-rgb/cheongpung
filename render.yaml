@@ -19,13 +19,15 @@ services:
     rootDir: onpre/Dolbom-it/dolbom-it
     buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy && npm run build
     startCommand: npm start
+    domains:
+      - dolbom.coretail.co.kr
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: dolbom_db_ulth
           property: connectionString
       - key: NEXTAUTH_URL
-        sync: false
+        value: https://dolbom.coretail.co.kr
       - key: NEXTAUTH_SECRET
         generateValue: true
       - key: KAKAO_CLIENT_ID
