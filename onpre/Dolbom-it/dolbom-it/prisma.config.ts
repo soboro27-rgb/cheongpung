@@ -1,33 +1,37 @@
 import { defineConfig } from "prisma/config";
 
-function buildMigrationUrl(raw: string): string {
-  const trimmed = raw.trim();
-  if (!trimmed) {
-    console.error("[prisma.config] DATABASE_URL이 비어 있음");
-    return "";
-  }
+function fixDbUrl(raw: string): string {
+  const s = raw.trim();
+  if (!s) return s;
 
-  try {
-    const u = new URL(trimmed);
-    console.log(`[prisma.config] URL 파싱 성공: host=${u.host} pathname=${u.pathname} user=${u.username}`);
+  const schemeMatch = s.match(/^(postgresql?:\/\/)/);
+  if (!schemeMatch) return s;
 
-    // Render PostgreSQL 외부 URL은 sslmode=require 필요
-    if (u.host.includes("render.com") && !u.searchParams.has("sslmode")) {
-      u.searchParams.set("sslmode", "require");
-    }
+  const scheme = schemeMatch[1];
+  const rest = s.slice(scheme.length);
 
-    return u.toString();
-  } catch (e) {
-    // URL 파싱 자체가 실패 → 구조적 문제
-    console.error("[prisma.config] URL 파싱 실패:", String(e));
-    console.log("[prisma.config] 길이:", trimmed.length);
-    console.log("[prisma.config] 앞 40자:", trimmed.slice(0, 40));
-    console.log("[prisma.config] @ 포함 여부:", trimmed.includes("@"));
-    return trimmed;
-  }
+  // lastIndexOf 로 @ 찾기 — 비밀번호 안에 @ 있어도 올바르게 분리
+  const lastAt = rest.lastIndexOf("@");
+  if (lastAt === -1) return s;
+
+  const userinfo = rest.slice(0, lastAt);
+  const hostAndDb = rest.slice(lastAt + 1);
+
+  const colonIdx = userinfo.indexOf(":");
+  if (colonIdx === -1) return s;
+
+  const user = userinfo.slice(0, colonIdx);
+  const password = userinfo.slice(colonIdx + 1);
+
+  // decode 없이 바로 encode — % 같은 미인코딩 특수문자 처리
+  const encodedPassword = encodeURIComponent(password);
+
+  const result = `${scheme}${encodeURIComponent(user)}:${encodedPassword}@${hostAndDb}`;
+  console.log(`[prisma.config] 수정된 URL: ${scheme}[user]:[encoded]@${hostAndDb}`);
+  return result;
 }
 
-const url = buildMigrationUrl(process.env.DATABASE_URL ?? "");
+const url = fixDbUrl(process.env.DATABASE_URL ?? "");
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
