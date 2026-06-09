@@ -1,20 +1,33 @@
 import { defineConfig } from "prisma/config";
 
-const raw = process.env.DATABASE_URL ?? "";
+function buildMigrationUrl(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    console.error("[prisma.config] DATABASE_URL이 비어 있음");
+    return "";
+  }
 
-// Debug: URL 구조 확인 (비밀번호 제외)
-try {
-  const parsed = new URL(raw);
-  console.log("[prisma.config] protocol:", parsed.protocol);
-  console.log("[prisma.config] host:", parsed.host);
-  console.log("[prisma.config] pathname:", parsed.pathname);
-  console.log("[prisma.config] username:", parsed.username);
-  console.log("[prisma.config] hasPassword:", !!parsed.password);
-} catch (e) {
-  console.error("[prisma.config] URL parse FAILED:", e);
-  console.log("[prisma.config] raw length:", raw.length);
-  console.log("[prisma.config] raw preview:", raw.slice(0, 20) + "...");
+  try {
+    const u = new URL(trimmed);
+    console.log(`[prisma.config] URL 파싱 성공: host=${u.host} pathname=${u.pathname} user=${u.username}`);
+
+    // Render PostgreSQL 외부 URL은 sslmode=require 필요
+    if (u.host.includes("render.com") && !u.searchParams.has("sslmode")) {
+      u.searchParams.set("sslmode", "require");
+    }
+
+    return u.toString();
+  } catch (e) {
+    // URL 파싱 자체가 실패 → 구조적 문제
+    console.error("[prisma.config] URL 파싱 실패:", String(e));
+    console.log("[prisma.config] 길이:", trimmed.length);
+    console.log("[prisma.config] 앞 40자:", trimmed.slice(0, 40));
+    console.log("[prisma.config] @ 포함 여부:", trimmed.includes("@"));
+    return trimmed;
+  }
 }
+
+const url = buildMigrationUrl(process.env.DATABASE_URL ?? "");
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -22,6 +35,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: raw,
+    url,
   },
 });
