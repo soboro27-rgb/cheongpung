@@ -4,11 +4,10 @@ import pg from "pg"
 
 function createPrismaClient() {
   const connectionString = (process.env.DATABASE_URL ?? "").replace(/\s+/g, "")
+  const isLocal = connectionString.includes("localhost") || connectionString.includes("127.0.0.1")
   const pool = new pg.Pool({
     connectionString,
-    ssl: process.env.DATABASE_URL?.includes("render.com")
-      ? { rejectUnauthorized: false }
-      : undefined,
+    ssl: isLocal ? undefined : { rejectUnauthorized: false },
   })
   const adapter = new PrismaPg(pool)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
