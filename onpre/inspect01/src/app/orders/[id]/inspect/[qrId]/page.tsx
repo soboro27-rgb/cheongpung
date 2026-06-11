@@ -27,7 +27,7 @@ export default async function InspectPage({
   const action = saveInspection.bind(null, qr.id, order.id)
 
   // 다른 검수자가 이미 완료한 경우 읽기전용
-  if (ins && ins.inspectorId !== session?.userId) {
+  if (ins && ins.inspectorId !== Number(session?.userId)) {
     return (
       <div className="min-h-screen" style={{ background: '#F1F5F9' }}>
         <Navbar />

@@ -5,8 +5,9 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/app/components/Navbar'
 
-export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function OrderDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ locked?: string }> }) {
   const { id } = await params
+  const { locked } = await searchParams
   const session = await getSession()
   const order = await prisma.purchaseOrder.findUnique({
     where: { id: parseInt(id) },
@@ -53,6 +54,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             {isDone ? '완료' : '진행중'}
           </span>
         </div>
+
+        {locked && (
+          <div className="bg-red-50 border border-red-300 rounded-lg px-4 py-3 mb-5 text-sm text-red-700 font-bold">
+            이미 다른 검수자가 완료한 항목입니다. 수정할 수 없습니다.
+          </div>
+        )}
 
         {/* 기본정보 */}
         <div className="bg-white rounded-xl border border-slate-200 p-5 mb-5">
