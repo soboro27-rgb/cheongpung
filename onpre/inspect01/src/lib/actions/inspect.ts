@@ -7,6 +7,11 @@ export async function saveInspection(qrId: number, orderId: number, formData: Fo
   const session = await getSession()
   if (!session) throw new Error('권한 없음')
 
+  const existing = await prisma.inspection.findUnique({ where: { qrId } })
+  if (existing && existing.inspectorId !== session.userId) {
+    return { error: '다른 검수자가 이미 완료한 항목입니다.' }
+  }
+
   const data = {
     manufacturer: (formData.get('manufacturer') as string) || '',
     model: (formData.get('model') as string) || '',
