@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+body {
+  font-family: 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #F1F5F9;
+  color: #1E293B;
+}
+
+@media print {
+  .no-print { display: none !important; }
+  .print-label { display: block !important; }
+  body { background: white !important; }
+}
+
+@media screen {
+  .print-label { display: none !important; }
+}
+
+@page {
+  size: 95mm 90mm;
+  margin: 0mm;
+}

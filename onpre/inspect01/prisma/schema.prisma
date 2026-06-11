@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  loginId      String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("INSPECTOR")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  orders       PurchaseOrder[]
+  inspections  Inspection[]
+}
+
+model PurchaseOrder {
+  id            Int      @id @default(autoincrement())
+  createdAt     DateTime @default(now())
+  companyName   String
+  erpName       String   @default("")
+  bizNumber     String   @default("")
+  managerName   String   @default("")
+  contact       String   @default("")
+  quantityDesc  String   @default("")
+  arrivalDate   String   @default("")
+  depositor     String   @default("")
+  bank          String   @default("")
+  accountNumber String   @default("")
+  chargeAmount  Int      @default(0)
+  memo          String   @default("")
+  status        String   @default("IN_PROGRESS")
+  vendorNameEn  String   @default("")
+  managerLastEn String   @default("")
+  quantity      Int      @default(1)
+
+  createdById   Int
+  createdBy     User     @relation(fields: [createdById], references: [id])
+  qrCodes       QRCode[]
+}
+
+model QRCode {
+  id              Int           @id @default(autoincrement())
+  qrString        String        @unique
+  seq             Int
+  isInspected     Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+
+  purchaseOrderId Int
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  inspection      Inspection?
+}
+
+model Inspection {
+  id               Int      @id @default(autoincrement())
+  inspectedAt      DateTime @default(now())
+
+  manufacturer     String   @default("")
+  model            String   @default("")
+  cpu              String   @default("")
+  ram              String   @default("")
+  storage          String   @default("")
+  vga              String   @default("")
+  screenSize       String   @default("")
+  resolution       String   @default("")
+  lcdCondition     String   @default("")
+  keyboardTouch    String   @default("")
+  batteryLossPct   Float    @default(0)
+  battery45Checked Boolean  @default(false)
+  notes            String   @default("")
+
+  adapter          Boolean  @default(false)
+  disassembled     Boolean  @default(false)
+  defectStatus     String   @default("GOOD")
+  grade            String   @default("")
+  purchasePrice    Int      @default(0)
+
+  qrId             Int      @unique
+  qr               QRCode   @relation(fields: [qrId], references: [id])
+  inspectorId      Int
+  inspector        User     @relation(fields: [inspectorId], references: [id])
+}

@@ -1,0 +1,186 @@
+import { prisma } from '@/lib/prisma'
+import { getSession } from '@/lib/session'
+import { saveInspection } from '@/lib/actions/inspect'
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import Navbar from '@/app/components/Navbar'
+
+export default async function InspectPage({
+  params,
+}: {
+  params: Promise<{ id: string; qrId: string }>
+}) {
+  const { id, qrId } = await params
+  const session = await getSession()
+
+  const qr = await prisma.qRCode.findUnique({
+    where: { id: parseInt(qrId) },
+    include: {
+      purchaseOrder: true,
+      inspection: { include: { inspector: true } },
+    },
+  })
+  if (!qr || qr.purchaseOrderId !== parseInt(id)) notFound()
+
+  const ins = qr.inspection
+  const order = qr.purchaseOrder
+  const action = saveInspection.bind(null, qr.id, order.id)
+
+  const specFields: { label: string; name: string; list?: string[]; placeholder?: string }[] = [
+    { label: '제조사', name: 'manufacturer', list: ['Samsung','LG','Lenovo','HP','Dell','ASUS','Apple'], placeholder: 'Samsung' },
+    { label: '모델명', name: 'model', placeholder: 'Galaxy Book3 Pro' },
+    { label: 'CPU', name: 'cpu', placeholder: 'i7-1355U' },
+    { label: 'RAM', name: 'ram', list: ['4GB DDR4','8GB DDR4','16GB DDR4','32GB DDR4'], placeholder: '16GB DDR4' },
+    { label: '저장장치', name: 'storage', list: ['256GB SSD','512GB NVMe','1TB NVMe'], placeholder: '512GB NVMe' },
+    { label: 'VGA', name: 'vga', placeholder: 'Intel Iris Xe' },
+    { label: '해상도(inch)', name: 'screenSize', list: ['13.3"','14"','15.6"','17.3"'], placeholder: '15.6"' },
+    { label: '해상도', name: 'resolution', list: ['1920x1080','2560x1440','3840x2160'], placeholder: '1920x1080' },
+    { label: '액정', name: 'lcdCondition', list: ['정상','잔상있음','사점1개','불량'], placeholder: '정상' },
+  ]
+
+  return (
+    <div className="min-h-screen" style={{ background: '#F1F5F9' }}>
+      <Navbar />
+      <main className="max-w-4xl mx-auto px-4 py-6">
+        <div className="flex items-center gap-3 mb-5">
+          <Link href={`/orders/${id}`} className="text-slate-400 hover:text-slate-600 text-sm">← 매입건</Link>
+          <h1 className="text-lg font-black text-slate-900">검수 입력</h1>
+          <code className="text-xs bg-slate-200 px-2 py-0.5 rounded font-mono text-slate-600">{qr.qrString}</code>
+        </div>
+
+        <form action={action}>
+          {/* 라벨 스티커 레이아웃 */}
+          <div className="bg-white rounded-xl border-2 border-slate-300 overflow-hidden mb-5" style={{ fontFamily: 'monospace' }}>
+            <div className="bg-slate-800 text-white px-4 py-2 text-xs font-bold flex justify-between">
+              <span>월드와이드메모리(주) 매입검수 라벨</span>
+              <span>{qr.qrString}</span>
+            </div>
+
+            <div className="flex gap-0">
+              {/* 좌측: 스펙 필드 */}
+              <div className="w-1/2 border-r border-slate-200 p-4 space-y-2.5">
+                {specFields.map(f => (
+                  <div key={f.name} className="flex items-center gap-2">
+                    <label className="text-xs font-bold text-slate-500 w-20 flex-shrink-0">{f.label}</label>
+                    <input
+                      type="text" name={f.name}
+                      defaultValue={ins ? (ins as Record<string, unknown>)[f.name] as string : ''}
+                      list={f.list ? `list-${f.name}` : undefined}
+                      placeholder={f.placeholder}
+                      className="flex-1 border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-400"
+                    />
+                    {f.list && (
+                      <datalist id={`list-${f.name}`}>
+                        {f.list.map(v => <option key={v} value={v} />)}
+                      </datalist>
+                    )}
+                  </div>
+                ))}
+
+                {/* 키보드터치 */}
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-bold text-slate-500 w-20 flex-shrink-0">키보드/터치</label>
+                  <select name="keyboardTouch" defaultValue={ins?.keyboardTouch || ''}
+                    className="flex-1 border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-400">
+                    <option value="">—</option>
+                    {['정상','불량','없음'].map(v => <option key={v} value={v}>{v}</option>)}
+                  </select>
+                </div>
+
+                {/* 배터리 */}
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-bold text-slate-500 w-20 flex-shrink-0">배터리손실%</label>
+                  <input type="number" name="batteryLossPct" step="0.1" min="0" max="100"
+                    defaultValue={ins?.batteryLossPct || 0}
+                    className="w-20 border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-400" />
+                  <label className="flex items-center gap-1 text-xs text-slate-500">
+                    <input type="checkbox" name="battery45Checked" defaultChecked={ins?.battery45Checked} className="rounded" />
+                    45%방전확인
+                  </label>
+                </div>
+              </div>
+
+              {/* 우측: 특이사항 + 평가 */}
+              <div className="w-1/2 p-4 flex flex-col gap-4">
+                <div className="flex-1">
+                  <label className="text-xs font-bold text-slate-500 block mb-1.5">특이사항 / 불량내역</label>
+                  <textarea name="notes" rows={6} defaultValue={ins?.notes || ''}
+                    placeholder="특이사항, 불량 내용 자유 작성..."
+                    className="w-full border border-slate-200 rounded px-3 py-2 text-xs resize-none focus:outline-none focus:border-blue-400 h-full" />
+                </div>
+
+                <div className="border-t border-slate-200 pt-3 space-y-3">
+                  <OXField label="아답터" name="adapter" defaultVal={ins?.adapter} />
+                  <OXField label="바라시" name="disassembled" defaultVal={ins?.disassembled} />
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-500 w-16">판정</span>
+                    <div className="flex gap-2">
+                      {[['GOOD','양품','bg-green-100 text-green-700'],['DEFECT','불량','bg-red-100 text-red-700']].map(([val, label, cls]) => (
+                        <label key={val} className="flex items-center gap-1 cursor-pointer">
+                          <input type="radio" name="defectStatus" value={val} defaultChecked={ins ? ins.defectStatus === val : val === 'GOOD'} className="sr-only" />
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${ins?.defectStatus === val || (!ins && val === 'GOOD') ? cls + ' border-current' : 'bg-white text-slate-400 border-slate-200'}`}>{label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-500 w-16">등급</span>
+                    <div className="flex gap-2">
+                      {['S','A','B','C'].map(g => (
+                        <label key={g} className="flex items-center gap-1 cursor-pointer">
+                          <input type="radio" name="grade" value={g} defaultChecked={ins?.grade === g} className="sr-only" />
+                          <span className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-black border-2 ${ins?.grade === g ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-400 border-slate-200'}`}>{g}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-500 w-16">매입가</span>
+                    <input type="number" name="purchasePrice" defaultValue={ins?.purchasePrice || 0}
+                      className="w-36 border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-400" />
+                    <span className="text-xs text-slate-400">원</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-500 w-16">검수자</span>
+                    <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded">{session?.name}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-lg text-sm">
+              저장
+            </button>
+            <Link href={`/orders/${id}`} className="border border-slate-300 text-slate-600 px-6 py-3 rounded-lg text-sm hover:bg-slate-50">
+              취소
+            </Link>
+          </div>
+        </form>
+      </main>
+    </div>
+  )
+}
+
+function OXField({ label, name, defaultVal }: { label: string; name: string; defaultVal?: boolean }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs font-bold text-slate-500 w-16">{label}</span>
+      <div className="flex gap-2">
+        {[['O', true], ['X', false]].map(([display, val]) => (
+          <label key={String(display)} className="cursor-pointer">
+            <input type="radio" name={name} value={String(display)} defaultChecked={defaultVal === val} className="sr-only" />
+            <span className={`px-3 py-1 rounded text-xs font-bold border ${defaultVal === val ? (display === 'O' ? 'bg-blue-600 text-white border-blue-600' : 'bg-red-500 text-white border-red-500') : 'bg-white text-slate-400 border-slate-200'}`}>
+              {String(display)}
+            </span>
+          </label>
+        ))}
+      </div>
+    </div>
+  )
+}
