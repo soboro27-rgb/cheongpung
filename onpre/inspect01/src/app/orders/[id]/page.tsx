@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/session'
 import { completeOrder, addQrRow, deleteQrRow } from '@/lib/actions/orders'
+import DeleteOrderButton from './DeleteOrderButton'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/app/components/Navbar'
@@ -178,19 +179,22 @@ export default async function OrderDetailPage({ params, searchParams }: { params
 
         {/* 하단 버튼 영역 */}
         <div className="flex items-center justify-between">
-          {/* 엑셀 다운로드 (관리자 전용) */}
-          {session?.role === 'ADMIN' && (
-            <a
-              href={`/api/orders/${order.id}/export`}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white"
-            >
-              📊 엑셀 다운로드
-            </a>
-          )}
+          {/* 왼쪽: 엑셀 + 삭제 (관리자 전용) */}
+          {session?.role === 'ADMIN' ? (
+            <div className="flex items-center gap-3">
+              <a
+                href={`/api/orders/${order.id}/export`}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                📊 엑셀 다운로드
+              </a>
+              <DeleteOrderButton orderId={order.id} />
+            </div>
+          ) : <div />}
 
           {/* 검수 완료 버튼 */}
           {!isDone && (
-            <form action={completeWithId} className="ml-auto">
+            <form action={completeWithId}>
               <button
                 type="submit"
                 disabled={!allInspected}

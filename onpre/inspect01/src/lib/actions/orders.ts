@@ -99,3 +99,20 @@ export async function completeOrder(orderId: number) {
   await prisma.purchaseOrder.update({ where: { id: orderId }, data: { status: 'DONE' } })
   revalidatePath(`/orders/${orderId}`)
 }
+
+export async function deleteOrder(orderId: number) {
+  const session = await getSession()
+  if (!session || session.role !== 'ADMIN') throw new Error('권한 없음')
+
+  const qrCodes = await prisma.qRCode.findMany({
+    where: { purchaseOrderId: orderId },
+    select: { id: true },
+  })
+  const qrIds = qrCodes.map(q => q.id)
+
+  await prisma.inspection.deleteMany({ where: { qrId: { in: qrIds } } })
+  await prisma.qRCode.deleteMany({ where: { purchaseOrderId: orderId } })
+  await prisma.purchaseOrder.delete({ where: { id: orderId } })
+
+  redirect('/')
+}

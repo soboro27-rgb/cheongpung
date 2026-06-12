@@ -131,24 +131,18 @@ function LabelSticker({ specRows, data }: { specRows: string[][]; data: LabelDat
           </table>
         </div>
 
-        {/* 우: QR + 평가 + 메타 (46%) */}
+        {/* 우: 특이사항 + 평가 + 메타 + QR (46%) */}
         <div style={{ width: '46%', padding: '3px 5px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
 
-          {/* QR + 특이사항 */}
-          <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-start' }}>
-            <div style={{ flexShrink: 0, textAlign: 'center' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={data.qrImageUrl} alt="QR" style={{ width: '52px', height: '52px', display: 'block' }} />
-            </div>
-            <div style={{
-              flex: 1, fontSize: '6.5pt', color: '#1E293B',
-              background: '#F8FAFC', border: '1px solid #E2E8F0',
-              borderRadius: '3px', padding: '3px', lineHeight: 1.5,
-              minHeight: '52px', wordBreak: 'break-all',
-            }}>
-              <div style={{ color: '#64748B', fontWeight: 700, fontSize: '6pt', marginBottom: '2px' }}>특이사항</div>
-              {data.notes || '없음'}
-            </div>
+          {/* 특이사항 */}
+          <div style={{
+            flex: 1, fontSize: '6.5pt', color: '#1E293B',
+            background: '#F8FAFC', border: '1px solid #E2E8F0',
+            borderRadius: '3px', padding: '3px', lineHeight: 1.5,
+            wordBreak: 'break-all', overflow: 'hidden',
+          }}>
+            <div style={{ color: '#64748B', fontWeight: 700, fontSize: '6pt', marginBottom: '2px' }}>특이사항</div>
+            {data.notes || '없음'}
           </div>
 
           {/* 판정 + 등급 + 매입가 */}
@@ -179,13 +173,21 @@ function LabelSticker({ specRows, data }: { specRows: string[][]; data: LabelDat
             </div>
           </div>
 
-          {/* 하단 메타 */}
-          <div style={{ fontSize: '6.5pt', color: '#94A3B8', lineHeight: 1.5, marginTop: 'auto' }}>
-            <div>매입처: {data.companyName}</div>
-            <div>입고일: {data.arrivalDate || '—'}</div>
-            <div>검수자: {data.inspectorName || '—'}</div>
-            <div style={{ fontFamily: 'monospace', fontSize: '6pt', wordBreak: 'break-all', color: '#CBD5E1' }}>
-              {data.qrString}
+          {/* 메타정보 + QR (하단) */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', marginTop: 'auto' }}>
+            {/* 메타 텍스트 — QR 위 */}
+            <div style={{ flex: 1, fontSize: '6.5pt', color: '#94A3B8', lineHeight: 1.5 }}>
+              <div>매입처: {data.companyName}</div>
+              <div>입고일: {data.arrivalDate || '—'}</div>
+              <div>검수자: {data.inspectorName || '—'}</div>
+              <div style={{ fontFamily: 'monospace', fontSize: '5.5pt', wordBreak: 'break-all', color: '#CBD5E1' }}>
+                {data.qrString}
+              </div>
+            </div>
+            {/* QR — 우측 하단 */}
+            <div style={{ flexShrink: 0 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={data.qrImageUrl} alt="QR" style={{ width: '52px', height: '52px', display: 'block' }} />
             </div>
           </div>
         </div>
