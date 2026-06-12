@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>렌탈료 계산기</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4F46E5;
+      --primary-pale: #EEF2FF;
+      --success-pale: #F0FDF4;
+    }
+    body {
+      background: #F8FAFC;
+      font-family: 'Apple SD Gothic Neo', -apple-system, 'Segoe UI', sans-serif;
+      font-size: 14px;
+    }
+    .navbar { border-bottom: 1px solid #E2E8F0; }
+    .navbar-brand { font-weight: 700; color: var(--primary) !important; font-size: 1rem; }
+
+    /* Tabs */
+    .nav-pills .nav-link { color: #64748B; font-weight: 500; border-radius: 8px; padding: 7px 16px; }
+    .nav-pills .nav-link.active { background: var(--primary); }
+
+    /* Cards */
+    .panel { background: #fff; border-radius: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.07); padding: 24px; margin-bottom: 16px; }
+
+    /* Calculator result cards */
+    .r-card { border: 1.5px solid #E2E8F0; border-radius: 14px; padding: 18px; transition: .2s; cursor: default; }
+    .r-card:hover { border-color: var(--primary); box-shadow: 0 4px 16px rgba(79,70,229,.12); transform: translateY(-2px); }
+    .r-card .period { background: var(--primary); color: #fff; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .r-card .profit { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--success-pale); color: #16A34A; font-weight: 600; }
+    .r-card .monthly { font-size: 1.6rem; font-weight: 800; color: var(--primary); line-height: 1.1; }
+    .r-card .meta { font-size: 12px; color: #94A3B8; }
+    .r-card .info-row { display: flex; justify-content: space-between; font-size: 12px; color: #64748B; margin-top: 4px; }
+    .r-card .info-row span:last-child { font-weight: 600; color: #1E293B; }
+
+    /* Section label */
+    .slabel { font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+
+    /* Big input */
+    .big-input { font-size: 1.4rem; font-weight: 700; border: 2px solid #E2E8F0; border-radius: 12px; padding: 14px 18px; }
+    .big-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.1); outline: none; }
+
+    /* Rate row */
+    .rate-row { background: #F8FAFC; border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+    .rate-row:hover { background: var(--primary-pale); }
+
+    /* Period row in link tab */
+    .period-row { background: #F8FAFC; border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+
+    /* Toast */
+    #toast { position: fixed; bottom: 24px; right: 24px; background: #1E293B; color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 13px; z-index: 9999; opacity: 0; transition: opacity .3s; pointer-events: none; }
+    #toast.show { opacity: 1; }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 60px 20px; color: #CBD5E1; }
+    .empty-state i { font-size: 3rem; display: block; margin-bottom: 12px; }
+
+    /* Residual toggle */
+    .residual-panel { background: #FFFBEB; border: 1.5px solid #FDE68A; border-radius: 12px; padding: 16px; margin-top: 16px; }
+    .residual-panel.active { background: #FFF7ED; border-color: #FB923C; }
+
+    /* Residual card extras */
+    .r-card.residual { border-color: #FB923C; }
+    .r-card.residual .period { background: #EA580C; }
+    .r-card .badge-return { font-size: 10px; padding: 2px 7px; border-radius: 20px; background: #FEF3C7; color: #92400E; font-weight: 700; }
+    .r-card .saving { font-size: 11px; color: #EA580C; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-light bg-white sticky-top">
+  <div class="container" style="max-width:900px">
+    <span class="navbar-brand"><i class="bi bi-calculator-fill me-2"></i>렌탈료 계산기</span>
+    <small class="text-muted d-none d-md-block">요율 내장형 · 독립 실행</small>
+  </div>
+</nav>
+
+<div class="container py-4" style="max-width:900px">
+
+  <!-- Tab Nav -->
+  <ul class="nav nav-pills mb-4 gap-1" id="tabs" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#t-calc"><i class="bi bi-calculator me-1"></i>계산기</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-link"><i class="bi bi-link-45deg me-1"></i>링크생성</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-rates"><i class="bi bi-sliders me-1"></i>요율관리</button></li>
+  </ul>
+
+  <div class="tab-content">
+
+    <!-- ── Tab 1: Calculator ─────────────────────────────── -->
+    <div class="tab-pane fade show active" id="t-calc">
+
+      <div class="panel">
+
+        <!-- 정상가 -->
+        <p class="slabel">정상가</p>
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <input type="text" id="normalPrice" class="form-control" placeholder="0" inputmode="numeric" autocomplete="off"
+                 style="border-radius:10px;border:1.5px solid #E2E8F0;padding:10px 14px;font-size:1rem;font-weight:600"
+                 oninput="onPriceInput(this); renderCalc()">
+          <span class="fw-bold text-secondary">원</span>
+        </div>
+
+        <!-- 렌탈 설정가 -->
+        <p class="slabel">렌탈 설정가</p>
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <input type="text" id="calcPrice" class="form-control big-input flex-grow-1" placeholder="0" inputmode="numeric" autocomplete="off">
+          <span class="fw-bold text-secondary fs-5">원</span>
+        </div>
+
+        <!-- 공급가 -->
+        <p class="slabel">공급가 <small class="text-muted fw-normal" style="text-transform:none;font-size:10px">미입력 시 렌탈설정가 × 할인율 적용</small></p>
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <input type="text" id="supplyPrice" class="form-control" placeholder="0" inputmode="numeric" autocomplete="off"
+                 style="border-radius:10px;border:1.5px solid #E2E8F0;padding:10px 14px;font-size:1rem;font-weight:600"
+                 oninput="onPriceInput(this); renderCalc()">
+          <span class="fw-bold text-secondary">원</span>
+        </div>
+
+        <p class="slabel">개월별 할인율 <small class="text-muted fw-normal normal-case" style="text-transform:none">(1 = 100%)</small></p>
+        <div class="d-flex flex-wrap gap-2" id="discountInputs"></div>
+
+        <!-- 잔존가 (만기 반납형) -->
+        <div class="residual-panel mt-3" id="residualPanel">
+          <div class="d-flex align-items-center gap-2 mb-0" id="residualToggleRow">
+            <input class="form-check-input" type="checkbox" id="chkResidual" onchange="toggleResidual()">
+            <label class="fw-semibold" for="chkResidual" style="cursor:pointer">
+              잔존가 적용 <span class="badge-return ms-1">만기 반납형</span>
+            </label>
+            <small class="text-muted ms-auto">만기 시 제품 반납 조건</small>
+          </div>
+
+          <div id="residualInputs" class="d-none mt-3">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <div class="btn-group btn-group-sm" role="group">
+                <input type="radio" class="btn-check" name="residualMode" id="rModeAmt" value="amt" checked onchange="renderCalc()">
+                <label class="btn btn-outline-secondary" for="rModeAmt">금액 입력</label>
+                <input type="radio" class="btn-check" name="residualMode" id="rModePct" value="pct" onchange="renderCalc()">
+                <label class="btn btn-outline-secondary" for="rModePct">비율 입력</label>
+              </div>
+            </div>
+            <div class="input-group">
+              <input type="text" id="residualVal" class="form-control" placeholder="0" inputmode="numeric" oninput="onResidualInput(this)">
+              <span class="input-group-text" id="residualUnit">원</span>
+            </div>
+            <small class="text-muted mt-1 d-block" id="residualHint"></small>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3" id="calcResults">
+        <div class="col-12 empty-state"><i class="bi bi-calculator"></i>판매가격을 입력하면 렌탈료가 계산됩니다</div>
+      </div>
+    </div>
+
+    <!-- ── Tab 2: Link Generation ────────────────────────── -->
+    <div class="tab-pane fade" id="t-link">
+      <div class="panel">
+        <div class="row g-3 mb-4">
+          <div class="col-12">
+            <p class="slabel">상품명 *</p>
+            <input type="text" id="lNm" class="form-control" placeholder="상품명 입력">
+          </div>
+          <div class="col-md-6">
+            <p class="slabel">렌탈 설정가 *</p>
+            <div class="input-group">
+              <input type="text" id="lPrice" class="form-control" placeholder="0" inputmode="numeric">
+              <span class="input-group-text">원</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <p class="slabel">배송비</p>
+            <input type="text" id="lDelivery" class="form-control" value="무료">
+          </div>
+          <div class="col-12">
+            <p class="slabel">상품 URL</p>
+            <input type="text" id="lPrdUrl" class="form-control" placeholder="https://...">
+          </div>
+          <div class="col-12">
+            <p class="slabel">상품 이미지 URL</p>
+            <input type="text" id="lImg" class="form-control" placeholder="https://...">
+          </div>
+        </div>
+
+        <p class="slabel">렌탈 기간</p>
+        <div id="lPeriods"></div>
+
+        <button class="btn btn-primary w-100 mt-3" onclick="generateLink()">
+          <i class="bi bi-magic me-2"></i>링크 생성하기
+        </button>
+      </div>
+
+      <!-- Output -->
+      <div id="linkOutput" class="d-none">
+        <div class="panel">
+          <p class="slabel">계산된 렌탈 조건</p>
+          <div class="table-responsive mb-4" id="lnkTable"></div>
+
+          <p class="slabel">생성된 링크</p>
+          <div class="input-group mb-3">
+            <input type="text" id="genUrl" class="form-control" readonly style="font-size:12px">
+            <button class="btn btn-outline-secondary" onclick="copyText('genUrl','URL 복사됨')"><i class="bi bi-clipboard"></i></button>
+            <button class="btn btn-outline-primary" onclick="window.open(document.getElementById('genUrl').value)"><i class="bi bi-box-arrow-up-right"></i></button>
+          </div>
+
+          <p class="slabel">임베드 코드 (QR 포함)</p>
+          <textarea id="embedCode" class="form-control mb-2" rows="2" readonly style="font-size:12px"></textarea>
+          <button class="btn btn-sm btn-outline-secondary" onclick="copyText('embedCode','임베드 코드 복사됨')"><i class="bi bi-clipboard me-1"></i>복사</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tab 3: Rate Management ─────────────────────────── -->
+    <div class="tab-pane fade" id="t-rates">
+      <div class="panel">
+        <div class="d-flex justify-content-between align-items-start mb-4">
+          <div>
+            <h6 class="fw-bold mb-1">요율 설정</h6>
+            <small class="text-muted">개월별 요율을 수정하고 저장합니다. 저장된 요율은 브라우저에 유지됩니다.</small>
+          </div>
+          <button class="btn btn-sm btn-outline-secondary" onclick="resetRates()"><i class="bi bi-arrow-counterclockwise me-1"></i>기본값</button>
+        </div>
+        <div id="rateTable"></div>
+        <button class="btn btn-primary w-100 mt-2" onclick="saveRates()"><i class="bi bi-floppy me-1"></i>요율 저장</button>
+      </div>
+
+      <div class="panel">
+        <p class="slabel">미리보기 — 물대 100만원 기준</p>
+        <div class="row g-2" id="ratePreview"></div>
+      </div>
+    </div>
+
+  </div><!-- /tab-content -->
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── 기본 요율 (bs-on.com API 역산값) ─────────────────────────────
+const DEFAULT_RATES = { 12: 9.80, 24: 5.27, 36: 3.75, 48: 2.98, 60: 2.53 };
+const PERIODS = [60, 48, 36, 24, 12];
+const LS_KEY = 'rsimul_rates';
+
+// ── 유틸 ────────────────────────────────────────────────────────
+const fmt   = n => !n ? '0' : Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+const parse = s => parseInt(String(s).replace(/[^0-9]/g, '')) || 0;
+
+function getRates() {
+  try { const s = localStorage.getItem(LS_KEY); return s ? JSON.parse(s) : { ...DEFAULT_RATES }; }
+  catch { return { ...DEFAULT_RATES }; }
+}
+
+function calcRental(prodAmt, months, dis = 1, residual = 0, directSupply = 0) {
+  const rates = getRates();
+  const rate = rates[months];
+  if (!rate || !prodAmt) return null;
+  const supply   = directSupply > 0 ? directSupply : Math.round(prodAmt * dis);
+  const base     = Math.max(supply - residual, 0);   // 과금 기준액 = 공급가 - 잔존가
+  const monthly  = Math.round(base * rate / 10000) * 100;
+  const total    = monthly * months;
+  const profit   = total - supply;                   // 수익 = 총렌탈료 - 공급가
+  const profitRate = supply > 0 ? (profit / supply * 100).toFixed(1) : '0';
+  return { supply, base, residual, monthly, total, profit, profitRate, rate };
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+function copyText(id, msg) {
+  const el = document.getElementById(id);
+  el.select();
+  try { document.execCommand('copy'); } catch { navigator.clipboard?.writeText(el.value); }
+  toast(msg || '복사됨');
+}
+
+// 공통 숫자 입력 포매터
+function onPriceInput(el) {
+  const n = parse(el.value);
+  el.value = n ? fmt(n) : '';
+}
+
+// ── Tab 1: 계산기 ────────────────────────────────────────────────
+function initCalc() {
+  document.getElementById('discountInputs').innerHTML = PERIODS.map(p => `
+    <div class="d-flex align-items-center gap-1">
+      <label class="text-muted" style="min-width:36px;font-size:12px">${p}개월</label>
+      <input type="number" id="dis_${p}" class="form-control form-control-sm text-center"
+             value="1" min="0.01" max="1" step="0.01" style="width:66px"
+             oninput="renderCalc()">
+    </div>`).join('');
+}
+
+function getResidual(supplyAmt) {
+  if (!document.getElementById('chkResidual')?.checked) return 0;
+  const mode = document.querySelector('input[name="residualMode"]:checked')?.value || 'amt';
+  const val  = parse(document.getElementById('residualVal')?.value);
+  if (!val) return 0;
+  if (mode === 'pct') return Math.round(supplyAmt * val / 100);
+  return val;
+}
+
+function renderCalc() {
+  const amt        = parse(document.getElementById('calcPrice').value);
+  const normalAmt  = parse(document.getElementById('normalPrice')?.value);
+  const directSupply = parse(document.getElementById('supplyPrice')?.value);
+  const el         = document.getElementById('calcResults');
+
+  if (!amt) {
+    el.innerHTML = '<div class="col-12 empty-state"><i class="bi bi-calculator"></i>렌탈 설정가를 입력하면 렌탈료가 계산됩니다</div>';
+    return;
+  }
+
+  const useResidual = document.getElementById('chkResidual')?.checked;
+
+  el.innerHTML = PERIODS.map(p => {
+    const dis      = parseFloat(document.getElementById('dis_' + p)?.value || 1);
+    const residual = getResidual(directSupply > 0 ? directSupply : Math.round(amt * dis));
+    const r        = calcRental(amt, p, dis, residual, directSupply);
+    const rBase    = useResidual ? calcRental(amt, p, dis, 0, directSupply) : null;
+    if (!r) return '';
+
+    const saving     = rBase ? rBase.monthly - r.monthly : 0;
+    const isResidual = useResidual && residual > 0;
+
+    return `
+      <div class="col-12 col-sm-6 col-lg-4">
+        <div class="r-card ${isResidual ? 'residual' : ''}">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex align-items-center gap-1">
+              <span class="period">${p}개월</span>
+              ${isResidual ? '<span class="badge-return">만기 반납형</span>' : ''}
+            </div>
+            <span class="profit">${r.profitRate >= 0 ? '+' : ''}${r.profitRate}%</span>
+          </div>
+          <div class="monthly">${fmt(r.monthly)}<small class="fs-6 fw-normal text-muted ms-1">원/월</small></div>
+          <div class="meta mt-1 mb-1">총 ${fmt(r.total)}원</div>
+          ${isResidual && saving > 0 ? `<div class="saving mb-2">↓ 기존 대비 월 ${fmt(saving)}원 절감</div>` : '<div class="mb-2"></div>'}
+          <hr class="my-0 mb-2">
+          ${normalAmt ? `<div class="info-row"><span>정상가</span><span class="text-muted">${fmt(normalAmt)}원</span></div>` : ''}
+          <div class="info-row"><span>렌탈 설정가</span><span>${fmt(amt)}원</span></div>
+          <div class="info-row"><span>공급가</span><span>${fmt(r.supply)}원</span></div>
+          ${isResidual ? `
+          <div class="info-row"><span>잔존가</span><span class="text-warning">-${fmt(r.residual)}원</span></div>
+          <div class="info-row"><span>과금 기준액</span><span>${fmt(r.base)}원</span></div>` : ''}
+          <div class="info-row"><span>수익</span><span class="${r.profit >= 0 ? 'text-success' : 'text-danger'}">${r.profit >= 0 ? '+' : ''}${fmt(r.profit)}원</span></div>
+          <div class="info-row"><span>적용 요율</span><span>${r.rate}%</span></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+document.getElementById('calcPrice').addEventListener('input', function () {
+  const n = parse(this.value);
+  this.value = n ? fmt(n) : '';
+  updateResidualHint();
+  renderCalc();
+});
+
+function toggleResidual() {
+  const on = document.getElementById('chkResidual').checked;
+  document.getElementById('residualInputs').classList.toggle('d-none', !on);
+  document.getElementById('residualPanel').classList.toggle('active', on);
+  updateResidualHint();
+  renderCalc();
+}
+
+function onResidualInput(el) {
+  const mode = document.querySelector('input[name="residualMode"]:checked')?.value || 'amt';
+  if (mode === 'amt') {
+    const n = parse(el.value);
+    el.value = n ? fmt(n) : '';
+  }
+  updateResidualHint();
+  renderCalc();
+}
+
+function updateResidualHint() {
+  const hint = document.getElementById('residualHint');
+  const unit = document.getElementById('residualUnit');
+  if (!hint || !unit) return;
+  const mode = document.querySelector('input[name="residualMode"]:checked')?.value || 'amt';
+  unit.textContent = mode === 'pct' ? '%' : '원';
+
+  const amt = parse(document.getElementById('calcPrice').value);
+  const val = parse(document.getElementById('residualVal')?.value);
+  if (!amt || !val) { hint.textContent = ''; return; }
+
+  if (mode === 'pct') {
+    const residualAmt = Math.round(amt * val / 100);
+    hint.textContent = `→ 물대의 ${val}% = ${fmt(residualAmt)}원 잔존`;
+  } else {
+    const pct = (val / amt * 100).toFixed(1);
+    hint.textContent = `→ 물대의 ${pct}%에 해당`;
+  }
+}
+
+// 비율/금액 모드 전환 시 단위 업데이트
+document.querySelectorAll('input[name="residualMode"]').forEach(r =>
+  r.addEventListener('change', () => {
+    document.getElementById('residualVal').value = '';
+    updateResidualHint();
+    renderCalc();
+  })
+);
+
+// ── Tab 2: 링크생성 ───────────────────────────────────────────────
+function initLink() {
+  document.getElementById('lPeriods').innerHTML = PERIODS.map((p, i) => `
+    <div class="period-row">
+      <input class="form-check-input" type="checkbox" id="lChk_${p}" value="${p}" ${i < 3 ? 'checked' : ''}>
+      <label class="fw-semibold" for="lChk_${p}" style="min-width:44px">${p}개월</label>
+      <div class="input-group input-group-sm" style="max-width:150px">
+        <span class="input-group-text">할인율</span>
+        <input type="number" id="lDis_${p}" class="form-control" value="1" min="0.01" max="1" step="0.01">
+      </div>
+    </div>`).join('');
+}
+
+document.getElementById('lPrice').addEventListener('input', function () {
+  this.value = parse(this.value) ? fmt(parse(this.value)) : '';
+});
+
+function generateLink() {
+  const nm       = document.getElementById('lNm').value.trim();
+  const price    = parse(document.getElementById('lPrice').value);
+  const prdUrl   = document.getElementById('lPrdUrl').value.trim();
+  const img      = document.getElementById('lImg').value.trim();
+  const delivery = document.getElementById('lDelivery').value.trim();
+
+  if (!nm || !price) { alert('상품명과 판매가격은 필수입니다.'); return; }
+
+  const chosen = [];
+  PERIODS.forEach(p => {
+    if (!document.getElementById('lChk_' + p)?.checked) return;
+    const dis = parseFloat(document.getElementById('lDis_' + p)?.value || 1);
+    const r   = calcRental(price, p, dis);
+    if (r) chosen.push({ p, dis, ...r });
+  });
+  if (!chosen.length) { alert('렌탈 기간을 1개 이상 선택하세요.'); return; }
+
+  // Table
+  document.getElementById('lnkTable').innerHTML = `
+    <table class="table table-sm align-middle">
+      <thead><tr class="table-light">
+        <th>기간</th><th>물대</th><th>월 렌탈료</th><th>총 렌탈료</th><th>수익률</th>
+      </tr></thead>
+      <tbody>${chosen.map(c => `
+        <tr>
+          <td><span class="badge" style="background:var(--primary)">${c.p}개월</span></td>
+          <td>${fmt(c.supply)}원</td>
+          <td><strong>${fmt(c.monthly)}원</strong></td>
+          <td>${fmt(c.total)}원</td>
+          <td class="text-success fw-semibold">+${c.profitRate}%</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+
+  const params = new URLSearchParams({
+    nm, price, url: prdUrl, img, delivery,
+    periods: chosen.map(c => `${c.p}:${c.dis}:${c.monthly}:${c.total}`).join('|')
+  });
+  const base   = location.href.replace(/[^/]*$/, '') + 'view.html';
+  const payUrl = `${base}?${params}`;
+
+  document.getElementById('genUrl').value    = payUrl;
+  document.getElementById('embedCode').value =
+    `<a href="${payUrl}" target="_blank"><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(payUrl)}" alt="QR"></a>`;
+  document.getElementById('linkOutput').classList.remove('d-none');
+  document.getElementById('linkOutput').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Tab 3: 요율관리 ───────────────────────────────────────────────
+function renderRateTable() {
+  const rates = getRates();
+  document.getElementById('rateTable').innerHTML = PERIODS.map(p => `
+    <div class="rate-row">
+      <div>
+        <span class="fw-semibold">${p}개월</span>
+        <small class="text-muted ms-2">기본: ${DEFAULT_RATES[p]}%</small>
+      </div>
+      <div class="input-group input-group-sm" style="max-width:140px">
+        <input type="number" id="rt_${p}" class="form-control text-end fw-bold"
+               value="${rates[p]}" step="0.01" min="0.01"
+               oninput="renderRatePreview()">
+        <span class="input-group-text">%</span>
+      </div>
+    </div>`).join('');
+}
+
+function renderRatePreview() {
+  const base = 1000000;
+  document.getElementById('ratePreview').innerHTML = PERIODS.map(p => {
+    const rate    = parseFloat(document.getElementById('rt_' + p)?.value) || getRates()[p];
+    const monthly = Math.round(base * rate / 10000) * 100;
+    return `
+      <div class="col-6 col-md-4">
+        <div class="text-center p-3 rounded-3" style="background:#F1F5F9">
+          <small class="text-muted d-block">${p}개월 · ${rate}%</small>
+          <strong class="d-block" style="font-size:1.1rem;color:var(--primary)">${fmt(monthly)}원/월</strong>
+          <small class="text-muted">총 ${fmt(monthly * p)}원</small>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function saveRates() {
+  const r = {};
+  PERIODS.forEach(p => {
+    const v = parseFloat(document.getElementById('rt_' + p)?.value);
+    r[p] = isNaN(v) || v <= 0 ? DEFAULT_RATES[p] : v;
+  });
+  localStorage.setItem(LS_KEY, JSON.stringify(r));
+  renderCalc();
+  toast('✓ 요율이 저장되었습니다');
+}
+
+function resetRates() {
+  if (!confirm('기본값으로 복원하시겠습니까?')) return;
+  localStorage.removeItem(LS_KEY);
+  renderRateTable();
+  renderRatePreview();
+  renderCalc();
+  toast('기본값으로 복원되었습니다');
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+initCalc();
+initLink();
+renderRateTable();
+renderRatePreview();
+</script>
+</body>
+</html>
