@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>사무실 레이아웃 플래너</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Segoe UI', sans-serif; background: #f1f5f9; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── Header ── */
+    header { background: #0f172a; color: #fff; padding: 0 20px; height: 52px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .header-left h1 { font-size: 16px; font-weight: 800; letter-spacing: -0.3px; }
+    .header-left span { font-size: 11px; color: #64748b; background: #1e293b; padding: 2px 8px; border-radius: 99px; }
+    .header-right { display: flex; gap: 8px; }
+    .btn-icon { background: #1e293b; border: 1px solid #334155; color: #94a3b8; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+    .btn-icon:hover { background: #334155; color: #fff; }
+
+    /* ── Layout ── */
+    .app { display: grid; grid-template-columns: 340px 1fr; flex: 1; overflow: hidden; }
+
+    /* ── Left Panel ── */
+    .panel { background: #fff; border-right: 1px solid #e2e8f0; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+    .section-title { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; margin-bottom: 10px; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 11px; font-weight: 600; color: #475569; }
+    .field input, .field select { padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; color: #1e293b; outline: none; transition: border-color 0.15s; background: #fff; }
+    .field input:focus, .field select:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px #bfdbfe40; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+    .hint { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+
+    /* Names */
+    .names-list { display: flex; flex-direction: column; gap: 5px; max-height: 180px; overflow-y: auto; padding-right: 2px; }
+    .name-row { display: flex; align-items: center; gap: 6px; }
+    .name-row .seq { width: 20px; text-align: right; font-size: 10px; color: #94a3b8; flex-shrink: 0; font-family: monospace; }
+    .name-row .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .name-row input { flex: 1; padding: 5px 8px; border: 1px solid #e2e8f0; border-radius: 5px; font-size: 12px; }
+    .name-row input:focus { border-color: #3b82f6; outline: none; }
+
+    /* Generate button */
+    .btn-generate { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; letter-spacing: -0.2px; transition: opacity 0.15s; }
+    .btn-generate:hover { opacity: 0.92; }
+    .btn-generate:active { transform: scale(0.99); }
+
+    /* ── Right Panel ── */
+    .canvas-area { display: flex; flex-direction: column; overflow: hidden; }
+    .stats-bar { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 10px 20px; display: none; gap: 16px; flex-wrap: wrap; align-items: center; }
+    .stat { display: flex; flex-direction: column; gap: 1px; }
+    .stat-label { font-size: 10px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-value { font-size: 18px; font-weight: 800; color: #0f172a; line-height: 1; }
+    .stat-value small { font-size: 11px; font-weight: 500; color: #64748b; }
+    .stat-sep { width: 1px; height: 32px; background: #e2e8f0; }
+    .warn-badge { background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 5px 10px; font-size: 12px; color: #dc2626; font-weight: 700; }
+
+    .svg-wrapper { flex: 1; overflow: auto; padding: 20px; display: flex; align-items: flex-start; justify-content: center; }
+
+    /* Empty state */
+    .empty { flex: 1; display: flex; align-items: center; justify-content: center; color: #94a3b8; }
+    .empty-inner { text-align: center; }
+    .empty-icon { font-size: 56px; margin-bottom: 12px; }
+    .empty-title { font-size: 15px; font-weight: 700; color: #475569; margin-bottom: 4px; }
+    .empty-sub { font-size: 12px; }
+
+    /* Tooltip */
+    #tooltip { position: fixed; background: #0f172a; color: #fff; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; pointer-events: none; display: none; z-index: 999; white-space: nowrap; }
+
+    /* Print */
+    @media print {
+      header, .panel, .stats-bar, .btn-icon { display: none !important; }
+      .app { grid-template-columns: 1fr; }
+      .canvas-area { overflow: visible; }
+      .svg-wrapper { padding: 0; overflow: visible; }
+      body { overflow: visible; height: auto; }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.5"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="2" y1="15" x2="22" y2="15"/><line x1="8" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="16" y2="21"/></svg>
+    <h1>사무실 레이아웃 플래너</h1>
+    <span>Beta</span>
+  </div>
+  <div class="header-right">
+    <button class="btn-icon" onclick="window.print()">🖨 인쇄</button>
+    <button class="btn-icon" onclick="downloadSVG()">💾 SVG 저장</button>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- ── Left Panel ── -->
+  <div class="panel">
+
+    <!-- 공간 정보 -->
+    <div>
+      <div class="section-title">사무실 공간</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="field">
+          <label>면적 (평수 → 자동 환산)</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="number" id="pyeong" placeholder="20" min="1" step="0.5" oninput="onPyeong()" style="flex:1">
+            <span style="font-size:12px;color:#64748b;white-space:nowrap" id="sqm-label">≈ — m²</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>직접 입력 (m)</label>
+          <div class="row2">
+            <input type="number" id="room-w" placeholder="가로" step="0.5" min="2" oninput="onDims()">
+            <input type="number" id="room-h" placeholder="세로" step="0.5" min="2" oninput="onDims()">
+          </div>
+          <span class="hint">가로 × 세로 (미터 단위)</span>
+        </div>
+        <div class="field">
+          <label>구조</label>
+          <select id="structure" onchange="onStructure()">
+            <option value="rect">직사각형</option>
+            <option value="lshape">L자형 (모서리 잘린 구조)</option>
+          </select>
+        </div>
+        <div id="lshape-extra" style="display:none">
+          <div class="field">
+            <label>잘린 모서리 크기 (m) — 우하단 기준</label>
+            <div class="row2">
+              <input type="number" id="cut-w" placeholder="잘린 폭" step="0.5" min="0.5">
+              <input type="number" id="cut-h" placeholder="잘린 높이" step="0.5" min="0.5">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 인원 -->
+    <div>
+      <div class="section-title">인원</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="field">
+          <label>총 인원수</label>
+          <input type="number" id="count" placeholder="10" min="1" max="200" oninput="updateNames()">
+        </div>
+        <div class="field">
+          <label>이름 목록 <span id="name-count-badge" style="font-weight:400;color:#94a3b8"></span></label>
+          <div class="names-list" id="names-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 책상 설정 -->
+    <div>
+      <div class="section-title">책상 · 배치</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="field">
+          <label>책상 크기</label>
+          <select id="desk-preset" onchange="onPreset()">
+            <option value="sm">소형 1000 × 500mm</option>
+            <option value="md" selected>중형 1200 × 600mm</option>
+            <option value="lg">대형 1400 × 700mm</option>
+            <option value="xl">임원 1800 × 800mm</option>
+            <option value="custom">직접 입력</option>
+          </select>
+        </div>
+        <div id="custom-desk" style="display:none" class="field">
+          <label>직접 입력 (mm)</label>
+          <div class="row2">
+            <input type="number" id="desk-w" value="1200" step="100" placeholder="가로">
+            <input type="number" id="desk-d" value="600" step="100" placeholder="깊이">
+          </div>
+        </div>
+        <div class="field">
+          <label>통로 너비</label>
+          <select id="aisle">
+            <option value="0.9">협소 900mm</option>
+            <option value="1.2" selected>표준 1200mm</option>
+            <option value="1.5">넓게 1500mm</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>배치 방식</label>
+          <select id="layout-style">
+            <option value="rows">행별 배치 (단방향)</option>
+            <option value="pods" selected>군집 배치 (대면형)</option>
+            <option value="islands">섬형 배치 (4인 1조)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>여백 (m)</label>
+          <input type="number" id="margin" value="0.5" step="0.1" min="0" max="2">
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-generate" onclick="generate()">🪑 최적 레이아웃 생성</button>
+
+  </div>
+
+  <!-- ── Right Panel ── -->
+  <div class="canvas-area">
+    <div class="stats-bar" id="stats-bar">
+      <!-- populated by JS -->
+    </div>
+    <div class="svg-wrapper" id="svg-wrapper">
+      <div class="empty" id="empty-state">
+        <div class="empty-inner">
+          <div class="empty-icon">🏢</div>
+          <div class="empty-title">레이아웃을 생성하세요</div>
+          <div class="empty-sub">좌측 폼 작성 후 '최적 레이아웃 생성' 버튼을 클릭하세요</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+// ──────────────────────────────────────────────
+// Constants
+// ──────────────────────────────────────────────
+const DESK_GAP   = 0.05;  // gap between adjacent desks (m)
+const POD_GAP    = 0.8;   // facing desk gap (m)
+
+const DESK_PRESETS = {
+  sm: [1.0, 0.5],
+  md: [1.2, 0.6],
+  lg: [1.4, 0.7],
+  xl: [1.8, 0.8],
+};
+
+const PALETTE = [
+  '#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899',
+  '#06b6d4','#ef4444','#84cc16','#f97316','#6366f1',
+  '#14b8a6','#e11d48','#7c3aed','#0ea5e9','#eab308',
+  '#64748b','#0891b2','#059669','#d97706','#7c3aed',
+];
+
+// ──────────────────────────────────────────────
+// Form sync
+// ──────────────────────────────────────────────
+function onPyeong() {
+  const p = parseFloat(document.getElementById('pyeong').value);
+  if (isNaN(p) || p <= 0) { document.getElementById('sqm-label').textContent = '≈ — m²'; return; }
+  const sqm = p * 3.30579;
+  document.getElementById('sqm-label').textContent = `≈ ${sqm.toFixed(1)} m²`;
+  const w = Math.sqrt(sqm * 1.25);
+  const h = sqm / w;
+  document.getElementById('room-w').value = w.toFixed(1);
+  document.getElementById('room-h').value = h.toFixed(1);
+}
+
+function onDims() {
+  const w = parseFloat(document.getElementById('room-w').value);
+  const h = parseFloat(document.getElementById('room-h').value);
+  if (isNaN(w) || isNaN(h) || w <= 0 || h <= 0) return;
+  const sqm = w * h;
+  document.getElementById('pyeong').value = (sqm / 3.30579).toFixed(1);
+  document.getElementById('sqm-label').textContent = `≈ ${sqm.toFixed(1)} m²`;
+}
+
+function onStructure() {
+  const v = document.getElementById('structure').value;
+  document.getElementById('lshape-extra').style.display = v === 'lshape' ? 'block' : 'none';
+}
+
+function onPreset() {
+  const v = document.getElementById('desk-preset').value;
+  document.getElementById('custom-desk').style.display = v === 'custom' ? 'flex' : 'none';
+  if (v !== 'custom') {
+    const [w, d] = DESK_PRESETS[v];
+    document.getElementById('desk-w').value = Math.round(w * 1000);
+    document.getElementById('desk-d').value = Math.round(d * 1000);
+  }
+}
+
+function updateNames() {
+  const count = Math.min(parseInt(document.getElementById('count').value) || 0, 200);
+  const list = document.getElementById('names-list');
+  const existing = Array.from(list.querySelectorAll('input')).map(i => i.value);
+  list.innerHTML = '';
+  document.getElementById('name-count-badge').textContent = count ? `(${count}명)` : '';
+
+  for (let i = 0; i < count; i++) {
+    const color = PALETTE[i % PALETTE.length];
+    const row = document.createElement('div');
+    row.className = 'name-row';
+    row.innerHTML = `
+      <span class="seq">${i + 1}</span>
+      <span class="dot" style="background:${color}"></span>
+      <input type="text" placeholder="이름 ${i + 1}" value="${existing[i] || ''}">
+    `;
+    list.appendChild(row);
+  }
+}
+
+// ──────────────────────────────────────────────
+// Layout algorithms
+// ──────────────────────────────────────────────
+function getNames() {
+  return Array.from(document.getElementById('names-list').querySelectorAll('input'))
+    .map((inp, i) => inp.value.trim() || `인원 ${i + 1}`);
+}
+
+function getDeskSize() {
+  const preset = document.getElementById('desk-preset').value;
+  if (preset !== 'custom') return DESK_PRESETS[preset];
+  return [
+    parseFloat(document.getElementById('desk-w').value) / 1000,
+    parseFloat(document.getElementById('desk-d').value) / 1000,
+  ];
+}
+
+function layoutRows(ox, oy, aw, ah, names, dw, dd, aisle) {
+  const per = Math.floor((aw + DESK_GAP) / (dw + DESK_GAP));
+  if (per <= 0) return [];
+  const desks = [], pitch = dd + aisle;
+  let ni = 0;
+  for (let r = 0; ni < names.length; r++) {
+    const y = oy + r * pitch;
+    if (y + dd > oy + ah + 0.001) break;
+    for (let c = 0; c < per && ni < names.length; c++) {
+      desks.push({ x: ox + c * (dw + DESK_GAP), y, w: dw, d: dd, name: names[ni++] });
+    }
+  }
+  return desks;
+}
+
+function layoutPods(ox, oy, aw, ah, names, dw, dd, aisle) {
+  const per = Math.floor((aw + DESK_GAP) / (dw + DESK_GAP));
+  if (per <= 0) return [];
+  const podH = dd * 2 + POD_GAP, pitch = podH + aisle;
+  const desks = [];
+  let ni = 0;
+  for (let p = 0; ni < names.length; p++) {
+    const py = oy + p * pitch;
+    if (py + podH > oy + ah + 0.001) break;
+    for (let c = 0; c < per && ni < names.length; c++)
+      desks.push({ x: ox + c * (dw + DESK_GAP), y: py, w: dw, d: dd, name: names[ni++], front: 'bottom' });
+    for (let c = 0; c < per && ni < names.length; c++)
+      desks.push({ x: ox + c * (dw + DESK_GAP), y: py + dd + POD_GAP, w: dw, d: dd, name: names[ni++], front: 'top' });
+  }
+  return desks;
+}
+
+function layoutIslands(ox, oy, aw, ah, names, dw, dd, aisle) {
+  const isW = dw * 2 + DESK_GAP, isH = dd * 2 + POD_GAP;
+  const px = isW + aisle, py = isH + aisle;
+  const desks = [];
+  let ni = 0;
+  for (let r = 0; ni < names.length; r++) {
+    const iy = oy + r * py;
+    if (iy + isH > oy + ah + 0.001) break;
+    for (let c = 0; ni < names.length; c++) {
+      const ix = ox + c * px;
+      if (ix + isW > ox + aw + 0.001) break;
+      const pos = [
+        [ix, iy, 'bottom'], [ix + dw + DESK_GAP, iy, 'bottom'],
+        [ix, iy + dd + POD_GAP, 'top'], [ix + dw + DESK_GAP, iy + dd + POD_GAP, 'top'],
+      ];
+      for (const [dx, dy, f] of pos) {
+        if (ni < names.length)
+          desks.push({ x: dx, y: dy, w: dw, d: dd, name: names[ni++], front: f });
+      }
+    }
+  }
+  return desks;
+}
+
+function runLayout(ox, oy, aw, ah, names, dw, dd, aisle, style) {
+  if (aw <= dw || ah <= dd || names.length === 0) return [];
+  if (style === 'rows')   return layoutRows(ox, oy, aw, ah, names, dw, dd, aisle);
+  if (style === 'pods')   return layoutPods(ox, oy, aw, ah, names, dw, dd, aisle);
+  if (style === 'islands') return layoutIslands(ox, oy, aw, ah, names, dw, dd, aisle);
+  return [];
+}
+
+function countCapacity(aw, ah, dw, dd, aisle, style) {
+  return runLayout(0, 0, aw, ah, Array(999).fill('x'), dw, dd, aisle, style).length;
+}
+
+// ──────────────────────────────────────────────
+// SVG rendering
+// ──────────────────────────────────────────────
+function buildSVG(config, desks) {
+  const { roomW, roomH, structure, cutW, cutH } = config;
+  const OUTER_PAD = 56;
+
+  const area = document.getElementById('svg-wrapper');
+  const maxW = area.clientWidth - 40;
+  const maxH = Math.max(400, area.clientHeight - 40);
+
+  const sx = (maxW - OUTER_PAD * 2) / roomW;
+  const sy = (maxH - OUTER_PAD * 2) / roomH;
+  const sc = Math.min(sx, sy, 90);
+
+  const svgW = roomW * sc + OUTER_PAD * 2;
+  const svgH = roomH * sc + OUTER_PAD * 2;
+  const P = OUTER_PAD;
+
+  const gridSize = sc; // 1m grid
+
+  let s = `<svg id="main-svg" width="${svgW.toFixed(0)}" height="${svgH.toFixed(0)}" viewBox="0 0 ${svgW.toFixed(2)} ${svgH.toFixed(2)}" xmlns="http://www.w3.org/2000/svg" style="border-radius:10px;box-shadow:0 4px 24px #0001">`;
+
+  // Defs: grid pattern + shadow
+  s += `<defs>
+    <pattern id="g1m" width="${gridSize}" height="${gridSize}" patternUnits="userSpaceOnUse" x="${P}" y="${P}">
+      <path d="M ${gridSize} 0 L 0 0 0 ${gridSize}" fill="none" stroke="#e2e8f0" stroke-width="0.6"/>
+    </pattern>
+    <filter id="dshadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#0002"/>
+    </filter>
+  </defs>`;
+
+  // Room background
+  if (structure === 'rect') {
+    s += `<rect x="${P}" y="${P}" width="${(roomW*sc).toFixed(2)}" height="${(roomH*sc).toFixed(2)}" fill="#f8fafc"/>`;
+    s += `<rect x="${P}" y="${P}" width="${(roomW*sc).toFixed(2)}" height="${(roomH*sc).toFixed(2)}" fill="url(#g1m)"/>`;
+    s += `<rect x="${P}" y="${P}" width="${(roomW*sc).toFixed(2)}" height="${(roomH*sc).toFixed(2)}" fill="none" stroke="#334155" stroke-width="2.5" rx="1"/>`;
+  } else {
+    // L-shape: main rect + extension (bottom-right corner removed)
+    const mH = roomH - cutH; // main area height
+    const eW = roomW - cutW; // extension width
+    const pts = [
+      [P, P], [P + roomW*sc, P], [P + roomW*sc, P + mH*sc],
+      [P + eW*sc, P + mH*sc], [P + eW*sc, P + roomH*sc],
+      [P, P + roomH*sc],
+    ].map(([x,y])=>`${x.toFixed(2)},${y.toFixed(2)}`).join(' ');
+    s += `<polygon points="${pts}" fill="#f8fafc"/>`;
+    s += `<polygon points="${pts}" fill="url(#g1m)"/>`;
+    s += `<polygon points="${pts}" fill="none" stroke="#334155" stroke-width="2.5"/>`;
+  }
+
+  // 1m tick marks along bottom & right
+  for (let m = 1; m < roomW; m++) {
+    const tx = P + m * sc;
+    const ty = P + roomH * sc;
+    s += `<line x1="${tx.toFixed(1)}" y1="${(ty).toFixed(1)}" x2="${tx.toFixed(1)}" y2="${(ty+5).toFixed(1)}" stroke="#94a3b8" stroke-width="1"/>`;
+    s += `<text x="${tx.toFixed(1)}" y="${(ty+14).toFixed(1)}" text-anchor="middle" font-size="8" fill="#94a3b8" font-family="monospace">${m}</text>`;
+  }
+  for (let m = 1; m < roomH; m++) {
+    const tx = P + roomW * sc;
+    const ty = P + m * sc;
+    s += `<line x1="${(tx).toFixed(1)}" y1="${ty.toFixed(1)}" x2="${(tx+5).toFixed(1)}" y2="${ty.toFixed(1)}" stroke="#94a3b8" stroke-width="1"/>`;
+    s += `<text x="${(tx+14).toFixed(1)}" y="${(ty+3).toFixed(1)}" text-anchor="middle" font-size="8" fill="#94a3b8" font-family="monospace">${m}</text>`;
+  }
+
+  // Dimension labels
+  s += `<text x="${(P + roomW*sc/2).toFixed(1)}" y="${(P-10).toFixed(1)}" text-anchor="middle" font-size="12" fill="#475569" font-weight="700" font-family="monospace">${roomW.toFixed(1)}m</text>`;
+  s += `<text x="${(P-12).toFixed(1)}" y="${(P + roomH*sc/2).toFixed(1)}" text-anchor="middle" font-size="12" fill="#475569" font-weight="700" font-family="monospace" transform="rotate(-90, ${(P-12).toFixed(1)}, ${(P + roomH*sc/2).toFixed(1)})">${roomH.toFixed(1)}m</text>`;
+
+  // Desks
+  for (let i = 0; i < desks.length; i++) {
+    const d = desks[i];
+    const color = PALETTE[i % PALETTE.length];
+    const dx = (P + d.x * sc).toFixed(2);
+    const dy = (P + d.y * sc).toFixed(2);
+    const dw = (d.w * sc).toFixed(2);
+    const dd = (d.d * sc).toFixed(2);
+
+    // Desk body
+    s += `<g class="desk" data-name="${d.name}" data-idx="${i}">`;
+    s += `<rect x="${dx}" y="${dy}" width="${dw}" height="${dd}" rx="2" fill="${color}" filter="url(#dshadow)"/>`;
+
+    // Monitor bar (at back of desk — top edge for 'bottom' front desks, bottom edge for 'top' front desks)
+    const monH = Math.max(3, d.d * sc * 0.12);
+    const monY = d.front === 'top'
+      ? (P + (d.y + d.d) * sc - monH - 1).toFixed(2)
+      : (P + d.y * sc + 1).toFixed(2);
+    s += `<rect x="${(P + d.x * sc + 2).toFixed(2)}" y="${monY}" width="${(d.w * sc - 4).toFixed(2)}" height="${monH.toFixed(2)}" rx="1" fill="rgba(255,255,255,0.35)"/>`;
+
+    // Chair (small half-circle at front)
+    const chairR = Math.min(6, d.w * sc * 0.14);
+    const chairCx = (P + (d.x + d.w / 2) * sc).toFixed(2);
+    let chairCy;
+    if (d.front === 'top') {
+      chairCy = (P + d.y * sc - chairR * 0.5).toFixed(2);
+      s += `<circle cx="${chairCx}" cy="${chairCy}" r="${chairR.toFixed(1)}" fill="${color}" opacity="0.4"/>`;
+    } else {
+      chairCy = (P + (d.y + d.d) * sc + chairR * 0.5).toFixed(2);
+      s += `<circle cx="${chairCx}" cy="${chairCy}" r="${chairR.toFixed(1)}" fill="${color}" opacity="0.4"/>`;
+    }
+
+    // Name label
+    const nameStr = d.name.length > 7 ? d.name.slice(0, 6) + '…' : d.name;
+    const fs = Math.max(7, Math.min(12, d.w * sc / 7));
+    s += `<text x="${(P + (d.x + d.w/2)*sc).toFixed(2)}" y="${(P + (d.y + d.d/2)*sc + fs/3).toFixed(2)}" text-anchor="middle" font-size="${fs.toFixed(1)}" fill="white" font-weight="700" font-family="-apple-system,sans-serif">${nameStr}</text>`;
+
+    s += `</g>`;
+  }
+
+  // Scale bar (bottom-left)
+  const barM = Math.max(1, Math.round(roomW / 5));
+  const barPx = barM * sc;
+  const barX = P, barY2 = P + roomH * sc + 28;
+  s += `<line x1="${barX}" y1="${barY2}" x2="${(barX+barPx).toFixed(1)}" y2="${barY2}" stroke="#64748b" stroke-width="2"/>`;
+  s += `<line x1="${barX}" y1="${(barY2-4)}" x2="${barX}" y2="${(barY2+4)}" stroke="#64748b" stroke-width="2"/>`;
+  s += `<line x1="${(barX+barPx).toFixed(1)}" y1="${(barY2-4)}" x2="${(barX+barPx).toFixed(1)}" y2="${(barY2+4)}" stroke="#64748b" stroke-width="2"/>`;
+  s += `<text x="${(barX + barPx/2).toFixed(1)}" y="${(barY2+14)}" text-anchor="middle" font-size="10" fill="#64748b" font-family="monospace">${barM}m</text>`;
+
+  s += `</svg>`;
+  return s;
+}
+
+// ──────────────────────────────────────────────
+// Main generate function
+// ──────────────────────────────────────────────
+function generate() {
+  const roomW  = parseFloat(document.getElementById('room-w').value);
+  const roomH  = parseFloat(document.getElementById('room-h').value);
+  const count  = parseInt(document.getElementById('count').value) || 0;
+  const aisle  = parseFloat(document.getElementById('aisle').value);
+  const style  = document.getElementById('layout-style').value;
+  const margin = parseFloat(document.getElementById('margin').value) || 0.5;
+  const structure = document.getElementById('structure').value;
+  const cutW   = parseFloat(document.getElementById('cut-w').value) || 0;
+  const cutH   = parseFloat(document.getElementById('cut-h').value) || 0;
+
+  if (!roomW || !roomH) { alert('사무실 크기를 입력해주세요.'); return; }
+  if (count <= 0) { alert('인원수를 입력해주세요.'); return; }
+
+  const [dw, dd] = getDeskSize();
+  const names = getNames().slice(0, count);
+
+  let desks = [];
+
+  if (structure === 'rect') {
+    const aw = roomW - margin * 2;
+    const ah = roomH - margin * 2;
+    desks = runLayout(margin, margin, aw, ah, names, dw, dd, aisle, style);
+  } else {
+    // L-shape: split into two zones
+    // Zone 1: full width, top portion (height = roomH - cutH)
+    // Zone 2: left portion (width = roomW - cutW), bottom
+    const mH = roomH - cutH;
+    const eW = roomW - cutW;
+
+    const cap1 = countCapacity(roomW - margin*2, mH - margin, dw, dd, aisle, style);
+    const zone1Names = names.slice(0, Math.min(cap1, names.length));
+    const zone2Names = names.slice(zone1Names.length);
+
+    const d1 = runLayout(margin, margin, roomW - margin*2, mH - margin*1.5, zone1Names, dw, dd, aisle, style);
+    const d2 = runLayout(margin, mH + margin*0.5, eW - margin*2, cutH - margin*1.5, zone2Names, dw, dd, aisle, style);
+    desks = [...d1, ...d2];
+  }
+
+  // Render SVG
+  const config = { roomW, roomH, structure, cutW, cutH };
+  const wrapper = document.getElementById('svg-wrapper');
+  wrapper.innerHTML = buildSVG(config, desks);
+
+  // Tooltip on hover
+  document.querySelectorAll('.desk').forEach(el => {
+    el.style.cursor = 'pointer';
+    el.addEventListener('mouseenter', e => {
+      const tt = document.getElementById('tooltip');
+      tt.textContent = el.dataset.name;
+      tt.style.display = 'block';
+    });
+    el.addEventListener('mousemove', e => {
+      const tt = document.getElementById('tooltip');
+      tt.style.left = (e.clientX + 12) + 'px';
+      tt.style.top  = (e.clientY - 28) + 'px';
+    });
+    el.addEventListener('mouseleave', () => {
+      document.getElementById('tooltip').style.display = 'none';
+    });
+  });
+
+  // Stats
+  const placed = desks.length;
+  const sqm = structure === 'rect' ? roomW * roomH : roomW * roomH - cutW * cutH;
+  const deskArea = placed * dw * dd;
+  const perPerson = placed > 0 ? (sqm / placed).toFixed(1) : '—';
+  const utilPct = ((deskArea / sqm) * 100).toFixed(0);
+
+  const pyeong = (sqm / 3.30579).toFixed(1);
+
+  let statsHtml = `
+    <div class="stat"><div class="stat-label">면적</div><div class="stat-value">${sqm.toFixed(1)}<small> m² (${pyeong}평)</small></div></div>
+    <div class="stat-sep"></div>
+    <div class="stat"><div class="stat-label">배치 인원</div><div class="stat-value">${placed}<small>/${count}명</small></div></div>
+    <div class="stat-sep"></div>
+    <div class="stat"><div class="stat-label">1인당 면적</div><div class="stat-value">${perPerson}<small> m²</small></div></div>
+    <div class="stat-sep"></div>
+    <div class="stat"><div class="stat-label">책상 점유율</div><div class="stat-value">${utilPct}<small>%</small></div></div>
+  `;
+  if (placed < count) {
+    statsHtml += `<div class="warn-badge">⚠ ${count - placed}명 미배치 — 공간 부족</div>`;
+  }
+
+  const bar = document.getElementById('stats-bar');
+  bar.style.display = 'flex';
+  bar.innerHTML = statsHtml;
+
+  document.getElementById('empty-state') && document.getElementById('empty-state').remove();
+}
+
+// ──────────────────────────────────────────────
+// SVG download
+// ──────────────────────────────────────────────
+function downloadSVG() {
+  const svg = document.getElementById('main-svg');
+  if (!svg) { alert('먼저 레이아웃을 생성하세요.'); return; }
+  const data = new XMLSerializer().serializeToString(svg);
+  const blob = new Blob([data], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'office-layout.svg'; a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
