@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/session'
-import { completeOrder } from '@/lib/actions/orders'
+import { completeOrder, addQrRow, deleteQrRow } from '@/lib/actions/orders'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/app/components/Navbar'
@@ -25,6 +25,7 @@ export default async function OrderDetailPage({ params, searchParams }: { params
   const isDone = order.status === 'DONE'
 
   const completeWithId = completeOrder.bind(null, order.id)
+  const addRowAction = addQrRow.bind(null, order.id)
 
   const infoRows: [string, string][] = [
     ['업체명', order.companyName],
@@ -32,7 +33,7 @@ export default async function OrderDetailPage({ params, searchParams }: { params
     ['사업자번호', order.bizNumber],
     ['담당자', order.managerName],
     ['연락처', order.contact],
-    ['수량', order.quantityDesc || `${order.quantity}대`],
+    ['수량', `${order.qrCodes.length}대${order.quantityDesc ? ` (${order.quantityDesc})` : ''}`],
     ['입고일', order.arrivalDate],
     ['예금주', order.depositor],
     ['은행', order.bank],
@@ -83,6 +84,13 @@ export default async function OrderDetailPage({ params, searchParams }: { params
                 {order.qrCodes.filter(q => q.isInspected).length}/{order.qrCodes.length}
               </span>
             </div>
+            {session?.role === 'ADMIN' && !isDone && (
+              <form action={addRowAction}>
+                <button type="submit" className="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-bold border border-blue-200">
+                  + 행 추가
+                </button>
+              </form>
+            )}
           </div>
 
           <div className="overflow-x-auto">
@@ -117,6 +125,13 @@ export default async function OrderDetailPage({ params, searchParams }: { params
                             >
                               라벨
                             </Link>
+                          )}
+                          {session?.role === 'ADMIN' && !qr.isInspected && !isDone && (
+                            <form action={deleteQrRow.bind(null, qr.id, order.id)}>
+                              <button type="submit" className="whitespace-nowrap px-2 py-1.5 rounded text-xs font-bold text-red-400 hover:text-red-600 hover:bg-red-50">
+                                삭제
+                              </button>
+                            </form>
                           )}
                         </div>
                       </td>

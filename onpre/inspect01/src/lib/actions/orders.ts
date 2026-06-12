@@ -5,6 +5,48 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/session'
 import { makeQrString } from '@/lib/qr'
 
+export async function addQrRow(orderId: number) {
+  const session = await getSession()
+  if (!session || session.role !== 'ADMIN') throw new Error('권한 없음')
+
+  const order = await prisma.purchaseOrder.findUnique({
+    where: { id: orderId },
+    include: { qrCodes: { orderBy: { seq: 'desc' }, take: 1 } },
+  })
+  if (!order) throw new Error('매입건 없음')
+
+  const maxSeq = order.qrCodes[0]?.seq ?? 0
+  const date = order.arrivalDate ? new Date(order.arrivalDate) : new Date()
+
+  await prisma.qRCode.create({
+    data: {
+      qrString: makeQrString(date, order.vendorNameEn, order.managerLastEn, maxSeq + 1),
+      seq: maxSeq + 1,
+      purchaseOrderId: orderId,
+    },
+  })
+
+  const total = await prisma.qRCode.count({ where: { purchaseOrderId: orderId } })
+  await prisma.purchaseOrder.update({ where: { id: orderId }, data: { quantity: total } })
+
+  revalidatePath(`/orders/${orderId}`)
+}
+
+export async function deleteQrRow(qrId: number, orderId: number) {
+  const session = await getSession()
+  if (!session || session.role !== 'ADMIN') throw new Error('권한 없음')
+
+  const qr = await prisma.qRCode.findUnique({ where: { id: qrId } })
+  if (!qr || qr.isInspected) throw new Error('검수 완료된 행은 삭제할 수 없습니다')
+
+  await prisma.qRCode.delete({ where: { id: qrId } })
+
+  const total = await prisma.qRCode.count({ where: { purchaseOrderId: orderId } })
+  await prisma.purchaseOrder.update({ where: { id: orderId }, data: { quantity: total } })
+
+  revalidatePath(`/orders/${orderId}`)
+}
+
 export async function createOrder(formData: FormData) {
   const session = await getSession()
   if (!session || session.role !== 'ADMIN') throw new Error('권한 없음')
