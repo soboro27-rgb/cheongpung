@@ -104,20 +104,41 @@
           <span class="fw-bold text-secondary">원</span>
         </div>
 
-        <!-- 렌탈 설정가 -->
-        <p class="slabel">렌탈 설정가</p>
-        <div class="d-flex align-items-center gap-3 mb-3">
-          <input type="text" id="calcPrice" class="form-control big-input flex-grow-1" placeholder="0" inputmode="numeric" autocomplete="off">
-          <span class="fw-bold text-secondary fs-5">원</span>
-        </div>
+        <!-- 렌탈 설정가 ↔ 마진율 ↔ 공급가 -->
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:10px;margin-bottom:16px">
 
-        <!-- 공급가 -->
-        <p class="slabel">공급가 <small class="text-muted fw-normal" style="text-transform:none;font-size:10px">미입력 시 렌탈설정가 × 할인율 적용</small></p>
-        <div class="d-flex align-items-center gap-3 mb-4">
-          <input type="text" id="supplyPrice" class="form-control" placeholder="0" inputmode="numeric" autocomplete="off"
-                 style="border-radius:10px;border:1.5px solid #E2E8F0;padding:10px 14px;font-size:1rem;font-weight:600"
-                 oninput="onPriceInput(this); renderCalc()">
-          <span class="fw-bold text-secondary">원</span>
+          <!-- 렌탈 설정가 -->
+          <div>
+            <p class="slabel mb-1">렌탈 설정가</p>
+            <div class="d-flex align-items-center gap-2">
+              <input type="text" id="calcPrice" class="form-control big-input flex-grow-1" placeholder="0" inputmode="numeric" autocomplete="off">
+              <span class="fw-bold text-secondary fs-5">원</span>
+            </div>
+          </div>
+
+          <!-- 마진율 -->
+          <div style="padding-bottom:6px;text-align:center;min-width:68px">
+            <div style="font-size:9px;font-weight:700;color:#94A3B8;letter-spacing:.05em;margin-bottom:4px">마진율</div>
+            <div id="marginBadge" style="
+              background:#EEF2FF;color:#4F46E5;
+              font-size:13px;font-weight:800;
+              padding:6px 10px;border-radius:20px;
+              border:1.5px solid #C7D2FE;
+              white-space:nowrap;line-height:1
+            ">—</div>
+            <div id="marginAmt" style="font-size:10px;color:#94A3B8;margin-top:3px;white-space:nowrap">—</div>
+          </div>
+
+          <!-- 공급가 -->
+          <div>
+            <p class="slabel mb-1">공급가 <small class="text-muted fw-normal" style="text-transform:none;font-size:10px">미입력 시 할인율 적용</small></p>
+            <div class="d-flex align-items-center gap-2">
+              <input type="text" id="supplyPrice" class="form-control big-input flex-grow-1" placeholder="0" inputmode="numeric" autocomplete="off"
+                     oninput="onPriceInput(this); updateMargin(); renderCalc()">
+              <span class="fw-bold text-secondary fs-5">원</span>
+            </div>
+          </div>
+
         </div>
 
         <p class="slabel">개월별 할인율 <small class="text-muted fw-normal normal-case" style="text-transform:none">(1 = 100%)</small></p>
@@ -360,9 +381,34 @@ function renderCalc() {
 document.getElementById('calcPrice').addEventListener('input', function () {
   const n = parse(this.value);
   this.value = n ? fmt(n) : '';
+  updateMargin();
   updateResidualHint();
   renderCalc();
 });
+
+function updateMargin() {
+  const rental = parse(document.getElementById('calcPrice').value);
+  const supply = parse(document.getElementById('supplyPrice').value);
+  const badge  = document.getElementById('marginBadge');
+  const amt    = document.getElementById('marginAmt');
+  if (!rental || !supply) {
+    badge.textContent = '—';
+    badge.style.background = '#EEF2FF';
+    badge.style.color = '#4F46E5';
+    badge.style.borderColor = '#C7D2FE';
+    amt.textContent = '—';
+    return;
+  }
+  const diff    = rental - supply;
+  const rate    = (diff / rental * 100);
+  const positive = diff >= 0;
+  badge.textContent = (positive ? '+' : '') + rate.toFixed(1) + '%';
+  badge.style.background = positive ? '#F0FDF4' : '#FEF2F2';
+  badge.style.color      = positive ? '#16A34A' : '#DC2626';
+  badge.style.borderColor = positive ? '#BBF7D0' : '#FECACA';
+  amt.textContent = (positive ? '+' : '') + fmt(diff) + '원';
+  amt.style.color = positive ? '#16A34A' : '#DC2626';
+}
 
 function toggleResidual() {
   const on = document.getElementById('chkResidual').checked;
