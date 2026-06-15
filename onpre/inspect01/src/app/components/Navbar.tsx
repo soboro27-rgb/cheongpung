@@ -75,12 +75,15 @@ export default async function Navbar() {
         <span className="text-slate-400 text-xs">{session?.name}</span>
         <span
           className="text-xs px-2.5 py-0.5 rounded-full font-bold"
-          style={session?.role === 'ADMIN'
-            ? { background: '#1E40AF', color: '#93C5FD' }
-            : { background: '#1E293B', color: '#64748B' }
+          style={
+            session?.role === 'ADMIN'
+              ? { background: '#1E40AF', color: '#93C5FD' }
+              : session?.role === 'FINAL_INSPECTOR'
+              ? { background: '#4C1D95', color: '#C4B5FD' }
+              : { background: '#1E293B', color: '#64748B' }
           }
         >
-          {session?.role === 'ADMIN' ? 'ADMIN' : 'INSPECTOR'}
+          {session?.role === 'ADMIN' ? 'ADMIN' : session?.role === 'FINAL_INSPECTOR' ? 'FINAL' : 'INSPECTOR'}
         </span>
         <form action={logout}>
             <button className="text-xs text-slate-500 hover:text-slate-300 transition-colors">

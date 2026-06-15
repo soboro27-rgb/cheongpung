@@ -8,16 +8,17 @@ datasource db {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  loginId      String   @unique
-  passwordHash String
-  name         String
-  role         String   @default("INSPECTOR")
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
+  id                 Int      @id @default(autoincrement())
+  loginId            String   @unique
+  passwordHash       String
+  name               String
+  role               String   @default("INSPECTOR")
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
 
-  orders       PurchaseOrder[]
-  inspections  Inspection[]
+  orders             PurchaseOrder[]
+  inspections        Inspection[]     @relation("InspectorRelation")
+  stampedInspections Inspection[]     @relation("StamperRelation")
 }
 
 model PurchaseOrder {
@@ -58,31 +59,37 @@ model QRCode {
 }
 
 model Inspection {
-  id               Int      @id @default(autoincrement())
-  inspectedAt      DateTime @default(now())
+  id               Int       @id @default(autoincrement())
+  inspectedAt      DateTime  @default(now())
 
-  manufacturer     String   @default("")
-  model            String   @default("")
-  cpu              String   @default("")
-  ram              String   @default("")
-  storage          String   @default("")
-  vga              String   @default("")
-  screenSize       String   @default("")
-  resolution       String   @default("")
-  lcdCondition     String   @default("")
-  keyboardTouch    String   @default("")
-  batteryLossPct   Float    @default(0)
-  battery45Checked Boolean  @default(false)
-  notes            String   @default("")
+  manufacturer     String    @default("")
+  model            String    @default("")
+  cpu              String    @default("")
+  ram              String    @default("")
+  storage          String    @default("")
+  vga              String    @default("")
+  screenSize       String    @default("")
+  resolution       String    @default("")
+  lcdCondition     String    @default("")
+  keyboardTouch    String    @default("")
+  batteryLossPct   Float     @default(0)
+  battery45Checked Boolean   @default(false)
+  notes            String    @default("")
 
-  adapter          Boolean  @default(false)
-  disassembled     Boolean  @default(false)
-  defectStatus     String   @default("GOOD")
-  grade            String   @default("")
-  purchasePrice    Int      @default(0)
+  adapter          Boolean   @default(false)
+  disassembled     Boolean   @default(false)
 
-  qrId             Int      @unique
-  qr               QRCode   @relation(fields: [qrId], references: [id])
+  defectStatus     String    @default("GOOD")
+  grade            String    @default("")
+  purchasePrice    Int       @default(0)
+
+  isStamped        Boolean   @default(false)
+  stampedAt        DateTime?
+  stampedById      Int?
+
+  qrId             Int       @unique
+  qr               QRCode    @relation(fields: [qrId], references: [id])
   inspectorId      Int
-  inspector        User     @relation(fields: [inspectorId], references: [id])
+  inspector        User      @relation("InspectorRelation", fields: [inspectorId], references: [id])
+  stampedBy        User?     @relation("StamperRelation", fields: [stampedById], references: [id])
 }

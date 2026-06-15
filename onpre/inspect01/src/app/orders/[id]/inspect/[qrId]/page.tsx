@@ -17,7 +17,7 @@ export default async function InspectPage({
     where: { id: parseInt(qrId) },
     include: {
       purchaseOrder: true,
-      inspection: { include: { inspector: true } },
+      inspection: { include: { inspector: true, stampedBy: true } },
     },
   })
   if (!qr || qr.purchaseOrderId !== parseInt(id)) notFound()
@@ -34,12 +34,12 @@ export default async function InspectPage({
         <main className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center gap-3 mb-5">
             <Link href={`/orders/${id}`} className="text-slate-400 hover:text-slate-600 text-sm">← 매입건</Link>
-            <h1 className="text-lg font-black text-slate-900">검수 결과</h1>
+            <h1 className="text-lg font-black text-slate-900">검수 결과 (1차)</h1>
             <code className="text-xs bg-slate-200 px-2 py-0.5 rounded font-mono text-slate-600">{qr.qrString}</code>
           </div>
 
-          <div className="bg-amber-50 border border-amber-300 rounded-lg px-4 py-3 mb-5 flex items-center gap-2">
-            <span className="text-amber-600 font-bold text-sm">🔒 이미 완료된 검수입니다</span>
+          <div className="bg-amber-50 border border-amber-300 rounded-lg px-4 py-3 mb-5 flex items-center gap-3">
+            <span className="text-amber-600 font-bold text-sm">🔒 이미 완료된 1차 검수입니다</span>
             <span className="text-amber-500 text-xs">
               검수자: <strong>{ins.inspector.name}</strong> · {new Date(ins.inspectedAt).toLocaleString('ko-KR')}
             </span>
@@ -58,8 +58,6 @@ export default async function InspectPage({
                 ['키보드/터치', ins.keyboardTouch], ['배터리손실%', String(ins.batteryLossPct)],
                 ['45%방전확인', ins.battery45Checked ? '확인' : '미확인'],
                 ['아답터', ins.adapter ? 'O' : 'X'], ['바라시', ins.disassembled ? 'O' : 'X'],
-                ['판정', ins.defectStatus === 'GOOD' ? '양품' : '불량'], ['등급', ins.grade],
-                ['매입가', `${ins.purchasePrice.toLocaleString()}원`],
               ].map(([label, value]) => (
                 <div key={label} className="flex gap-2">
                   <span className="text-slate-400 font-bold w-24 flex-shrink-0">{label}</span>
@@ -73,6 +71,30 @@ export default async function InspectPage({
                 </div>
               )}
             </div>
+            {ins.isStamped && (
+              <div className="border-t border-slate-200 p-4 bg-violet-50">
+                <div className="text-xs font-bold text-violet-600 mb-2">2차 검수 (스탬핑) 완료</div>
+                <div className="grid grid-cols-3 gap-4 text-xs">
+                  <div className="flex gap-2">
+                    <span className="text-slate-400 font-bold w-12 flex-shrink-0">판정</span>
+                    <span className={`px-2 py-0.5 rounded font-bold ${ins.defectStatus === 'GOOD' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      {ins.defectStatus === 'GOOD' ? '양품' : '불량'}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="text-slate-400 font-bold w-8 flex-shrink-0">등급</span>
+                    <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-black">{ins.grade || '—'}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="text-slate-400 font-bold w-12 flex-shrink-0">매입가</span>
+                    <span className="text-slate-800 font-bold">{ins.purchasePrice.toLocaleString()}원</span>
+                  </div>
+                </div>
+                <div className="text-xs text-slate-400 mt-2">
+                  스탬퍼: <strong className="text-slate-600">{ins.stampedBy?.name}</strong> · {ins.stampedAt ? new Date(ins.stampedAt).toLocaleString('ko-KR') : ''}
+                </div>
+              </div>
+            )}
           </div>
         </main>
       </div>
@@ -97,7 +119,7 @@ export default async function InspectPage({
       <main className="max-w-4xl mx-auto px-4 py-6">
         <div className="flex items-center gap-3 mb-5">
           <Link href={`/orders/${id}`} className="text-slate-400 hover:text-slate-600 text-sm">← 매입건</Link>
-          <h1 className="text-lg font-black text-slate-900">검수 입력</h1>
+          <h1 className="text-lg font-black text-slate-900">1차 검수 입력</h1>
           <code className="text-xs bg-slate-200 px-2 py-0.5 rounded font-mono text-slate-600">{qr.qrString}</code>
         </div>
 
@@ -153,7 +175,7 @@ export default async function InspectPage({
                 </div>
               </div>
 
-              {/* 우측: 특이사항 + 평가 */}
+              {/* 우측: 특이사항 + 아답터/바라시 */}
               <div className="w-1/2 p-4 flex flex-col gap-4">
                 <div className="flex-1">
                   <label className="text-xs font-bold text-slate-500 block mb-1.5">특이사항 / 불량내역</label>
@@ -167,39 +189,14 @@ export default async function InspectPage({
                   <OXField label="바라시" name="disassembled" defaultVal={ins?.disassembled} />
 
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-500 w-16">판정</span>
-                    <div className="flex gap-2">
-                      {[['GOOD','양품','bg-green-100 text-green-700'],['DEFECT','불량','bg-red-100 text-red-700']].map(([val, label, cls]) => (
-                        <label key={val} className="flex items-center gap-1 cursor-pointer">
-                          <input type="radio" name="defectStatus" value={val} defaultChecked={ins ? ins.defectStatus === val : val === 'GOOD'} className="sr-only" />
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${ins?.defectStatus === val || (!ins && val === 'GOOD') ? cls + ' border-current' : 'bg-white text-slate-400 border-slate-200'}`}>{label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-500 w-16">등급</span>
-                    <div className="flex gap-2">
-                      {['S','A','B','C'].map(g => (
-                        <label key={g} className="flex items-center gap-1 cursor-pointer">
-                          <input type="radio" name="grade" value={g} defaultChecked={ins?.grade === g} className="sr-only" />
-                          <span className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-black border-2 ${ins?.grade === g ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-400 border-slate-200'}`}>{g}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-500 w-16">매입가</span>
-                    <input type="number" name="purchasePrice" defaultValue={ins?.purchasePrice || 0}
-                      className="w-36 border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-400" />
-                    <span className="text-xs text-slate-400">원</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-slate-500 w-16">검수자</span>
                     <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded">{session?.name}</span>
+                  </div>
+
+                  <div className="mt-2 p-2 rounded bg-violet-50 border border-violet-200">
+                    <p className="text-xs text-violet-600 font-medium">
+                      판정·등급·매입가는 최종검수자가 Stamping 단계에서 입력합니다.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -208,7 +205,7 @@ export default async function InspectPage({
 
           <div className="flex gap-3">
             <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-lg text-sm">
-              저장
+              1차 저장
             </button>
             <Link href={`/orders/${id}`} className="border border-slate-300 text-slate-600 px-6 py-3 rounded-lg text-sm hover:bg-slate-50">
               취소

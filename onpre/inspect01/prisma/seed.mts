@@ -9,6 +9,7 @@ const prisma = new PrismaClient({ adapter })
 async function main() {
   const adminHash = bcrypt.hashSync('admin1234', 10)
   const inspHash = bcrypt.hashSync('insp1234', 10)
+  const finalHash = bcrypt.hashSync('final1234', 10)
 
   await prisma.user.upsert({
     where: { loginId: 'admin' },
@@ -23,7 +24,14 @@ async function main() {
       create: { loginId: `insp0${i}`, passwordHash: inspHash, name: `검수자${i}`, role: 'INSPECTOR' },
     })
   }
-  console.log('Seed complete — admin/admin1234, insp01~05/insp1234')
+
+  await prisma.user.upsert({
+    where: { loginId: 'final01' },
+    update: {},
+    create: { loginId: 'final01', passwordHash: finalHash, name: '최종검수자', role: 'FINAL_INSPECTOR' },
+  })
+
+  console.log('Seed complete — admin/admin1234, insp01~05/insp1234, final01/final1234')
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect())

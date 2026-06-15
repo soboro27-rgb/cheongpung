@@ -6,16 +6,16 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/app/components/Navbar'
 
-export default async function OrderDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ locked?: string }> }) {
+export default async function OrderDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ locked?: string; noauth?: string }> }) {
   const { id } = await params
-  const { locked } = await searchParams
+  const { locked, noauth } = await searchParams
   const session = await getSession()
   const order = await prisma.purchaseOrder.findUnique({
     where: { id: parseInt(id) },
     include: {
       qrCodes: {
         orderBy: { seq: 'asc' },
-        include: { inspection: { include: { inspector: true } } },
+        include: { inspection: { include: { inspector: true, stampedBy: true } } },
       },
       createdBy: true,
     },
@@ -24,6 +24,7 @@ export default async function OrderDetailPage({ params, searchParams }: { params
 
   const allInspected = order.qrCodes.every(q => q.isInspected)
   const isDone = order.status === 'DONE'
+  const isFinalOrAdmin = session?.role === 'FINAL_INSPECTOR' || session?.role === 'ADMIN'
 
   const completeWithId = completeOrder.bind(null, order.id)
   const addRowAction = addQrRow.bind(null, order.id)
@@ -63,6 +64,12 @@ export default async function OrderDetailPage({ params, searchParams }: { params
           </div>
         )}
 
+        {noauth && (
+          <div className="bg-orange-50 border border-orange-300 rounded-lg px-4 py-3 mb-5 text-sm text-orange-700 font-bold">
+            스탬핑은 최종검수자 계정만 가능합니다.
+          </div>
+        )}
+
         {/* 기본정보 */}
         <div className="bg-white rounded-xl border border-slate-200 p-5 mb-5">
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">매입건 기본정보</div>
@@ -84,6 +91,11 @@ export default async function OrderDetailPage({ params, searchParams }: { params
               <span className="ml-2 text-blue-600 font-black">
                 {order.qrCodes.filter(q => q.isInspected).length}/{order.qrCodes.length}
               </span>
+              {isFinalOrAdmin && (
+                <span className="ml-3 text-violet-600 font-black">
+                  스탬핑 {order.qrCodes.filter(q => q.inspection?.isStamped).length}/{order.qrCodes.filter(q => q.isInspected).length}
+                </span>
+              )}
             </div>
             {session?.role === 'ADMIN' && !isDone && (
               <form action={addRowAction}>
@@ -98,10 +110,9 @@ export default async function OrderDetailPage({ params, searchParams }: { params
             <table className="w-full text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
-                  {/* 첫 열: 액션 버튼 고정 */}
                   <th className="sticky left-0 z-10 bg-slate-50 px-3 py-2 text-left font-bold text-slate-500 whitespace-nowrap border-r border-slate-200">동작</th>
-                  {['순번','제조사','모델명','CPU','RAM','저장장치','VGA','크기','해상도','액정','키보드터치','배터리','특이사항','검수자','아답터','바라시','판정','등급','매입가'].map(h => (
-                    <th key={h} className="px-3 py-2 text-left font-bold text-slate-500 whitespace-nowrap">{h}</th>
+                  {['순번','제조사','모델명','CPU','RAM','저장장치','VGA','크기','해상도','액정','키보드터치','배터리','특이사항','검수자','아답터','바라시','판정','등급','매입가','스탬퍼'].map(h => (
+                    <th key={h} className={`px-3 py-2 text-left font-bold whitespace-nowrap ${['판정','등급','매입가','스탬퍼'].includes(h) ? 'text-violet-500' : 'text-slate-500'}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -109,22 +120,34 @@ export default async function OrderDetailPage({ params, searchParams }: { params
                 {order.qrCodes.map(qr => {
                   const ins = qr.inspection
                   return (
-                    <tr key={qr.id} className={`border-b border-slate-100 hover:bg-slate-50 ${!qr.isInspected ? 'bg-yellow-50/50' : ''}`}>
+                    <tr key={qr.id} className={`border-b border-slate-100 hover:bg-slate-50 ${!qr.isInspected ? 'bg-yellow-50/50' : ins?.isStamped ? 'bg-violet-50/30' : ''}`}>
                       {/* 액션 버튼 — sticky 첫 열 */}
-                      <td className={`sticky left-0 z-10 px-2 py-2 border-r border-slate-200 ${!qr.isInspected ? 'bg-yellow-50' : 'bg-white'}`}>
-                        <div className="flex gap-1">
-                          <Link
-                            href={`/orders/${order.id}/inspect/${qr.id}`}
-                            className={`whitespace-nowrap px-3 py-1.5 rounded text-xs font-bold ${qr.isInspected ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-                          >
-                            {qr.isInspected ? '수정' : '검수입력'}
-                          </Link>
+                      <td className={`sticky left-0 z-10 px-2 py-2 border-r border-slate-200 ${!qr.isInspected ? 'bg-yellow-50' : ins?.isStamped ? 'bg-violet-50/60' : 'bg-white'}`}>
+                        <div className="flex gap-1 flex-wrap">
+                          {/* 수정/검수입력 — FINAL_INSPECTOR 에게는 미표시 */}
+                          {session?.role !== 'FINAL_INSPECTOR' && (
+                            <Link
+                              href={`/orders/${order.id}/inspect/${qr.id}`}
+                              className={`whitespace-nowrap px-3 py-1.5 rounded text-xs font-bold ${qr.isInspected ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                            >
+                              {qr.isInspected ? '수정' : '검수입력'}
+                            </Link>
+                          )}
                           {qr.isInspected && (
                             <Link
                               href={`/orders/${order.id}/inspect/${qr.id}/label`}
                               className="whitespace-nowrap px-3 py-1.5 rounded text-xs font-bold bg-green-600 text-white hover:bg-green-700"
                             >
                               라벨
+                            </Link>
+                          )}
+                          {/* Stamping — FINAL_INSPECTOR + ADMIN 에게만 표시, 1차 완료 후 */}
+                          {qr.isInspected && isFinalOrAdmin && (
+                            <Link
+                              href={`/orders/${order.id}/inspect/${qr.id}/stamp`}
+                              className={`whitespace-nowrap px-3 py-1.5 rounded text-xs font-bold ${ins?.isStamped ? 'bg-violet-200 text-violet-700 hover:bg-violet-300' : 'bg-violet-600 text-white hover:bg-violet-700'}`}
+                            >
+                              {ins?.isStamped ? '재스탬핑' : 'Stamping'}
                             </Link>
                           )}
                           {session?.role === 'ADMIN' && !qr.isInspected && !isDone && (
@@ -154,20 +177,26 @@ export default async function OrderDetailPage({ params, searchParams }: { params
                       <td className="px-3 py-2">{ins?.inspector?.name || '—'}</td>
                       <td className="px-3 py-2 text-center">{ins ? (ins.adapter ? 'O' : 'X') : '—'}</td>
                       <td className="px-3 py-2 text-center">{ins ? (ins.disassembled ? 'O' : 'X') : '—'}</td>
+                      {/* 판정/등급/매입가 — 스탬핑 완료 후에만 표시 */}
                       <td className="px-3 py-2">
-                        {ins ? (
+                        {ins?.isStamped ? (
                           <span className={`px-1.5 py-0.5 rounded text-xs font-bold ${ins.defectStatus === 'GOOD' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                             {ins.defectStatus === 'GOOD' ? '양품' : '불량'}
                           </span>
+                        ) : ins ? (
+                          <span className="text-xs text-violet-400 font-medium">미스탬핑</span>
                         ) : '—'}
                       </td>
                       <td className="px-3 py-2">
-                        {ins?.grade ? (
+                        {ins?.isStamped && ins.grade ? (
                           <span className="px-2 py-0.5 rounded-full text-xs font-black bg-blue-100 text-blue-700">{ins.grade}</span>
                         ) : '—'}
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap font-medium">
-                        {ins?.purchasePrice ? ins.purchasePrice.toLocaleString() + '원' : '—'}
+                        {ins?.isStamped && ins.purchasePrice ? ins.purchasePrice.toLocaleString() + '원' : '—'}
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap text-xs text-violet-600 font-medium">
+                        {ins?.isStamped ? ins.stampedBy?.name || '—' : '—'}
                       </td>
                     </tr>
                   )
@@ -179,7 +208,6 @@ export default async function OrderDetailPage({ params, searchParams }: { params
 
         {/* 하단 버튼 영역 */}
         <div className="flex items-center justify-between">
-          {/* 왼쪽: 엑셀 + 삭제 (관리자 전용) */}
           {session?.role === 'ADMIN' ? (
             <div className="flex items-center gap-3">
               <a
@@ -192,8 +220,7 @@ export default async function OrderDetailPage({ params, searchParams }: { params
             </div>
           ) : <div />}
 
-          {/* 검수 완료 버튼 */}
-          {!isDone && (
+          {!isDone && session?.role === 'ADMIN' && (
             <form action={completeWithId}>
               <button
                 type="submit"

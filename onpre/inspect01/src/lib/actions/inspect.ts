@@ -28,9 +28,6 @@ export async function saveInspection(qrId: number, orderId: number, formData: Fo
     notes: (formData.get('notes') as string) || '',
     adapter: formData.get('adapter') === 'O',
     disassembled: formData.get('disassembled') === 'O',
-    defectStatus: (formData.get('defectStatus') as string) || 'GOOD',
-    grade: (formData.get('grade') as string) || '',
-    purchasePrice: parseInt(formData.get('purchasePrice') as string) || 0,
     inspectorId: session.userId,
     inspectedAt: new Date(),
   }
@@ -42,6 +39,31 @@ export async function saveInspection(qrId: number, orderId: number, formData: Fo
   })
 
   await prisma.qRCode.update({ where: { id: qrId }, data: { isInspected: true } })
+
+  redirect(`/orders/${orderId}`)
+}
+
+export async function saveStamping(qrId: number, orderId: number, formData: FormData) {
+  const session = await getSession()
+  if (!session) throw new Error('권한 없음')
+  if (session.role !== 'FINAL_INSPECTOR' && session.role !== 'ADMIN') {
+    redirect(`/orders/${orderId}?noauth=1`)
+  }
+
+  const existing = await prisma.inspection.findUnique({ where: { qrId } })
+  if (!existing) throw new Error('1차 검수 데이터가 없습니다')
+
+  await prisma.inspection.update({
+    where: { qrId },
+    data: {
+      defectStatus: (formData.get('defectStatus') as string) || 'GOOD',
+      grade: (formData.get('grade') as string) || '',
+      purchasePrice: parseInt(formData.get('purchasePrice') as string) || 0,
+      isStamped: true,
+      stampedAt: new Date(),
+      stampedById: session.userId,
+    },
+  })
 
   redirect(`/orders/${orderId}`)
 }
