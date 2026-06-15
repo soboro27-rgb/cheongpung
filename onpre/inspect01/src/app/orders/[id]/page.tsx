@@ -135,14 +135,14 @@ export default async function OrderDetailPage({
                   <th className="px-3 py-2 text-left font-bold text-violet-500 whitespace-nowrap">등급</th>
                   <th className="px-3 py-2 text-left font-bold text-violet-500 whitespace-nowrap">매입가</th>
                   <th className="px-3 py-2 text-left font-bold text-violet-500 whitespace-nowrap">
-                    {isFinalOrAdmin ? '저장 / 스탬퍼' : '스탬퍼'}
+                    {session?.role === 'FINAL_INSPECTOR' ? '저장 / 스탬퍼' : '스탬퍼'}
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {order.qrCodes.map(qr => {
                   const ins = qr.inspection
-                  const canStampRow = isFinalOrAdmin && qr.isInspected
+                  const canStampRow = session?.role === 'FINAL_INSPECTOR' && qr.isInspected
                   const stampFormId = `stamp-${qr.id}`
                   const stampAction = saveStamping.bind(null, qr.id, order.id)
                   const defectInfo = ins?.defectStatus ? DEFECT_LABEL[ins.defectStatus] : null
