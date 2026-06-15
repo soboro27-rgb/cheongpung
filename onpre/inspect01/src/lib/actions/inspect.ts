@@ -56,7 +56,7 @@ export async function saveStamping(qrId: number, orderId: number, formData: Form
   await prisma.inspection.update({
     where: { qrId },
     data: {
-      defectStatus: (formData.get('defectStatus') as string) || 'GOOD',
+      defectStatus: (formData.get('defectStatus') as string) || 'MODEL',
       grade: (formData.get('grade') as string) || '',
       purchasePrice: parseInt(formData.get('purchasePrice') as string) || 0,
       isStamped: true,

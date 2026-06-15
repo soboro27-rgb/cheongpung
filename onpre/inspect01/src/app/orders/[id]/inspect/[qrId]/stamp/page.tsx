@@ -118,24 +118,24 @@ export default async function StampPage({
               <div className="p-5 space-y-5">
                 {/* 판정 */}
                 <div>
-                  <span className="text-xs font-bold text-slate-600 block mb-2">불량 판정</span>
-                  <div className="flex gap-3">
-                    <label className="cursor-pointer">
-                      <input type="radio" name="defectStatus" value="GOOD"
-                        defaultChecked={!ins.isStamped || ins.defectStatus === 'GOOD'}
-                        className="peer sr-only" />
-                      <span className="px-5 py-2 rounded-lg text-sm font-bold border-2 bg-white text-slate-300 border-slate-200 peer-checked:bg-green-100 peer-checked:text-green-700 peer-checked:border-green-400 transition-colors">
-                        양품
-                      </span>
-                    </label>
-                    <label className="cursor-pointer">
-                      <input type="radio" name="defectStatus" value="DEFECT"
-                        defaultChecked={ins.isStamped && ins.defectStatus === 'DEFECT'}
-                        className="peer sr-only" />
-                      <span className="px-5 py-2 rounded-lg text-sm font-bold border-2 bg-white text-slate-300 border-slate-200 peer-checked:bg-red-100 peer-checked:text-red-700 peer-checked:border-red-400 transition-colors">
-                        불량
-                      </span>
-                    </label>
+                  <span className="text-xs font-bold text-slate-600 block mb-2">판정</span>
+                  <div className="flex gap-2">
+                    {([
+                      ['MODEL',  '모델', 'peer-checked:bg-green-100 peer-checked:text-green-700 peer-checked:border-green-400'],
+                      ['DEFECT', '불량', 'peer-checked:bg-red-100 peer-checked:text-red-700 peer-checked:border-red-400'],
+                      ['PARTS',  '부품', 'peer-checked:bg-orange-100 peer-checked:text-orange-700 peer-checked:border-orange-400'],
+                    ] as [string,string,string][]).map(([val, label, cls]) => (
+                      <label key={val} className="cursor-pointer">
+                        <input
+                          type="radio" name="defectStatus" value={val}
+                          defaultChecked={ins.isStamped ? ins.defectStatus === val : val === 'MODEL'}
+                          className="peer sr-only"
+                        />
+                        <span className={`px-4 py-2 rounded-lg text-sm font-bold border-2 bg-white text-slate-300 border-slate-200 transition-colors ${cls}`}>
+                          {label}
+                        </span>
+                      </label>
+                    ))}
                   </div>
                 </div>
 

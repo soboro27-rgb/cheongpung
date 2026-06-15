@@ -173,7 +173,7 @@ export async function GET(
       ins?.inspector?.name ?? '',                       // 검수자
       ins ? (ins.adapter ? 'O' : 'X') : '',            // 아답터
       ins ? (ins.disassembled ? 'O' : 'X') : '',       // 바라시
-      ins ? (ins.defectStatus === 'GOOD' ? '양품' : '불량') : '',  // 불량/양품
+      ins?.isStamped ? ({ MODEL:'모델', DEFECT:'불량', PARTS:'부품', GOOD:'양품' }[ins.defectStatus] ?? ins.defectStatus) : '',  // 판정
       ins?.grade ?? '',                                 // 등급
       ins?.purchasePrice ?? '',                         // 매입가
     ]
