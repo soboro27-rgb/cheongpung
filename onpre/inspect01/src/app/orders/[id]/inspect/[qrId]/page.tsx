@@ -222,14 +222,26 @@ function OXField({ label, name, defaultVal }: { label: string; name: string; def
     <div className="flex items-center gap-2">
       <span className="text-xs font-bold text-slate-500 w-16">{label}</span>
       <div className="flex gap-2">
-        {[['O', true], ['X', false]].map(([display, val]) => (
-          <label key={String(display)} className="cursor-pointer">
-            <input type="radio" name={name} value={String(display)} defaultChecked={defaultVal === val} className="sr-only" />
-            <span className={`px-3 py-1 rounded text-xs font-bold border ${defaultVal === val ? (display === 'O' ? 'bg-blue-600 text-white border-blue-600' : 'bg-red-500 text-white border-red-500') : 'bg-white text-slate-400 border-slate-200'}`}>
-              {String(display)}
-            </span>
-          </label>
-        ))}
+        <label className="cursor-pointer">
+          <input
+            type="radio" name={name} value="O"
+            defaultChecked={defaultVal === true}
+            className="peer sr-only"
+          />
+          <span className="px-3 py-1 rounded text-xs font-bold border bg-white text-slate-400 border-slate-200 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-colors">
+            O
+          </span>
+        </label>
+        <label className="cursor-pointer">
+          <input
+            type="radio" name={name} value="X"
+            defaultChecked={defaultVal === false}
+            className="peer sr-only"
+          />
+          <span className="px-3 py-1 rounded text-xs font-bold border bg-white text-slate-400 border-slate-200 peer-checked:bg-red-500 peer-checked:text-white peer-checked:border-red-500 transition-colors">
+            X
+          </span>
+        </label>
       </div>
     </div>
   )

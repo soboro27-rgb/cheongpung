@@ -120,16 +120,22 @@ export default async function StampPage({
                 <div>
                   <span className="text-xs font-bold text-slate-600 block mb-2">불량 판정</span>
                   <div className="flex gap-3">
-                    {[['GOOD','양품','bg-green-100 text-green-700 border-green-400'],['DEFECT','불량','bg-red-100 text-red-700 border-red-400']].map(([val, label, cls]) => (
-                      <label key={val} className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="defectStatus" value={val}
-                          defaultChecked={ins.isStamped ? ins.defectStatus === val : val === 'GOOD'}
-                          className="sr-only" />
-                        <span className={`px-5 py-2 rounded-lg text-sm font-bold border-2 ${ins.isStamped ? (ins.defectStatus === val ? cls : 'bg-white text-slate-300 border-slate-200') : (val === 'GOOD' ? cls : 'bg-white text-slate-300 border-slate-200')}`}>
-                          {label}
-                        </span>
-                      </label>
-                    ))}
+                    <label className="cursor-pointer">
+                      <input type="radio" name="defectStatus" value="GOOD"
+                        defaultChecked={!ins.isStamped || ins.defectStatus === 'GOOD'}
+                        className="peer sr-only" />
+                      <span className="px-5 py-2 rounded-lg text-sm font-bold border-2 bg-white text-slate-300 border-slate-200 peer-checked:bg-green-100 peer-checked:text-green-700 peer-checked:border-green-400 transition-colors">
+                        양품
+                      </span>
+                    </label>
+                    <label className="cursor-pointer">
+                      <input type="radio" name="defectStatus" value="DEFECT"
+                        defaultChecked={ins.isStamped && ins.defectStatus === 'DEFECT'}
+                        className="peer sr-only" />
+                      <span className="px-5 py-2 rounded-lg text-sm font-bold border-2 bg-white text-slate-300 border-slate-200 peer-checked:bg-red-100 peer-checked:text-red-700 peer-checked:border-red-400 transition-colors">
+                        불량
+                      </span>
+                    </label>
                   </div>
                 </div>
 
@@ -141,8 +147,8 @@ export default async function StampPage({
                       <label key={g} className="cursor-pointer">
                         <input type="radio" name="grade" value={g}
                           defaultChecked={ins.grade === g}
-                          className="sr-only" />
-                        <span className={`w-10 h-10 flex items-center justify-center rounded-full text-sm font-black border-2 ${ins.grade === g ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-400 border-slate-200'}`}>
+                          className="peer sr-only" />
+                        <span className="w-10 h-10 flex items-center justify-center rounded-full text-sm font-black border-2 bg-white text-slate-400 border-slate-200 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-colors">
                           {g}
                         </span>
                       </label>
