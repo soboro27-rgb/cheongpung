@@ -35,7 +35,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession()
-  if (!session || session.role !== 'ADMIN') {
+  const isAdmin = session?.role === 'ADMIN'
+  const isFinalInspector = session?.role === 'FINAL_INSPECTOR'
+  if (!session || (!isAdmin && !isFinalInspector)) {
     return NextResponse.json({ error: '권한 없음' }, { status: 403 })
   }
 
@@ -50,24 +52,22 @@ export async function GET(
     },
   })
   if (!order) return NextResponse.json({ error: '없음' }, { status: 404 })
+  if (isFinalInspector && order.status !== 'DONE') {
+    return NextResponse.json({ error: '완료된 건만 다운로드 가능합니다' }, { status: 403 })
+  }
 
   const wb = new ExcelJS.Workbook()
   wb.creator = '월드와이드메모리(주)'
   const ws = wb.addWorksheet('매입검수', { pageSetup: { paperSize: 9, orientation: 'landscape', fitToPage: true } })
 
   // ── 열 너비 설정 ──────────────────────────────────────────
-  // A   B     C    D     E     F    G    H    I    J    K     L         M     N     O     P    Q    R    S    T    U
-  // 순번 제조사 모델명 CPU  RAM  저장장치 VGA 크기 해상도 액정 키보드터치 배터리 특이사항 입고처 검수자 아답터 바라시 불량양품 등급 매입가
-  // 헤더 테이블은 A~U (21컬럼)
-  const colWidths = [5, 10, 14, 14, 10, 12, 12, 7, 10, 10, 10, 14, 20, 20, 10, 7, 7, 9, 6, 10]
+  // A    B     C     D    E   F     G   H   I    J   K      L    M      N    O    P   Q   R   S  T
+  // 순번 제조사 모델명 CPU RAM 저장장치 VGA 크기 해상도 액정 키보드터치 배터리 특이사항 입고처 검수자 아답터 바라시 판정 등급 매입가
+  const colWidths = [4, 10, 14, 14, 8, 12, 10, 6, 7, 7, 8, 8, 40, 12, 8, 5, 5, 6, 4, 9]
   colWidths.forEach((w, i) => { ws.getColumn(i + 1).width = w })
 
   // ── 행 높이 ──────────────────────────────────────────────
-  ws.getRow(1).height = 18
-  ws.getRow(2).height = 18
-  ws.getRow(3).height = 18
-  ws.getRow(4).height = 18
-  ws.getRow(5).height = 18
+  for (let r = 1; r <= 7; r++) ws.getRow(r).height = 47.25
 
   // ── 상단 기본정보 (5행) ────────────────────────────────────
   // Row 1: 작성일 | val | 업체명 | val(merged) | 주민번호/사업자번호 | val(merged) | 진행여부
@@ -128,16 +128,12 @@ export async function GET(
   label(ws, 'L5', '계 좌 번 호')
   ws.mergeCells('M5:U5'); value(ws, 'M5', order.accountNumber)
 
-  // ── 빈 행 구분 ────────────────────────────────────────────
-  ws.getRow(6).height = 4
-
   // ── 테이블 헤더 (Row 7) ────────────────────────────────────
   const tableHeaders = [
     '순번', '제조사', '모델명', 'CPU', 'RAM', '저장장치', 'VGA',
     '크기', '해상도', '액정', '키보드/터치', '배터리손실률\n*45%방전*',
     '특이사항', '입고처', '검수자', '아답터', '바라시', '불량/양품', '등급', '매입가',
   ]
-  ws.getRow(7).height = 28
   const cols = 'ABCDEFGHIJKLMNOPQRSTU'.split('')
   tableHeaders.forEach((h, i) => {
     const c = ws.getCell(`${cols[i]}7`)
@@ -153,7 +149,9 @@ export async function GET(
     const rowNum = 8 + idx
     const ins = qr.inspection
     const row = ws.getRow(rowNum)
-    row.height = 30
+    // 특이사항 글자 수 기준으로 행 높이 동적 계산 (폭 40 컬럼 기준 약 20자/줄)
+    const notesLines = Math.max(1, Math.ceil((ins?.notes?.length ?? 0) / 20))
+    row.height = Math.max(30, notesLines * 18)
 
     const dataArr = [
       idx + 1,                                          // 순번

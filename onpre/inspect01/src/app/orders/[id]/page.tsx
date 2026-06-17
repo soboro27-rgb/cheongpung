@@ -314,6 +314,13 @@ export default async function OrderDetailPage({
               </a>
               <DeleteOrderButton orderId={order.id} />
             </div>
+          ) : session?.role === 'FINAL_INSPECTOR' && isDone ? (
+            <a
+              href={`/api/orders/${order.id}/export`}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              📊 엑셀 다운로드
+            </a>
           ) : <div />}
 
           {!isDone && session?.role === 'ADMIN' && (

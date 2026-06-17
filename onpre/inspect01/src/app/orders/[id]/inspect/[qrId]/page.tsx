@@ -4,6 +4,7 @@ import { saveInspection } from '@/lib/actions/inspect'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/app/components/Navbar'
+import InspectForm from './InspectForm'
 
 export default async function InspectPage({
   params,
@@ -101,18 +102,6 @@ export default async function InspectPage({
     )
   }
 
-  const specFields: { label: string; name: string; list?: string[]; placeholder?: string }[] = [
-    { label: '제조사', name: 'manufacturer', list: ['Samsung','LG','Lenovo','HP','Dell','ASUS','Apple'], placeholder: 'Samsung' },
-    { label: '모델명', name: 'model', placeholder: 'Galaxy Book3 Pro' },
-    { label: 'CPU', name: 'cpu', placeholder: 'i7-1355U' },
-    { label: 'RAM', name: 'ram', list: ['4GB DDR4','8GB DDR4','16GB DDR4','32GB DDR4'], placeholder: '16GB DDR4' },
-    { label: '저장장치', name: 'storage', list: ['256GB SSD','512GB NVMe','1TB NVMe'], placeholder: '512GB NVMe' },
-    { label: 'VGA', name: 'vga', placeholder: 'Intel Iris Xe' },
-    { label: '해상도(inch)', name: 'screenSize', list: ['13.3"','14"','15.6"','17.3"'], placeholder: '15.6"' },
-    { label: '해상도', name: 'resolution', list: ['1920x1080','2560x1440','3840x2160'], placeholder: '1920x1080' },
-    { label: '액정', name: 'lcdCondition', list: ['정상','잔상있음','사점1개','불량'], placeholder: '정상' },
-  ]
-
   return (
     <div className="min-h-screen" style={{ background: '#F1F5F9' }}>
       <Navbar />
@@ -123,126 +112,30 @@ export default async function InspectPage({
           <code className="text-xs bg-slate-200 px-2 py-0.5 rounded font-mono text-slate-600">{qr.qrString}</code>
         </div>
 
-        <form action={action}>
-          {/* 라벨 스티커 레이아웃 */}
-          <div className="bg-white rounded-xl border-2 border-slate-300 overflow-hidden mb-5" style={{ fontFamily: 'monospace' }}>
-            <div className="bg-slate-800 text-white px-4 py-2 text-xs font-bold flex justify-between">
-              <span>월드와이드메모리(주) 매입검수 라벨</span>
-              <span>{qr.qrString}</span>
-            </div>
-
-            <div className="flex gap-0">
-              {/* 좌측: 스펙 필드 */}
-              <div className="w-1/2 border-r border-slate-200 p-4 space-y-2.5">
-                {specFields.map(f => (
-                  <div key={f.name} className="flex items-center gap-2">
-                    <label className="text-xs font-bold text-slate-500 w-20 flex-shrink-0">{f.label}</label>
-                    <input
-                      type="text" name={f.name}
-                      defaultValue={ins ? (ins as Record<string, unknown>)[f.name] as string : ''}
-                      list={f.list ? `list-${f.name}` : undefined}
-                      placeholder={f.placeholder}
-                      className="flex-1 border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-400"
-                    />
-                    {f.list && (
-                      <datalist id={`list-${f.name}`}>
-                        {f.list.map(v => <option key={v} value={v} />)}
-                      </datalist>
-                    )}
-                  </div>
-                ))}
-
-                {/* 키보드터치 */}
-                <div className="flex items-center gap-2">
-                  <label className="text-xs font-bold text-slate-500 w-20 flex-shrink-0">키보드/터치</label>
-                  <select name="keyboardTouch" defaultValue={ins?.keyboardTouch || ''}
-                    className="flex-1 border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-400">
-                    <option value="">—</option>
-                    {['정상','불량','없음'].map(v => <option key={v} value={v}>{v}</option>)}
-                  </select>
-                </div>
-
-                {/* 배터리 */}
-                <div className="flex items-center gap-2">
-                  <label className="text-xs font-bold text-slate-500 w-20 flex-shrink-0">배터리손실%</label>
-                  <input type="number" name="batteryLossPct" step="0.1" min="0" max="100"
-                    defaultValue={ins?.batteryLossPct || 0}
-                    className="w-20 border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-400" />
-                  <label className="flex items-center gap-1 text-xs text-slate-500">
-                    <input type="checkbox" name="battery45Checked" defaultChecked={ins?.battery45Checked} className="rounded" />
-                    45%방전확인
-                  </label>
-                </div>
-              </div>
-
-              {/* 우측: 특이사항 + 아답터/바라시 */}
-              <div className="w-1/2 p-4 flex flex-col gap-4">
-                <div className="flex-1">
-                  <label className="text-xs font-bold text-slate-500 block mb-1.5">특이사항 / 불량내역</label>
-                  <textarea name="notes" rows={6} defaultValue={ins?.notes || ''}
-                    placeholder="특이사항, 불량 내용 자유 작성..."
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-xs resize-none focus:outline-none focus:border-blue-400 h-full" />
-                </div>
-
-                <div className="border-t border-slate-200 pt-3 space-y-3">
-                  <OXField label="아답터" name="adapter" defaultVal={ins?.adapter} />
-                  <OXField label="바라시" name="disassembled" defaultVal={ins?.disassembled} />
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-500 w-16">검수자</span>
-                    <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded">{session?.name}</span>
-                  </div>
-
-                  <div className="mt-2 p-2 rounded bg-violet-50 border border-violet-200">
-                    <p className="text-xs text-violet-600 font-medium">
-                      판정·등급·매입가는 최종검수자가 Stamping 단계에서 입력합니다.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-lg text-sm">
-              1차 저장
-            </button>
-            <Link href={`/orders/${id}`} className="border border-slate-300 text-slate-600 px-6 py-3 rounded-lg text-sm hover:bg-slate-50">
-              취소
-            </Link>
-          </div>
-        </form>
+        <InspectForm
+          action={action}
+          orderId={order.id}
+          qrString={qr.qrString}
+          inspectorName={session?.name ?? ''}
+          initialValues={{
+            manufacturer: ins?.manufacturer ?? '',
+            model: ins?.model ?? '',
+            cpu: ins?.cpu ?? '',
+            ram: ins?.ram ?? '',
+            storage: ins?.storage ?? '',
+            vga: ins?.vga ?? '',
+            screenSize: ins?.screenSize ?? '',
+            resolution: ins?.resolution ?? '',
+            lcdCondition: ins?.lcdCondition ?? '',
+            keyboardTouch: ins?.keyboardTouch ?? '',
+            batteryLossPct: ins?.batteryLossPct ?? 0,
+            battery45Checked: ins?.battery45Checked ?? false,
+            notes: ins?.notes ?? '',
+            adapter: ins ? ins.adapter : undefined,
+            disassembled: ins ? ins.disassembled : undefined,
+          }}
+        />
       </main>
-    </div>
-  )
-}
-
-function OXField({ label, name, defaultVal }: { label: string; name: string; defaultVal?: boolean }) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs font-bold text-slate-500 w-16">{label}</span>
-      <div className="flex gap-2">
-        <label className="cursor-pointer">
-          <input
-            type="radio" name={name} value="O"
-            defaultChecked={defaultVal === true}
-            className="peer sr-only"
-          />
-          <span className="px-3 py-1 rounded text-xs font-bold border bg-white text-slate-400 border-slate-200 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-colors">
-            O
-          </span>
-        </label>
-        <label className="cursor-pointer">
-          <input
-            type="radio" name={name} value="X"
-            defaultChecked={defaultVal === false}
-            className="peer sr-only"
-          />
-          <span className="px-3 py-1 rounded text-xs font-bold border bg-white text-slate-400 border-slate-200 peer-checked:bg-red-500 peer-checked:text-white peer-checked:border-red-500 transition-colors">
-            X
-          </span>
-        </label>
-      </div>
     </div>
   )
 }

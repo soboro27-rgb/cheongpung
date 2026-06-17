@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WWM 매입검수 플랫폼 사용 메뉴얼</title>
+<style>
+  /* ── 기본 ─────────────────────────── */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; font-size: 13px; color: #1e293b; background: #fff; }
+
+  /* ── 페이지 분리 (인쇄) ───────────── */
+  @media print {
+    .page-break { page-break-before: always; }
+    .no-print { display: none; }
+    body { font-size: 11px; }
+    .screenshot-box { height: 180px !important; }
+  }
+
+  /* ── 표지 ─────────────────────────── */
+  .cover {
+    background: linear-gradient(160deg, #0D2248 0%, #091730 60%, #071020 100%);
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    padding: 60px 40px; color: #fff;
+  }
+  .cover-logo { font-size: 48px; font-weight: 900; color: #7DD3F8; letter-spacing: 0.2em; margin-bottom: 8px; }
+  .cover-sub { font-size: 14px; color: #64748b; letter-spacing: 0.15em; margin-bottom: 48px; }
+  .cover-title { font-size: 34px; font-weight: 900; color: #f1f5f9; line-height: 1.4; margin-bottom: 16px; }
+  .cover-desc { font-size: 15px; color: #94a3b8; line-height: 1.8; margin-bottom: 48px; }
+  .cover-badge {
+    display: inline-block; background: #1e40af; color: #93c5fd;
+    font-size: 13px; font-weight: 700; padding: 8px 24px; border-radius: 999px; letter-spacing: 0.1em;
+  }
+  .cover-footer { position: absolute; bottom: 32px; font-size: 11px; color: #334155; }
+
+  /* ── 레이아웃 ─────────────────────── */
+  .wrapper { max-width: 900px; margin: 0 auto; padding: 48px 32px; }
+  h1.doc-title { font-size: 24px; font-weight: 900; color: #0f172a; margin-bottom: 6px; }
+  .doc-meta { font-size: 12px; color: #94a3b8; margin-bottom: 40px; }
+
+  /* ── 섹션 헤더 ────────────────────── */
+  .section { margin-bottom: 48px; }
+  .section-header {
+    display: flex; align-items: center; gap: 12px;
+    border-left: 5px solid #2196f3; padding-left: 14px; margin-bottom: 24px;
+  }
+  .section-number {
+    background: #2196f3; color: #fff; width: 28px; height: 28px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900; flex-shrink: 0;
+  }
+  .section-title { font-size: 18px; font-weight: 900; color: #0f172a; }
+  .section-desc { font-size: 13px; color: #64748b; margin-top: 2px; }
+
+  /* 역할 섹션 컬러 */
+  .role-admin .section-header { border-color: #1d4ed8; }
+  .role-admin .section-number { background: #1d4ed8; }
+  .role-inspector .section-header { border-color: #0891b2; }
+  .role-inspector .section-number { background: #0891b2; }
+  .role-final .section-header { border-color: #7c3aed; }
+  .role-final .section-number { background: #7c3aed; }
+
+  /* ── 스텝 ─────────────────────────── */
+  .step { margin-bottom: 32px; }
+  .step-label {
+    display: inline-flex; align-items: center; gap-8px;
+    font-size: 11px; font-weight: 700; color: #fff;
+    background: #334155; padding: 3px 10px; border-radius: 4px;
+    margin-bottom: 10px; letter-spacing: 0.06em;
+  }
+  .step-label.admin { background: #1d4ed8; }
+  .step-label.inspector { background: #0891b2; }
+  .step-label.final { background: #7c3aed; }
+
+  .step-title { font-size: 15px; font-weight: 900; color: #0f172a; margin-bottom: 6px; }
+  .step-desc { font-size: 13px; color: #475569; line-height: 1.8; margin-bottom: 12px; }
+
+  /* ── 스크린샷 자리 ────────────────── */
+  .screenshot-box {
+    width: 100%; height: 240px; background: #f1f5f9;
+    border: 2px dashed #cbd5e1; border-radius: 10px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #94a3b8; font-size: 12px; font-weight: 700; margin-bottom: 4px;
+    position: relative; overflow: hidden;
+  }
+  .screenshot-box::before {
+    content: '📸';
+    font-size: 32px; margin-bottom: 8px; display: block;
+  }
+  .screenshot-box.real {
+    height: auto; background: transparent; border: 1px solid #e2e8f0;
+    padding: 0; display: block; overflow: hidden;
+  }
+  .screenshot-box.real::before { display: none; }
+  .screenshot-box.real img { width: 100%; border-radius: 8px; display: block; }
+  .screenshot-caption {
+    font-size: 11px; color: #94a3b8; text-align: center; margin: 4px 0 16px;
+  }
+  .screenshot-label {
+    font-size: 11px; color: #cbd5e1; margin-top: 4px; font-weight: 400;
+  }
+  .screenshot-insert {
+    position: absolute; top: 8px; right: 10px;
+    font-size: 10px; color: #e2e8f0; background: #94a3b8;
+    padding: 2px 8px; border-radius: 4px; font-weight: 700;
+  }
+
+  /* ── 팁/주의 박스 ─────────────────── */
+  .tip {
+    background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;
+    padding: 12px 16px; margin-bottom: 14px; font-size: 12px;
+    color: #1e40af; line-height: 1.7;
+  }
+  .tip strong { font-weight: 900; }
+  .caution {
+    background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px;
+    padding: 12px 16px; margin-bottom: 14px; font-size: 12px;
+    color: #c2410c; line-height: 1.7;
+  }
+  .caution strong { font-weight: 900; }
+
+  /* ── 필드 설명 테이블 ─────────────── */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 12px; }
+  th { background: #f1f5f9; padding: 8px 12px; text-align: left; font-weight: 700; color: #475569; border: 1px solid #e2e8f0; }
+  td { padding: 8px 12px; border: 1px solid #e2e8f0; color: #374151; vertical-align: top; line-height: 1.6; }
+  td.required { color: #dc2626; font-weight: 700; }
+  tr:hover td { background: #f8fafc; }
+
+  /* ── 역할 비교 카드 ───────────────── */
+  .role-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+  .role-card { border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; }
+  .role-card-header { padding: 12px 16px; font-size: 13px; font-weight: 900; color: #fff; }
+  .role-card-header.admin { background: #1d4ed8; }
+  .role-card-header.inspector { background: #0891b2; }
+  .role-card-header.final { background: #7c3aed; }
+  .role-card-body { padding: 14px 16px; background: #fff; }
+  .role-card-body li { font-size: 12px; color: #475569; line-height: 2; list-style: none; }
+  .role-card-body li::before { content: '✓ '; color: #22c55e; font-weight: 700; }
+  .role-card-body li.no::before { content: '✗ '; color: #e2e8f0; }
+
+  /* ── 플로우 다이어그램 ─────────────── */
+  .flow { display: flex; align-items: flex-start; gap: 0; margin-bottom: 24px; flex-wrap: wrap; }
+  .flow-step {
+    background: #fff; border: 2px solid #e2e8f0; border-radius: 8px;
+    padding: 10px 14px; font-size: 12px; font-weight: 700; color: #374151;
+    text-align: center; min-width: 100px; flex-shrink: 0;
+  }
+  .flow-step.admin { border-color: #bfdbfe; background: #eff6ff; color: #1e40af; }
+  .flow-step.inspector { border-color: #a5f3fc; background: #ecfeff; color: #0e7490; }
+  .flow-step.final { border-color: #ddd6fe; background: #f5f3ff; color: #6d28d9; }
+  .flow-arrow {
+    flex-shrink: 0; width: 32px; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: #94a3b8; margin-top: 16px;
+  }
+  .flow-step small { display: block; font-weight: 400; color: #94a3b8; font-size: 10px; margin-top: 2px; }
+
+  /* ── 목차 ─────────────────────────── */
+  .toc { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 24px 28px; margin-bottom: 40px; }
+  .toc h2 { font-size: 14px; font-weight: 900; color: #0f172a; margin-bottom: 16px; }
+  .toc ol { padding-left: 20px; }
+  .toc li { font-size: 13px; color: #475569; line-height: 2.2; }
+  .toc li a { color: #1d4ed8; text-decoration: none; }
+  .toc li a:hover { text-decoration: underline; }
+  .toc .sub { padding-left: 20px; }
+  .toc .sub li { font-size: 12px; color: #64748b; line-height: 2; }
+
+  /* ── 구분선 ───────────────────────── */
+  hr { border: none; border-top: 1px solid #e2e8f0; margin: 40px 0; }
+
+  /* ── 배지 ─────────────────────────── */
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px;
+    border-radius: 4px; margin-left: 6px;
+  }
+  .badge.admin { background: #dbeafe; color: #1d4ed8; }
+  .badge.inspector { background: #cffafe; color: #0e7490; }
+  .badge.final { background: #ede9fe; color: #6d28d9; }
+  .badge.all { background: #dcfce7; color: #166534; }
+
+  /* ── 번호 목록 ────────────────────── */
+  ol.steps { padding-left: 20px; }
+  ol.steps li { font-size: 13px; color: #374151; line-height: 2; }
+  ol.steps li strong { color: #0f172a; }
+  ul.bullets { padding-left: 20px; margin: 8px 0; }
+  ul.bullets li { font-size: 12px; color: #475569; line-height: 2; list-style: disc; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     표지
+══════════════════════════════════════════ -->
+<div class="cover" style="position:relative; min-height:100vh;">
+  <div class="cover-logo">WD</div>
+  <div class="cover-sub">WORLDWIDE MEMORY CO., LTD.</div>
+  <div class="cover-title">매입검수 플랫폼<br>사용 메뉴얼</div>
+  <div class="cover-desc">
+    WWM Inspection System v2<br>
+    관리자 · 검수자 · 최종검수자 역할별 운영 가이드
+  </div>
+  <div class="cover-badge">inspect01.onrender.com</div>
+  <div class="cover-footer">© 월드와이드메모리(주) · 사내 전용 시스템 · 무단 배포 금지</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     본문 시작
+══════════════════════════════════════════ -->
+<div class="wrapper">
+
+  <!-- 문서 제목 -->
+  <h1 class="doc-title">WWM 매입검수 플랫폼 사용 메뉴얼</h1>
+  <div class="doc-meta">최종 업데이트: 2026년 6월 &nbsp;|&nbsp; 시스템: inspect01.onrender.com &nbsp;|&nbsp; 버전: v2</div>
+
+  <!-- ── 목차 ────────────────────────── -->
+  <div class="toc">
+    <h2>목 차</h2>
+    <ol>
+      <li><a href="#overview">시스템 개요 및 역할 구분</a></li>
+      <li><a href="#login">로그인</a></li>
+      <li>
+        <a href="#admin">관리자(ADMIN) 업무 흐름</a>
+        <ol class="sub">
+          <li><a href="#admin-list">매입건 목록 확인</a></li>
+          <li><a href="#admin-new">신규 매입건 등록</a></li>
+          <li><a href="#admin-detail">매입건 상세 관리</a></li>
+          <li><a href="#admin-complete">검수 완료 처리</a></li>
+          <li><a href="#admin-excel">엑셀 다운로드</a></li>
+        </ol>
+      </li>
+      <li>
+        <a href="#inspector">검수자(INSPECTOR) 업무 흐름</a>
+        <ol class="sub">
+          <li><a href="#inspector-list">매입건 목록 확인</a></li>
+          <li><a href="#inspector-input">1차 검수 입력</a></li>
+          <li><a href="#inspector-label">QR 라벨 출력</a></li>
+        </ol>
+      </li>
+      <li>
+        <a href="#final">최종검수자(FINAL_INSPECTOR) 업무 흐름</a>
+        <ol class="sub">
+          <li><a href="#final-list">매입건 목록 및 스탬핑 현황 확인</a></li>
+          <li><a href="#final-stamp">인라인 스탬핑 (목록에서 직접 입력)</a></li>
+          <li><a href="#final-excel">검수 완료 건 엑셀 다운로드</a></li>
+        </ol>
+      </li>
+      <li><a href="#faq">자주 묻는 질문 (FAQ)</a></li>
+    </ol>
+  </div>
+
+  <!-- ══════════════════════════════════
+       1. 시스템 개요
+  ══════════════════════════════════ -->
+  <div class="section" id="overview">
+    <div class="section-header">
+      <div class="section-number">1</div>
+      <div>
+        <div class="section-title">시스템 개요 및 역할 구분</div>
+        <div class="section-desc">WWM 매입검수 플랫폼의 구조와 3가지 역할을 확인하세요</div>
+      </div>
+    </div>
+
+    <p class="step-desc">
+      WWM 매입검수 플랫폼은 매입된 IT 기기의 검수 데이터를 체계적으로 관리하고,
+      QR 라벨 출력 및 엑셀 보고서 생성을 지원하는 사내 전용 시스템입니다.<br><br>
+      전체 프로세스는 <strong>관리자의 매입건 등록 → 검수자의 1차 검수 → 최종검수자의 판정 스탬핑</strong> 순서로 진행됩니다.
+    </p>
+
+    <!-- 역할 카드 -->
+    <div class="role-cards">
+      <div class="role-card">
+        <div class="role-card-header admin">관리자 (ADMIN)</div>
+        <div class="role-card-body">
+          <ul>
+            <li>매입건 등록 / 삭제</li>
+            <li>QR 코드 행 추가 / 삭제</li>
+            <li>검수 완료 처리</li>
+            <li>엑셀 다운로드 (전체)</li>
+            <li>매입건 목록 전체 조회</li>
+            <li class="no">스탬핑 직접 편집 불가</li>
+          </ul>
+        </div>
+      </div>
+      <div class="role-card">
+        <div class="role-card-header inspector">검수자 (INSPECTOR)</div>
+        <div class="role-card-body">
+          <ul>
+            <li>매입건 목록 조회</li>
+            <li>1차 검수 입력 / 수정</li>
+            <li>QR 라벨 출력</li>
+            <li class="no">스탬핑 불가</li>
+            <li class="no">매입건 등록 불가</li>
+            <li class="no">엑셀 다운로드 불가</li>
+          </ul>
+        </div>
+      </div>
+      <div class="role-card">
+        <div class="role-card-header final">최종검수자 (FINAL)</div>
+        <div class="role-card-body">
+          <ul>
+            <li>매입건 목록 조회</li>
+            <li>스탬핑 (판정·등급·매입가)</li>
+            <li>인라인 스탬핑 (목록에서)</li>
+            <li>QR 라벨 출력</li>
+            <li>엑셀 다운로드 (완료 건)</li>
+            <li class="no">1차 검수 입력 불가</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 전체 흐름 -->
+    <p style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:12px;">전체 업무 흐름도</p>
+    <div class="flow">
+      <div class="flow-step admin">① 매입건 등록<small>ADMIN</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step admin">② QR 코드<br>자동 생성<small>ADMIN</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step inspector">③ 1차 검수 입력<small>INSPECTOR</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step final">④ 스탬핑<br>(판정·등급·매입가)<small>FINAL</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step admin">⑤ 완료 처리<br>+ 엑셀 출력<small>ADMIN / FINAL</small></div>
+    </div>
+  </div>
+
+  <hr />
+
+  <!-- ══════════════════════════════════
+       2. 로그인
+  ══════════════════════════════════ -->
+  <div class="section page-break" id="login">
+    <div class="section-header">
+      <div class="section-number">2</div>
+      <div>
+        <div class="section-title">로그인</div>
+        <div class="section-desc">모든 역할 공통 — inspect01.onrender.com/login</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">로그인 화면</div>
+      <div class="step-desc">
+        브라우저에서 <strong>inspect01.onrender.com</strong> 또는 <strong>inspect01.onrender.com/login</strong> 에 접속합니다.
+        왼쪽 패널에 브랜드 소개가 표시되고, 오른쪽 패널에 로그인 폼이 나타납니다.
+      </div>
+
+      <div class="screenshot-box real">
+        <img src="images/admin1.png" alt="로그인 화면">
+      </div>
+      <div class="screenshot-caption">inspect01.onrender.com/login</div>
+
+      <ol class="steps">
+        <li><strong>아이디</strong> 입력란에 계정 아이디를 입력합니다.</li>
+        <li><strong>비밀번호</strong> 입력란에 비밀번호를 입력합니다.</li>
+        <li><strong>로그인</strong> 버튼을 클릭합니다.</li>
+        <li>로그인 성공 시 매입건 목록 화면으로 이동합니다.</li>
+      </ol>
+
+      <div class="caution">
+        <strong>⚠ 주의:</strong> 아이디 또는 비밀번호가 틀리면 <em>"아이디 또는 비밀번호가 올바르지 않습니다."</em> 메시지가 표시됩니다.
+        계정 발급 문의는 시스템 관리자에게 연락하세요.
+      </div>
+
+      <div class="tip">
+        <strong>💡 역할 확인:</strong> 로그인 후 화면 우측 상단 내비게이션 바에서 자신의 이름과 역할 배지(<span class="badge admin">ADMIN</span> / <span class="badge inspector">INSPECTOR</span> / <span class="badge final">FINAL</span>)를 확인할 수 있습니다.
+      </div>
+    </div>
+  </div>
+
+  <hr />
+
+  <!-- ══════════════════════════════════
+       3. 관리자
+  ══════════════════════════════════ -->
+  <div class="section role-admin page-break" id="admin">
+    <div class="section-header">
+      <div class="section-number" style="background:#1d4ed8;">3</div>
+      <div>
+        <div class="section-title">관리자 (ADMIN) 업무 흐름</div>
+        <div class="section-desc">매입건 등록부터 완료 처리, 엑셀 출력까지의 전체 과정</div>
+      </div>
+    </div>
+
+    <!-- 3-1 매입건 목록 -->
+    <div class="step" id="admin-list">
+      <span class="step-label admin">STEP 3-1</span>
+      <div class="step-title">매입건 목록 확인</div>
+      <div class="step-desc">
+        로그인 후 첫 화면입니다. 등록된 모든 매입건이 카드 형태로 표시됩니다.
+        각 카드에는 <strong>업체명, 수량, 입고일, 담당자, 검수 진행률(완료/전체)</strong>이 표시됩니다.
+        상태 배지는 <span style="background:#fef9c3;color:#854d0e;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:700;">진행중</span>과
+        <span style="background:#dcfce7;color:#166534;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:700;">완료</span> 두 가지입니다.
+      </div>
+
+      <div class="screenshot-box real">
+        <img src="images/admin2.png" alt="매입건 목록 화면 (ADMIN)">
+      </div>
+      <div class="screenshot-caption">inspect01.onrender.com — 홈 화면</div>
+
+      <div class="tip">
+        <strong>💡 신규 등록 버튼:</strong> ADMIN 계정에서만 우측 상단에 <strong>"+ 신규 매입건 등록"</strong> 파란 버튼이 표시됩니다.
+        INSPECTOR / FINAL 계정에서는 이 버튼이 보이지 않습니다.
+      </div>
+    </div>
+
+    <!-- 3-2 신규 매입건 등록 -->
+    <div class="step page-break" id="admin-new">
+      <span class="step-label admin">STEP 3-2</span>
+      <div class="step-title">신규 매입건 등록</div>
+      <div class="step-desc">
+        목록 화면 우측 상단의 <strong>"+ 신규 매입건 등록"</strong> 버튼을 클릭하면 등록 폼으로 이동합니다.
+        업체 정보와 QR 생성 정보를 입력한 후 <strong>"등록 + QR 생성"</strong> 버튼을 클릭합니다.
+      </div>
+
+      <div class="screenshot-box real">
+        <img src="images/admin3.png" alt="신규 매입건 등록 폼">
+      </div>
+      <div class="screenshot-caption">inspect01.onrender.com/orders/new</div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>필드명</th>
+            <th>필수</th>
+            <th>설명</th>
+            <th>예시</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>업체명</td><td class="required">필수</td><td>매입 업체의 공식 명칭</td><td>(주)삼성전자</td></tr>
+          <tr><td>ERP 사업자명</td><td></td><td>ERP 시스템 상 등록된 업체명 (다를 경우 기재)</td><td>삼성전자(주)</td></tr>
+          <tr><td>사업자번호/주민번호</td><td></td><td>사업자등록번호 또는 주민등록번호</td><td>000-00-00000</td></tr>
+          <tr><td>담당자명</td><td></td><td>매입 담당 직원 이름</td><td>홍길동</td></tr>
+          <tr><td>연락처</td><td></td><td>담당자 연락처</td><td>010-0000-0000</td></tr>
+          <tr><td>수량 (텍스트)</td><td></td><td>수량을 자유 형식으로 기재 (목록 표시용)</td><td>노트북 5대, 올인원 2대</td></tr>
+          <tr><td>입고일</td><td></td><td>물품이 입고된 날짜</td><td>2026-06-16</td></tr>
+          <tr><td>예금주</td><td></td><td>대금 지급 계좌 예금주명</td><td>홍길동</td></tr>
+          <tr><td>은행</td><td></td><td>은행명</td><td>국민은행</td></tr>
+          <tr><td>계좌번호</td><td></td><td>대금 지급 계좌번호</td><td>000-000-000000</td></tr>
+          <tr><td>청구금액</td><td></td><td>업체 청구 금액 (숫자만 입력)</td><td>1500000</td></tr>
+          <tr><td>기타 MEMO</td><td></td><td>기타 메모 사항</td><td>SSD 불량 가능성 있음</td></tr>
+          <tr style="background:#eff6ff;"><td colspan="4" style="font-weight:700;color:#1d4ed8;padding:8px 12px;">── QR 생성 정보 (아래 3개 항목으로 QR 코드 문자열 자동 생성) ──</td></tr>
+          <tr><td>업체명 (영문 8자)</td><td class="required">필수</td><td>영문 소문자 8자 이내, QR 코드에 사용됨</td><td>samsung</td></tr>
+          <tr><td>담당자 성 (영문 2자)</td><td class="required">필수</td><td>담당자 성의 영문 약자 (홍→ho, 김→ki)</td><td>ho</td></tr>
+          <tr><td>수량 (QR 생성 수)</td><td class="required">필수</td><td>생성할 QR 코드(검수 슬롯) 개수</td><td>7</td></tr>
+        </tbody>
+      </table>
+
+      <div class="tip">
+        <strong>💡 QR 자동 생성:</strong> 등록 버튼을 클릭하면 입력한 수량만큼 QR 코드가 자동으로 생성됩니다.
+        생성된 QR 코드는 각 검수 항목(슬롯)에 1:1로 대응됩니다.
+      </div>
+      <div class="caution">
+        <strong>⚠ 수량 오입력 주의:</strong> 등록 후 행을 추가하거나 미검수 행을 삭제할 수 있지만,
+        처음부터 정확한 수량을 입력하는 것이 좋습니다.
+      </div>
+    </div>
+
+    <!-- 3-3 매입건 상세 -->
+    <div class="step page-break" id="admin-detail">
+      <span class="step-label admin">STEP 3-3</span>
+      <div class="step-title">매입건 상세 관리</div>
+      <div class="step-desc">
+        목록에서 매입건 카드를 클릭하면 상세 화면으로 이동합니다.
+        상단에는 업체 기본정보, 하단에는 QR 코드별 검수 리스트가 테이블로 표시됩니다.
+      </div>
+
+      <div class="screenshot-box real">
+        <img src="images/admin4.png" alt="매입건 상세 화면 (상단 기본정보 영역)">
+      </div>
+      <div class="screenshot-caption">inspect01.onrender.com/orders/{id}</div>
+
+      <div class="screenshot-box real">
+        <img src="images/admin5.png" alt="매입건 상세 화면 (검수 리스트 테이블)">
+      </div>
+      <div class="screenshot-caption">inspect01.onrender.com/orders/{id} — 검수 리스트</div>
+
+      <p style="font-size:12px;font-weight:700;color:#64748b;margin:12px 0 8px;">관리자 전용 기능</p>
+      <table>
+        <thead>
+          <tr><th>기능</th><th>위치</th><th>설명</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>행 추가</td><td>검수 리스트 헤더 우측</td><td>미검수 QR 슬롯을 1개 추가합니다. 진행중 상태에서만 활성화됩니다.</td></tr>
+          <tr><td>행 삭제</td><td>동작 열 → 삭제 버튼</td><td>미검수 항목만 삭제 가능합니다. 이미 검수된 항목은 삭제되지 않습니다.</td></tr>
+          <tr><td>매입건 삭제</td><td>하단 좌측 빨간 버튼</td><td>매입건 전체를 삭제합니다. 삭제 후 복구 불가합니다.</td></tr>
+          <tr><td>수정 (검수 재입력)</td><td>동작 열 → 수정 버튼</td><td>이미 검수된 항목의 내용을 수정할 수 있습니다.</td></tr>
+          <tr><td>라벨 출력</td><td>동작 열 → 라벨 버튼</td><td>검수 완료된 항목의 QR 라벨을 출력합니다.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="caution">
+        <strong>⚠ ADMIN의 스탬핑:</strong> 관리자는 스탬핑 결과를 <strong>읽기 전용</strong>으로만 볼 수 있습니다.
+        스탬핑(판정·등급·매입가 입력)은 최종검수자(FINAL_INSPECTOR)만 가능합니다.
+      </div>
+    </div>
+
+    <!-- 3-4 완료 처리 -->
+    <div class="step" id="admin-complete">
+      <span class="step-label admin">STEP 3-4</span>
+      <div class="step-title">검수 완료 처리</div>
+      <div class="step-desc">
+        모든 QR 슬롯의 1차 검수가 완료되면 하단 우측에 <strong>"✓ 검수 완료 처리"</strong> 초록 버튼이 활성화됩니다.
+        이 버튼을 클릭하면 해당 매입건의 상태가 <strong>진행중 → 완료</strong>로 변경됩니다.
+      </div>
+
+      <div class="screenshot-box real">
+        <img src="images/admin6.png" alt="하단 완료 처리 버튼 활성화 상태">
+      </div>
+      <div class="screenshot-caption">모든 검수 완료 후 하단 버튼 영역</div>
+
+      <div class="tip">
+        <strong>💡 버튼 비활성화:</strong> 미검수 항목이 남아있으면 버튼이 회색으로 표시되며 클릭할 수 없습니다.
+        버튼 위에 <em>"검수 미완료 (N건 남음)"</em> 텍스트가 표시됩니다.
+      </div>
+    </div>
+
+    <!-- 3-5 엑셀 -->
+    <div class="step" id="admin-excel">
+      <span class="step-label admin">STEP 3-5</span>
+      <div class="step-title">엑셀 다운로드</div>
+      <div class="step-desc">
+        매입건 상세 화면 하단 좌측의 <strong>"📊 엑셀 다운로드"</strong> 초록 버튼을 클릭합니다.
+        관리자는 진행중/완료 여부에 관계없이 언제든지 다운로드할 수 있습니다.
+        다운로드된 파일명 형식: <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;">매입검수_업체명_날짜.xlsx</code>
+      </div>
+
+      <div class="screenshot-box real">
+        <img src="images/admin7.png" alt="엑셀 다운로드 버튼">
+      </div>
+      <div class="screenshot-caption">매입건 상세 화면 하단 좌측</div>
+
+      <div class="screenshot-box real">
+        <img src="images/admin8.png" alt="다운로드된 엑셀 파일 화면">
+      </div>
+      <div class="screenshot-caption">Excel에서 열었을 때 모습</div>
+
+      <p style="font-size:12px;font-weight:700;color:#64748b;margin:12px 0 8px;">엑셀 출력 내용 구성</p>
+      <table>
+        <thead><tr><th>구분</th><th>내용</th></tr></thead>
+        <tbody>
+          <tr><td>상단 기본정보 (1~5행)</td><td>작성일, 업체명, 사업자번호, 매입담당, ERP사업자명, 예금주, 수량, 연락처, 은행, 입고일, 기타MEMO, 청구금액, 계좌번호, 진행여부</td></tr>
+          <tr><td>7행 테이블 헤더</td><td>순번·제조사·모델명·CPU·RAM·저장장치·VGA·크기·해상도·액정·키보드터치·배터리·특이사항·입고처·검수자·아답터·바라시·판정·등급·매입가</td></tr>
+          <tr><td>8행 이하 데이터</td><td>각 QR 코드별 검수 내용. 미검수 행은 회색 배경, 불량 판정 시 빨간 강조</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr />
+
+  <!-- ══════════════════════════════════
+       4. 검수자
+  ══════════════════════════════════ -->
+  <div class="section role-inspector page-break" id="inspector">
+    <div class="section-header">
+      <div class="section-number" style="background:#0891b2;">4</div>
+      <div>
+        <div class="section-title">검수자 (INSPECTOR) 업무 흐름</div>
+        <div class="section-desc">1차 검수 데이터 입력 및 QR 라벨 출력</div>
+      </div>
+    </div>
+
+    <!-- 4-1 목록 -->
+    <div class="step" id="inspector-list">
+      <span class="step-label inspector">STEP 4-1</span>
+      <div class="step-title">매입건 목록 확인</div>
+      <div class="step-desc">
+        로그인 후 동일하게 매입건 목록이 표시됩니다.
+        검수자 계정에서는 <strong>"+ 신규 매입건 등록" 버튼이 표시되지 않습니다.</strong>
+        자신이 검수해야 할 매입건 카드를 클릭하여 상세 화면으로 이동합니다.
+      </div>
+
+      <div class="screenshot-box real">
+        <img src="images/inpect1.png" alt="매입건 목록 화면 (INSPECTOR 계정)">
+      </div>
+      <div class="screenshot-caption">INSPECTOR 로그인 후 홈 화면 — 우측 상단 "INSPECTOR" 배지 확인</div>
+    </div>
+
+    <!-- 4-2 1차 검수 입력 -->
+    <div class="step page-break" id="inspector-input">
+      <span class="step-label inspector">STEP 4-2</span>
+      <div class="step-title">1차 검수 입력</div>
+      <div class="step-desc">
+        매입건 상세 화면에서 검수가 필요한 행의 <strong>"검수입력"</strong> 파란 버튼을 클릭합니다.
+        이미 검수된 행은 <strong>"수정"</strong> 회색 버튼으로 표시됩니다.
+      </div>
+
+      <div class="screenshot-box real">
+        <img src="images/inpect2.png" alt="매입건 상세 화면 — 검수 리스트 (INSPECTOR 계정)">
+      </div>
+      <div class="screenshot-caption">파란 "검수입력" 버튼이 있는 미검수 행 확인</div>
+
+      <div class="screenshot-box real">
+        <img src="images/inpect3.png" alt="1차 검수 입력 화면">
+      </div>
+      <div class="screenshot-caption">inspect01.onrender.com/orders/{id}/inspect/{qrId}</div>
+
+      <p style="font-size:12px;font-weight:700;color:#64748b;margin:12px 0 8px;">1차 검수 입력 항목</p>
+      <table>
+        <thead>
+          <tr><th>항목</th><th>입력 방식</th><th>선택지 / 설명</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>제조사</td><td>텍스트 + 자동완성</td><td>Samsung, LG, Lenovo, HP, Dell, ASUS, Apple 등</td></tr>
+          <tr><td>모델명</td><td>텍스트 직접 입력</td><td>예: Galaxy Book3 Pro</td></tr>
+          <tr><td>CPU</td><td>텍스트 직접 입력</td><td>예: i7-1355U</td></tr>
+          <tr><td>RAM</td><td>텍스트 + 자동완성</td><td>4/8/16/32GB DDR4 등</td></tr>
+          <tr><td>저장장치</td><td>텍스트 + 자동완성</td><td>256GB SSD, 512GB NVMe, 1TB NVMe 등</td></tr>
+          <tr><td>VGA</td><td>텍스트 직접 입력</td><td>예: Intel Iris Xe</td></tr>
+          <tr><td>크기(inch)</td><td>텍스트 + 자동완성</td><td>13.3" / 14" / 15.6" / 17.3" 등</td></tr>
+          <tr><td>해상도</td><td>텍스트 + 자동완성</td><td>1920x1080 / 2560x1440 / 3840x2160</td></tr>
+          <tr><td>액정</td><td>텍스트 + 자동완성</td><td>정상 / 잔상있음 / 사점1개 / 불량</td></tr>
+          <tr><td>키보드/터치</td><td>드롭다운 선택</td><td>정상 / 불량 / 없음</td></tr>
+          <tr><td>배터리손실%</td><td>숫자 직접 입력</td><td>0~100 사이 숫자 (소수점 가능)</td></tr>
+          <tr><td>45%방전확인</td><td>체크박스</td><td>45% 방전 후 확인했으면 체크</td></tr>
+          <tr><td>특이사항/불량내역</td><td>텍스트 자유 입력</td><td>자유 서술 (우측 영역)</td></tr>
+          <tr><td>아답터</td><td>O / X 라디오</td><td>아답터 포함(O) / 미포함(X)</td></tr>
+          <tr><td>바라시</td><td>O / X 라디오</td><td>분해 여부 O / X</td></tr>
+          <tr><td>검수자</td><td>자동 입력</td><td>현재 로그인한 계정 이름으로 자동 설정</td></tr>
+        </tbody>
+      </table>
+
+      <ol class="steps">
+        <li>모든 항목을 입력한 후 <strong>"1차 저장"</strong> 파란 버튼을 클릭합니다.</li>
+        <li>저장 성공 시 매입건 상세 화면으로 돌아가며, 해당 행이 <strong>"수정"</strong> 버튼으로 바뀝니다.</li>
+        <li>검수 진행률(N/전체) 숫자가 1 증가하는 것을 확인합니다.</li>
+      </ol>
+
+      <div class="caution">
+        <strong>⚠ 다른 검수자가 완료한 항목:</strong> 다른 검수자가 이미 입력한 항목은 <strong>읽기 전용</strong>으로 표시됩니다.
+        자신이 직접 입력한 항목만 수정할 수 있습니다.
+      </div>
+      <div class="tip">
+        <strong>💡 판정·등급·매입가:</strong> 1차 검수 화면 우측 하단에
+        <em>"판정·등급·매입가는 최종검수자가 Stamping 단계에서 입력합니다"</em> 안내가 표시됩니다.
+        이 항목들은 검수자가 직접 입력하지 않습니다.
+      </div>
+    </div>
+
+    <!-- 4-3 QR 라벨 -->
+    <div class="step" id="inspector-label">
+      <span class="step-label inspector">STEP 4-3</span>
+      <div class="step-title">QR 라벨 출력</div>
+      <div class="step-desc">
+        검수가 완료된 행의 <strong>"라벨"</strong> 초록 버튼을 클릭합니다.
+        라벨 화면에서는 QR 코드 이미지와 검수 스펙이 라벨 형식으로 표시됩니다.
+        브라우저의 <strong>인쇄(Ctrl+P)</strong> 기능을 사용하여 출력합니다.
+      </div>
+
+      <div class="screenshot-box real">
+        <img src="images/inpect4.png" alt="QR 라벨 출력 화면">
+      </div>
+      <div class="screenshot-caption">inspect01.onrender.com/orders/{id}/inspect/{qrId}/label</div>
+
+      <div class="tip">
+        <strong>💡 라벨 내용:</strong> 업체명, 입고일, QR 코드, 순번, 제조사, 모델명, CPU, RAM, 저장장치,
+        VGA, 화면 크기, 해상도, 액정 상태, 키보드/터치, 배터리 손실률, 아답터, 바라시 여부, 특이사항,
+        검수자 이름이 포함됩니다.
+      </div>
+    </div>
+  </div>
+
+  <hr />
+
+  <!-- ══════════════════════════════════
+       5. 최종검수자
+  ══════════════════════════════════ -->
+  <div class="section role-final page-break" id="final">
+    <div class="section-header">
+      <div class="section-number" style="background:#7c3aed;">5</div>
+      <div>
+        <div class="section-title">최종검수자 (FINAL_INSPECTOR) 업무 흐름</div>
+        <div class="section-desc">스탬핑(판정·등급·매입가 결정) 및 엑셀 출력</div>
+      </div>
+    </div>
+
+    <!-- 5-1 목록 -->
+    <div class="step" id="final-list">
+      <span class="step-label final">STEP 5-1</span>
+      <div class="step-title">매입건 목록 및 스탬핑 현황 확인</div>
+      <div class="step-desc">
+        로그인 후 동일한 매입건 목록이 표시됩니다. 상세 화면에 진입하면
+        검수 리스트 헤더에 <strong>검수 진행률과 스탬핑 현황(스탬핑 N/검수완료 N)</strong>이 함께 표시됩니다.
+      </div>
+
+      <div class="screenshot-box real">
+        <img src="images/inpect5.png" alt="매입건 상세 화면 — 스탬핑 현황 표시 (FINAL 계정)">
+      </div>
+      <div class="screenshot-caption">헤더 영역의 "스탬핑 N/N" 보라색 텍스트 확인</div>
+
+      <div class="tip">
+        <strong>💡 스탬핑 완료 행 표시:</strong> 스탬핑이 완료된 행은 <span style="background:#f5f3ff;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:700;color:#6d28d9;">보라색 배경</span>으로 표시되며,
+        동작 열에 <span style="background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:700;">스탬핑완료</span> 배지가 나타납니다.
+      </div>
+    </div>
+
+    <!-- 5-2 인라인 스탬핑 -->
+    <div class="step page-break" id="final-stamp">
+      <span class="step-label final">STEP 5-2</span>
+      <div class="step-title">인라인 스탬핑 (목록 화면에서 직접 입력)</div>
+      <div class="step-desc">
+        최종검수자는 <strong>매입건 상세 화면의 테이블에서 직접</strong> 판정·등급·매입가를 입력하고 저장할 수 있습니다.
+        별도 페이지로 이동하지 않아도 됩니다.
+      </div>
+
+      <div class="screenshot-box real">
+        <img src="images/final1.png" alt="인라인 스탬핑 입력 상태">
+      </div>
+      <div class="screenshot-caption">FINAL 계정 — 1차 검수 완료된 행에 판정/등급/매입가 입력 폼 표시</div>
+
+      <ol class="steps">
+        <li>1차 검수가 완료된 행(배경색 없음)에서 <strong>판정</strong> 드롭다운을 클릭합니다.</li>
+        <li>판정을 선택합니다: <strong>모델</strong>(정상 모델) / <strong>불량</strong> / <strong>부품</strong>(부품용)</li>
+        <li><strong>등급</strong> 드롭다운에서 등급을 선택합니다: S / A / B / C</li>
+        <li><strong>매입가</strong> 숫자 입력란에 금액을 입력합니다.</li>
+        <li>해당 행 맨 우측 <strong>"저장"</strong> 보라색 버튼을 클릭합니다.</li>
+        <li>저장 성공 시 해당 행 배경이 <span style="background:#f5f3ff;padding:1px 4px;border-radius:3px;">보라색</span>으로 바뀌고 스탬핑완료 배지가 표시됩니다.</li>
+      </ol>
+
+      <table>
+        <thead>
+          <tr><th>항목</th><th>선택지</th><th>의미</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="3">판정</td>
+            <td><span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">모델</span></td>
+            <td>정상 동작하는 제품 (양품으로 모델 분류)</td>
+          </tr>
+          <tr>
+            <td><span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">불량</span></td>
+            <td>사용 불가 또는 주요 결함이 있는 제품</td>
+          </tr>
+          <tr>
+            <td><span style="background:#ffedd5;color:#9a3412;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">부품</span></td>
+            <td>부품 수거 목적의 제품</td>
+          </tr>
+          <tr>
+            <td>등급</td>
+            <td>S / A / B / C</td>
+            <td>S: 최상급 → C: 하급 (내부 기준에 따라 부여)</td>
+          </tr>
+          <tr>
+            <td>매입가</td>
+            <td>숫자 입력</td>
+            <td>해당 기기의 최종 매입 금액 (원 단위)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="caution">
+        <strong>⚠ 1차 검수 미완료 행:</strong> 1차 검수가 완료되지 않은 행에는 스탬핑 입력 폼이 표시되지 않습니다.
+        반드시 검수자가 먼저 1차 검수를 완료해야 합니다.
+      </div>
+      <div class="tip">
+        <strong>💡 재스탬핑:</strong> 이미 스탬핑된 항목도 다시 값을 변경하고 "저장" 버튼을 누르면 재스탬핑됩니다.
+        저장 시 스탬퍼 이름과 시각이 갱신됩니다.
+      </div>
+    </div>
+
+    <!-- 5-3 엑셀 -->
+    <div class="step" id="final-excel">
+      <span class="step-label final">STEP 5-3</span>
+      <div class="step-title">검수 완료 건 엑셀 다운로드</div>
+      <div class="step-desc">
+        최종검수자는 <strong>상태가 "완료"인 매입건</strong>에 한해 엑셀 다운로드가 가능합니다.
+        완료 상태의 매입건 상세 화면 하단 좌측에 <strong>"📊 엑셀 다운로드"</strong> 버튼이 표시됩니다.
+        진행중 상태의 매입건에서는 버튼이 나타나지 않습니다.
+      </div>
+
+      <div class="screenshot-box real">
+        <img src="images/admin8.png" alt="완료 상태 매입건 상세 화면 하단 — 엑셀 다운로드 버튼 (FINAL 계정)">
+      </div>
+      <div class="screenshot-caption">진행여부: "완료" 배지 + 하단 "📊 엑셀 다운로드" 버튼</div>
+
+      <div class="caution">
+        <strong>⚠ 진행중 건 다운로드 불가:</strong> 최종검수자 계정에서 아직 완료 처리되지 않은 매입건은
+        엑셀 다운로드 버튼이 표시되지 않습니다. 완료 처리는 관리자(ADMIN)만 가능합니다.
+      </div>
+    </div>
+  </div>
+
+  <hr />
+
+  <!-- ══════════════════════════════════
+       6. FAQ
+  ══════════════════════════════════ -->
+  <div class="section page-break" id="faq">
+    <div class="section-header">
+      <div class="section-number" style="background:#475569;">6</div>
+      <div>
+        <div class="section-title">자주 묻는 질문 (FAQ)</div>
+        <div class="section-desc">운영 중 자주 발생하는 상황별 해결 방법</div>
+      </div>
+    </div>
+
+    <div style="space-y:16px;">
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:18px 20px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:900;color:#0f172a;margin-bottom:8px;">
+          Q. 스탬핑 저장 버튼을 눌렀을 때 "스탬핑은 최종검수자 계정만 가능합니다" 메시지가 뜹니다.
+        </div>
+        <div style="font-size:13px;color:#475569;line-height:1.8;">
+          <strong>A.</strong> 현재 로그인 계정이 FINAL_INSPECTOR 역할이 아닙니다.
+          화면 우측 상단 배지를 확인하세요. FINAL 계정으로 다시 로그인해야 스탬핑할 수 있습니다.
+        </div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:18px 20px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:900;color:#0f172a;margin-bottom:8px;">
+          Q. "검수 완료 처리" 버튼이 회색으로 비활성화되어 있습니다.
+        </div>
+        <div style="font-size:13px;color:#475569;line-height:1.8;">
+          <strong>A.</strong> 1차 검수가 완료되지 않은 항목이 남아있습니다.
+          버튼 텍스트에 <em>"(N건 남음)"</em>이 표시됩니다.
+          검수 리스트에서 배경이 노란색인 행을 찾아 검수를 먼저 완료하세요.
+        </div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:18px 20px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:900;color:#0f172a;margin-bottom:8px;">
+          Q. 다른 검수자가 입력한 항목을 수정하고 싶습니다.
+        </div>
+        <div style="font-size:13px;color:#475569;line-height:1.8;">
+          <strong>A.</strong> 보안상 <strong>자신이 입력한 항목만</strong> 수정할 수 있습니다.
+          다른 검수자가 입력한 항목은 읽기 전용으로 표시됩니다.
+          수정이 필요할 경우 관리자에게 문의하거나, 특이사항란에 수정 내용을 기재하는 방법을 사용하세요.
+        </div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:18px 20px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:900;color:#0f172a;margin-bottom:8px;">
+          Q. 최종검수자인데 엑셀 다운로드 버튼이 보이지 않습니다.
+        </div>
+        <div style="font-size:13px;color:#475569;line-height:1.8;">
+          <strong>A.</strong> 최종검수자는 <strong>완료 처리된 매입건</strong>에서만 엑셀 다운로드가 가능합니다.
+          해당 매입건 상단의 상태 배지가 <span style="background:#dcfce7;color:#166534;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:700;">✓ 완료</span>인지 확인하세요.
+          아직 <span style="background:#fef9c3;color:#854d0e;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:700;">● 진행중</span>이라면 관리자에게 완료 처리를 요청하세요.
+        </div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:18px 20px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:900;color:#0f172a;margin-bottom:8px;">
+          Q. QR 슬롯 수를 잘못 등록했습니다. 수정할 수 있나요?
+        </div>
+        <div style="font-size:13px;color:#475569;line-height:1.8;">
+          <strong>A.</strong> 관리자(ADMIN) 계정에서 <strong>행 추가</strong> 또는 <strong>행 삭제</strong>로 조정할 수 있습니다.
+          단, 행 삭제는 <strong>1차 검수가 완료되지 않은 행만</strong> 가능합니다.
+          이미 검수 데이터가 입력된 행은 삭제할 수 없습니다.
+        </div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:18px 20px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:900;color:#0f172a;margin-bottom:8px;">
+          Q. 로그인이 되지 않습니다.
+        </div>
+        <div style="font-size:13px;color:#475569;line-height:1.8;">
+          <strong>A.</strong> 다음 사항을 확인하세요:<br>
+          ① 아이디와 비밀번호가 정확한지 확인 (대/소문자 구분)<br>
+          ② 계정이 비활성화되었을 수 있으므로 시스템 관리자에게 문의<br>
+          ③ 인터넷 연결 상태 확인 (inspect01.onrender.com 서버가 응답하는지 확인)
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 하단 -->
+  <div style="margin-top:60px;padding-top:24px;border-top:1px solid #e2e8f0;text-align:center;font-size:11px;color:#94a3b8;line-height:2;">
+    WWM Inspection System v2 &nbsp;|&nbsp; 월드와이드메모리(주) 사내 전용 시스템<br>
+    스크린샷은 실제 화면 캡처 후 각 이미지 자리에 교체하여 완성하세요.<br>
+    메뉴얼 문의: 시스템 관리자
+  </div>
+
+</div><!-- /wrapper -->
+
+</body>
+</html>
