@@ -47,26 +47,24 @@
       <table class="table mb-0" id="assetTable">
         <thead>
           <tr>
-            <th style="width:40px">#</th>
+            <th style="width:34px">#</th>
             <th>제조사</th>
             <th>모델명</th>
-            <th style="width:80px">폼팩터</th>
+            <th style="width:76px">폼팩터</th>
             <th style="width:60px">CPU수</th>
             <th>CPU모델</th>
-            <th style="width:80px">RAM(GB)</th>
-            <th>스토리지</th>
+            <th style="width:120px">RAM 구성</th>
+            <th style="width:140px">스토리지 구성</th>
             <th>S/N</th>
             <th>자산번호</th>
             <th>랙위치</th>
-            <th style="width:60px">수량</th>
-            <th style="width:60px">등급</th>
-            <th style="width:50px">파기</th>
-            <th style="width:40px"></th>
+            <th style="width:54px">수량</th>
+            <th style="width:54px">등급</th>
+            <th style="width:44px">파기</th>
+            <th style="width:34px"></th>
           </tr>
         </thead>
-        <tbody id="assetRows">
-          <!-- JS가 동적 추가 -->
-        </tbody>
+        <tbody id="assetRows"></tbody>
       </table>
     </div>
   </div>
@@ -78,17 +76,85 @@
     </button>
   </div>
 </form>
+
+<!-- RAM 구성 모달 -->
+<div class="modal fade" id="ramModal" tabindex="-1">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title"><i class="bi bi-memory me-2"></i>RAM 구성 입력</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-sm mb-2" id="ramRows">
+          <thead>
+            <tr>
+              <th>용량(GB)</th>
+              <th style="width:80px">수량</th>
+              <th style="width:34px"></th>
+            </tr>
+          </thead>
+          <tbody id="ramRowBody"></tbody>
+        </table>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addRamRow()">
+          <i class="bi bi-plus me-1"></i>DIMM 추가
+        </button>
+        <div class="mt-2 text-muted small">합계: <span id="ramTotal">0</span> GB</div>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="confirmRam()">확인</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 스토리지 구성 모달 -->
+<div class="modal fade" id="storageModal" tabindex="-1">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title"><i class="bi bi-hdd-stack me-2"></i>스토리지 구성 입력</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-sm mb-2">
+          <thead>
+            <tr>
+              <th style="width:90px">타입</th>
+              <th style="width:70px">용량</th>
+              <th style="width:64px">단위</th>
+              <th style="width:64px">수량</th>
+              <th style="width:34px"></th>
+            </tr>
+          </thead>
+          <tbody id="storageRowBody"></tbody>
+        </table>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addStorageRow()">
+          <i class="bi bi-plus me-1"></i>드라이브 추가
+        </button>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="confirmStorage()">확인</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
 let rowCount = 0;
+let activeRowIdx = null;
 
+// ─── 서버 행 추가 ───────────────────────────────────────
 function addRow() {
   const tbody = document.getElementById('assetRows');
   const i = rowCount++;
-  const row = document.createElement('tr');
-  row.innerHTML = `
+  const tr = document.createElement('tr');
+  tr.id = `row_${i}`;
+  tr.innerHTML = `
     <td class="text-muted small align-middle">${rowCount}</td>
     <td><input type="text" name="manufacturer_${i}" class="form-control form-control-sm" placeholder="Dell" /></td>
     <td><input type="text" name="model_${i}" class="form-control form-control-sm" placeholder="PowerEdge R740" /></td>
@@ -102,8 +168,21 @@ function addRow() {
     </td>
     <td><input type="number" name="cpu_count_${i}" class="form-control form-control-sm" value="2" min="1" /></td>
     <td><input type="text" name="cpu_model_${i}" class="form-control form-control-sm" placeholder="Xeon Gold 6230" /></td>
-    <td><input type="number" name="ram_total_gb_${i}" class="form-control form-control-sm" value="0" min="0" /></td>
-    <td><input type="text" name="storage_config_${i}" class="form-control form-control-sm" placeholder="2TB×4 HDD" /></td>
+    <td>
+      <input type="hidden" name="ram_total_gb_${i}" id="ram_total_${i}" value="0" />
+      <input type="hidden" name="ram_config_${i}" id="ram_config_${i}" value="" />
+      <button type="button" class="btn btn-sm btn-outline-secondary w-100 text-start"
+        id="ram_btn_${i}" onclick="openRamModal(${i})">
+        <i class="bi bi-memory me-1 text-muted"></i><span id="ram_label_${i}" class="text-muted small">미입력</span>
+      </button>
+    </td>
+    <td>
+      <input type="hidden" name="storage_config_${i}" id="storage_config_${i}" value="" />
+      <button type="button" class="btn btn-sm btn-outline-secondary w-100 text-start"
+        id="storage_btn_${i}" onclick="openStorageModal(${i})">
+        <i class="bi bi-hdd me-1 text-muted"></i><span id="storage_label_${i}" class="text-muted small">미입력</span>
+      </button>
+    </td>
     <td><input type="text" name="serial_number_${i}" class="form-control form-control-sm" placeholder="SN123456" /></td>
     <td><input type="text" name="asset_tag_${i}" class="form-control form-control-sm" placeholder="자산번호" /></td>
     <td><input type="text" name="rack_location_${i}" class="form-control form-control-sm" placeholder="A-01-U10" /></td>
@@ -113,7 +192,7 @@ function addRow() {
         <option value="상">상</option><option value="중" selected>중</option><option value="하">하</option>
       </select>
     </td>
-    <td class="text-center">
+    <td class="text-center align-middle">
       <input type="checkbox" name="data_wipe_required_${i}" checked class="form-check-input" />
     </td>
     <td>
@@ -122,11 +201,126 @@ function addRow() {
       </button>
     </td>
   `;
-  tbody.appendChild(row);
+  tbody.appendChild(tr);
 }
 
-function removeRow(btn) {
-  btn.closest('tr').remove();
+function removeRow(btn) { btn.closest('tr').remove(); }
+
+// ─── RAM 모달 ───────────────────────────────────────────
+function openRamModal(idx) {
+  activeRowIdx = idx;
+  const body = document.getElementById('ramRowBody');
+  body.innerHTML = '';
+  // 기존 값 복원
+  const existing = document.getElementById(`ram_config_${idx}`).value;
+  if (existing) {
+    existing.split(',').forEach(part => {
+      const m = part.trim().match(/^(\d+)GB×(\d+)$/);
+      if (m) addRamRow(parseInt(m[1]), parseInt(m[2]));
+      else addRamRow();
+    });
+  } else {
+    addRamRow();
+  }
+  updateRamTotal();
+  new bootstrap.Modal(document.getElementById('ramModal')).show();
+}
+
+function addRamRow(gb = '', qty = 1) {
+  const body = document.getElementById('ramRowBody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="number" class="form-control form-control-sm ram-gb" value="${gb}" min="1" placeholder="예: 32" oninput="updateRamTotal()" /></td>
+    <td><input type="number" class="form-control form-control-sm ram-qty" value="${qty}" min="1" oninput="updateRamTotal()" /></td>
+    <td><button type="button" class="btn btn-sm btn-outline-danger py-0" onclick="this.closest('tr').remove(); updateRamTotal()"><i class="bi bi-x"></i></button></td>
+  `;
+  body.appendChild(tr);
+}
+
+function updateRamTotal() {
+  let total = 0;
+  document.querySelectorAll('#ramRowBody tr').forEach(tr => {
+    const gb = parseInt(tr.querySelector('.ram-gb').value || 0);
+    const qty = parseInt(tr.querySelector('.ram-qty').value || 0);
+    total += gb * qty;
+  });
+  document.getElementById('ramTotal').textContent = total;
+}
+
+function confirmRam() {
+  const parts = [];
+  let total = 0;
+  document.querySelectorAll('#ramRowBody tr').forEach(tr => {
+    const gb = parseInt(tr.querySelector('.ram-gb').value || 0);
+    const qty = parseInt(tr.querySelector('.ram-qty').value || 0);
+    if (gb > 0 && qty > 0) {
+      parts.push(`${gb}GB×${qty}`);
+      total += gb * qty;
+    }
+  });
+  const config = parts.join(', ');
+  document.getElementById(`ram_total_${activeRowIdx}`).value = total;
+  document.getElementById(`ram_config_${activeRowIdx}`).value = config;
+  document.getElementById(`ram_label_${activeRowIdx}`).textContent = config || '미입력';
+  document.getElementById(`ram_label_${activeRowIdx}`).classList.toggle('text-muted', !config);
+  bootstrap.Modal.getInstance(document.getElementById('ramModal')).hide();
+}
+
+// ─── 스토리지 모달 ─────────────────────────────────────
+function openStorageModal(idx) {
+  activeRowIdx = idx;
+  const body = document.getElementById('storageRowBody');
+  body.innerHTML = '';
+  const existing = document.getElementById(`storage_config_${idx}`).value;
+  if (existing) {
+    // "2TB HDD×3, 960GB SSD×1" 형태 파싱
+    existing.split(',').forEach(part => {
+      const m = part.trim().match(/^(\d+)(GB|TB)\s+(HDD|SSD|NVMe)×(\d+)$/);
+      if (m) addStorageRow(m[3], m[1], m[2], parseInt(m[4]));
+      else addStorageRow();
+    });
+  } else {
+    addStorageRow();
+  }
+  new bootstrap.Modal(document.getElementById('storageModal')).show();
+}
+
+function addStorageRow(type = 'HDD', cap = '', unit = 'TB', qty = 1) {
+  const body = document.getElementById('storageRowBody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>
+      <select class="form-select form-select-sm st-type">
+        ${['HDD','SSD','NVMe'].map(t => `<option${t===type?' selected':''}>${t}</option>`).join('')}
+      </select>
+    </td>
+    <td><input type="number" class="form-control form-control-sm st-cap" value="${cap}" min="1" placeholder="예: 2" /></td>
+    <td>
+      <select class="form-select form-select-sm st-unit">
+        <option${unit==='GB'?' selected':''}>GB</option>
+        <option${unit==='TB'?' selected':''}>TB</option>
+      </select>
+    </td>
+    <td><input type="number" class="form-control form-control-sm st-qty" value="${qty}" min="1" /></td>
+    <td><button type="button" class="btn btn-sm btn-outline-danger py-0" onclick="this.closest('tr').remove()"><i class="bi bi-x"></i></button></td>
+  `;
+  body.appendChild(tr);
+}
+
+function confirmStorage() {
+  const parts = [];
+  document.querySelectorAll('#storageRowBody tr').forEach(tr => {
+    const type = tr.querySelector('.st-type').value;
+    const cap  = tr.querySelector('.st-cap').value;
+    const unit = tr.querySelector('.st-unit').value;
+    const qty  = parseInt(tr.querySelector('.st-qty').value || 0);
+    if (cap && qty > 0) parts.push(`${cap}${unit} ${type}×${qty}`);
+  });
+  const config = parts.join(', ');
+  document.getElementById(`storage_config_${activeRowIdx}`).value = config;
+  document.getElementById(`storage_label_${activeRowIdx}`).textContent = config || '미입력';
+  document.getElementById(`storage_label_${activeRowIdx}`).classList.toggle('text-muted', !config);
+  bootstrap.Modal.getInstance(document.getElementById('storageModal')).hide();
 }
 
 // 첫 행 자동 추가

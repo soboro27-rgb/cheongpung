@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Depends
-from fastapi.responses import RedirectResponse, HTMLResponse, JSONResponse
+from fastapi.responses import RedirectResponse, HTMLResponse, JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from database import get_db
 import models
@@ -8,6 +8,8 @@ from auth import require_wm, require_super_admin
 from config import templates
 import bcrypt
 from datetime import datetime
+import openpyxl
+from io import BytesIO
 
 router = APIRouter()
 
@@ -698,3 +700,84 @@ def price_ref_api(request: Request, q: str = "", category: str = "", db: Session
         "model_display": r.model_display, "spec_summary": r.spec_summary,
         "base_price": r.base_price,
     } for r in refs])
+
+
+@router.get("/price-refs/template")
+def price_ref_template(request: Request):
+    u, redir = _check(request)
+    if redir: return redir
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "기준가"
+    ws.append(["분류", "제조사", "모델코드", "표시명", "스펙요약(CPU/RAM)", "기준가(원)"])
+    ws.append(["서버", "Dell", "R740", "PowerEdge R740", "Xeon Gold 6230 / 128GB DDR4", 500000])
+    ws.append(["스토리지", "NetApp", "FAS2750", "FAS2750 24-Bay", "24×1.8TB SAS", 1200000])
+    for col in ws.columns:
+        ws.column_dimensions[col[0].column_letter].width = 20
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename*=UTF-8''price_ref_template.xlsx"},
+    )
+
+
+@router.post("/price-refs/bulk")
+async def price_ref_bulk(request: Request, db: Session = Depends(get_db)):
+    u, redir = _check_super(request)
+    if redir: return redir
+
+    form = await request.form()
+    file = form.get("file")
+    if not file or not file.filename:
+        return RedirectResponse("/wm/price-refs?error=no_file", status_code=302)
+
+    content = await file.read()
+    try:
+        wb = openpyxl.load_workbook(BytesIO(content))
+    except Exception:
+        return RedirectResponse("/wm/price-refs?error=invalid_file", status_code=302)
+
+    ws = wb.active
+    count = 0
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        if not any(row):
+            continue
+        category     = str(row[0] or "서버").strip()
+        manufacturer = str(row[1] or "").strip()
+        model_code   = str(row[2] or "").strip()
+        model_display = str(row[3] or "").strip()
+        spec_summary = str(row[4] or "").strip()
+        try:
+            base_price = int(str(row[5] or 0).replace(",", "").split(".")[0] or 0)
+        except (ValueError, TypeError):
+            base_price = 0
+
+        if not model_code:
+            continue
+
+        existing = db.query(models.ServerPriceRef).filter(
+            models.ServerPriceRef.model_code == model_code
+        ).first()
+        if existing:
+            existing.category = category
+            existing.manufacturer = manufacturer
+            existing.model_display = model_display
+            existing.spec_summary = spec_summary
+            existing.base_price = base_price
+            existing.updated_at = datetime.now()
+        else:
+            db.add(models.ServerPriceRef(
+                category=category, manufacturer=manufacturer,
+                model_code=model_code, model_display=model_display,
+                spec_summary=spec_summary, base_price=base_price,
+                updated_at=datetime.now(),
+            ))
+        count += 1
+
+    db.commit()
+    return RedirectResponse(f"/wm/price-refs?imported={count}", status_code=302)

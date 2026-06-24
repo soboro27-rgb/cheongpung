@@ -3,7 +3,40 @@
 {% block page_title %}<i class="bi bi-currency-dollar me-2"></i>서버 기준가{% endblock %}
 
 {% block content %}
+{% if request.query_params.get('imported') %}
+<div class="alert alert-success alert-dismissible fade show py-2 small">
+  <i class="bi bi-check-circle me-1"></i>{{ request.query_params.get('imported') }}건 등록/수정 완료
+  <button type="button" class="btn-close py-2" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+{% if request.query_params.get('error') %}
+<div class="alert alert-danger alert-dismissible fade show py-2 small">
+  <i class="bi bi-exclamation-triangle me-1"></i>파일 오류 — 올바른 Excel 파일을 업로드해 주세요.
+  <button type="button" class="btn-close py-2" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
 {% if session.role == 'super_admin' %}
+<div class="card mb-3">
+  <div class="card-header fw-semibold small d-flex justify-content-between align-items-center">
+    Excel 대량 업로드
+    <a href="/wm/price-refs/template" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-download me-1"></i>템플릿 다운로드
+    </a>
+  </div>
+  <div class="card-body">
+    <form method="post" action="/wm/price-refs/bulk" enctype="multipart/form-data" class="row g-2 align-items-center">
+      <div class="col-auto">
+        <input type="file" name="file" accept=".xlsx,.xls" class="form-control form-control-sm" required />
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-success btn-sm"><i class="bi bi-upload me-1"></i>업로드 (upsert)</button>
+      </div>
+      <div class="col text-muted small">동일 모델코드가 있으면 덮어쓰고, 없으면 새로 추가합니다.</div>
+    </form>
+  </div>
+</div>
+
 <div class="card mb-4">
   <div class="card-header fw-semibold small">기준가 등록</div>
   <div class="card-body">
