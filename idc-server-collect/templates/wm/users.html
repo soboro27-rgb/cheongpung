@@ -1,0 +1,109 @@
+{% extends "wm/base_wm.html" %}
+{% block title %}계정 관리{% endblock %}
+{% block page_title %}<i class="bi bi-people me-2"></i>계정 관리{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+  <div class="card-header fw-semibold small">계정 등록</div>
+  <div class="card-body">
+    <form method="post" action="/wm/users" class="row g-2" id="userForm">
+      <div class="col-md-2">
+        <input type="text" name="login_id" class="form-control form-control-sm" placeholder="아이디 *" required />
+      </div>
+      <div class="col-md-2">
+        <input type="password" name="password" class="form-control form-control-sm" placeholder="비밀번호 *" required />
+      </div>
+      <div class="col-md-2">
+        <input type="text" name="name" class="form-control form-control-sm" placeholder="이름 *" required />
+      </div>
+      <div class="col-md-2">
+        <select name="role" class="form-select form-select-sm" id="roleSelect" required onchange="onRoleChange()">
+          <option value="">역할 선택 *</option>
+          <optgroup label="WorldMemory">
+            <option value="super_admin">슈퍼관리자</option>
+            <option value="wm_collector">수거기사</option>
+            <option value="wm_inspector">검수자</option>
+          </optgroup>
+          <optgroup label="딜러">
+            <option value="dealer_admin">딜러 관리자</option>
+            <option value="dealer_staff">딜러 직원</option>
+          </optgroup>
+          <optgroup label="고객사">
+            <option value="customer_admin">고객사 관리자</option>
+            <option value="customer_staff">고객사 직원</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="col-md-2" id="dealerSel" style="display:none">
+        <select name="dealer_id" class="form-select form-select-sm">
+          <option value="">딜러 선택</option>
+          {% for d in dealers %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2" id="customerSel" style="display:none">
+        <select name="customer_id" class="form-select form-select-sm">
+          <option value="">고객사 선택</option>
+          {% for c in customers %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-1">
+        <input type="text" name="phone" class="form-control form-control-sm" placeholder="전화" />
+      </div>
+      <div class="col-md-1">
+        <button class="btn btn-primary btn-sm w-100">등록</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header fw-semibold small">전체 계정 ({{ users|length }}개)</div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>이름</th><th>아이디</th><th>역할</th><th>소속</th><th>상태</th><th>최근로그인</th><th></th></tr></thead>
+      <tbody>
+        {% for usr in users %}
+        <tr class="{% if not usr.is_active %}text-muted{% endif %}">
+          <td>{{ usr.name }}</td>
+          <td>{{ usr.login_id }}</td>
+          <td>{{ ROLE_LABEL.get(usr.role.value, usr.role.value) }}</td>
+          <td>
+            {% if usr.dealer %}{{ usr.dealer.name }}{% endif %}
+            {% if usr.customer %}{{ usr.customer.name }}{% endif %}
+            {% if not usr.dealer and not usr.customer %}-{% endif %}
+          </td>
+          <td>
+            {% if usr.is_active %}<span class="badge bg-success">활성</span>
+            {% else %}<span class="badge bg-secondary">비활성</span>{% endif %}
+          </td>
+          <td class="text-muted">{{ usr.last_login.strftime('%m/%d %H:%M') if usr.last_login else '-' }}</td>
+          <td>
+            {% if usr.id != session.user_id %}
+            <form method="post" action="/wm/users/{{ usr.id }}/toggle" style="display:inline">
+              <button class="btn btn-sm btn-outline-{% if usr.is_active %}danger{% else %}success{% endif %} py-0">
+                {% if usr.is_active %}비활성화{% else %}활성화{% endif %}
+              </button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-4">계정이 없습니다.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function onRoleChange() {
+  const role = document.getElementById('roleSelect').value;
+  document.getElementById('dealerSel').style.display =
+    (role === 'dealer_admin' || role === 'dealer_staff') ? 'block' : 'none';
+  document.getElementById('customerSel').style.display =
+    (role === 'customer_admin' || role === 'customer_staff') ? 'block' : 'none';
+}
+</script>
+{% endblock %}

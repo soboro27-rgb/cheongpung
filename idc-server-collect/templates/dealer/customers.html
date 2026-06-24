@@ -1,0 +1,66 @@
+{% extends "dealer/base_dealer.html" %}
+{% block title %}고객사 관리{% endblock %}
+{% block page_title %}<i class="bi bi-building-fill me-2"></i>고객사 관리{% endblock %}
+
+{% block content %}
+{% if session.role == 'dealer_admin' %}
+<div class="card mb-4">
+  <div class="card-header fw-semibold small">고객사 등록</div>
+  <div class="card-body">
+    <form method="post" action="/dealer/customers" class="row g-2">
+      <div class="col-md-3">
+        <input type="text" name="name" class="form-control form-control-sm" placeholder="고객사명 *" required />
+      </div>
+      <div class="col-md-2">
+        <input type="text" name="customer_code" class="form-control form-control-sm" placeholder="고객코드 * (영문대문자)" required />
+      </div>
+      <div class="col-md-2">
+        <input type="text" name="business_no" class="form-control form-control-sm" placeholder="사업자번호" />
+      </div>
+      <div class="col-md-2">
+        <input type="text" name="manager_name" class="form-control form-control-sm" placeholder="담당자명" />
+      </div>
+      <div class="col-md-2">
+        <input type="text" name="manager_phone" class="form-control form-control-sm" placeholder="담당자 연락처" />
+      </div>
+      <div class="col-md-2">
+        <select name="default_idc_center_id" class="form-select form-select-sm">
+          <option value="">기본 IDC (선택)</option>
+          {% for c in centers %}
+          <option value="{{ c.id }}">{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-primary btn-sm w-100">등록</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header fw-semibold small">고객사 목록 ({{ customers|length }}개)</div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr><th>고객사명</th><th>코드</th><th>담당자</th><th>기본IDC</th><th>등록일</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for c in customers %}
+        <tr>
+          <td class="fw-semibold">{{ c.name }}</td>
+          <td><code>{{ c.customer_code }}</code></td>
+          <td>{{ c.manager_name or '-' }}<br><small class="text-muted">{{ c.manager_phone or '' }}</small></td>
+          <td>{{ c.default_idc.name if c.default_idc else '-' }}</td>
+          <td class="text-muted">{{ c.created_at.strftime('%Y.%m.%d') }}</td>
+          <td><a href="/dealer/customers/{{ c.id }}" class="btn btn-sm btn-outline-primary py-0">상세</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">고객사가 없습니다.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

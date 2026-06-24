@@ -1,0 +1,61 @@
+{% extends "dealer/base_dealer.html" %}
+{% block title %}{{ customer.name }} 상세{% endblock %}
+{% block page_title %}<i class="bi bi-building-fill me-2"></i>{{ customer.name }}{% endblock %}
+{% block breadcrumb %}<a href="/dealer/customers">고객사 목록</a> / {{ customer.name }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header fw-semibold small">고객사 정보</div>
+      <div class="card-body small">
+        <dl class="row mb-0">
+          <dt class="col-5 text-muted">고객사명</dt><dd class="col-7">{{ customer.name }}</dd>
+          <dt class="col-5 text-muted">고객코드</dt><dd class="col-7"><code>{{ customer.customer_code }}</code></dd>
+          <dt class="col-5 text-muted">사업자번호</dt><dd class="col-7">{{ customer.business_no or '-' }}</dd>
+          <dt class="col-5 text-muted">담당자</dt><dd class="col-7">{{ customer.manager_name or '-' }}</dd>
+          <dt class="col-5 text-muted">연락처</dt><dd class="col-7">{{ customer.manager_phone or '-' }}</dd>
+          <dt class="col-5 text-muted">기본 IDC</dt><dd class="col-7">{{ customer.default_idc.name if customer.default_idc else '-' }}</dd>
+        </dl>
+        <hr class="my-2"/>
+        <div class="text-muted small mb-1">소속 계정 ({{ users|length }}개)</div>
+        {% for usr in users %}
+        <div class="small">{{ usr.name }} <span class="badge bg-light text-dark border">{{ ROLE_LABEL.get(usr.role.value,'') }}</span></div>
+        {% else %}
+        <span class="text-muted small">계정 없음</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header fw-semibold small">신청 이력 ({{ applications|length }}건)</div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr><th>번호</th><th>IDC센터</th><th>상태</th><th>자산수</th><th>신청일</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for app in applications %}
+            <tr>
+              <td>#{{ app.id }}</td>
+              <td>{{ app.idc_center.name if app.idc_center else '-' }}</td>
+              <td>
+                <span class="badge bg-{{ STATUS_COLOR.get(app.status.value,'secondary') }} badge-status">
+                  {{ STATUS_LABEL.get(app.status.value, app.status.value) }}
+                </span>
+              </td>
+              <td>{{ app.assets|length }}대</td>
+              <td class="text-muted">{{ app.created_at.strftime('%Y.%m.%d') }}</td>
+              <td><a href="/dealer/applications/{{ app.id }}" class="btn btn-sm btn-outline-primary py-0">상세</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center text-muted py-3">신청 이력 없음</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

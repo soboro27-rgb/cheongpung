@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<title>데이터 파기 인증서 — #{{ app.id }}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Malgun Gothic","Apple SD Gothic Neo",sans-serif; font-size: 11pt; color: #000; background: #fff; }
+  .page { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 20mm; }
+  h1 { text-align: center; font-size: 20pt; letter-spacing: 4px; margin-bottom: 4px; }
+  .subtitle { text-align: center; color: #555; font-size: 10pt; margin-bottom: 24px; }
+  .section { margin-bottom: 16px; }
+  .section-title { font-size: 10pt; font-weight: bold; background: #1a2035; color: #fff;
+    padding: 4px 8px; margin-bottom: 6px; }
+  table.info { width: 100%; border-collapse: collapse; font-size: 10pt; }
+  table.info td { border: 1px solid #ccc; padding: 5px 8px; vertical-align: top; }
+  table.info td:first-child { background: #f5f5f5; font-weight: bold; width: 28%; }
+  table.assets { width: 100%; border-collapse: collapse; font-size: 9pt; }
+  table.assets th { background: #1a2035; color: #fff; padding: 5px; text-align: center; }
+  table.assets td { border: 1px solid #ccc; padding: 4px 6px; text-align: center; vertical-align: middle; }
+  table.assets tr:nth-child(even) td { background: #fafafa; }
+  .statement { border: 2px solid #1a2035; padding: 12px 16px; margin: 16px 0;
+    text-align: center; font-size: 11pt; line-height: 1.8; }
+  .sign-area { display: flex; gap: 40px; justify-content: flex-end; margin-top: 24px; }
+  .sign-box { text-align: center; min-width: 120px; }
+  .sign-box .label { font-size: 9pt; color: #555; margin-bottom: 40px; }
+  .sign-box .name { border-top: 1px solid #000; padding-top: 4px; font-size: 10pt; }
+  .issued { text-align: center; font-size: 10pt; margin: 12px 0; }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .no-print { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="no-print" style="text-align:right; margin-bottom:12px;">
+    <button onclick="window.print()" style="padding:6px 16px; cursor:pointer;">🖨 인쇄 / PDF 저장</button>
+    <button onclick="history.back()" style="padding:6px 16px; cursor:pointer; margin-left:8px;">← 돌아가기</button>
+  </div>
+
+  <h1>데이터 파기 인증서</h1>
+  <p class="subtitle">DATA DESTRUCTION CERTIFICATE</p>
+
+  <div class="statement">
+    아래 기재된 저장장치에 대하여 정보보안 규정에 따라<br/>
+    적법한 방법으로 데이터 파기가 완료되었음을 인증합니다.
+  </div>
+
+  <div class="section">
+    <div class="section-title">신청 정보</div>
+    <table class="info">
+      <tr><td>신청번호</td><td>IDC-{{ '%05d'|format(app.id) }}</td>
+          <td>고객사</td><td>{{ app.customer.name if app.customer else '-' }}</td></tr>
+      <tr><td>딜러</td><td>{{ app.dealer.name if app.dealer else '-' }}</td>
+          <td>IDC 센터</td><td>{{ app.idc_center.name if app.idc_center else '-' }}</td></tr>
+      <tr><td>수거일</td><td>{{ app.collected_at.strftime('%Y년 %m월 %d일') if app.collected_at else '-' }}</td>
+          <td>발급일</td><td>{{ issued_at }}</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">파기 대상 자산 목록</div>
+    <table class="assets">
+      <thead>
+        <tr>
+          <th>#</th><th>인증번호</th><th>제조사</th><th>모델</th>
+          <th>S/N</th><th>QR코드</th><th>파기방법</th><th>파기일자</th><th>담당자</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in app.assets %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{% if a.wipe_record %}{{ a.wipe_record.cert_number }}{% else %}-{% endif %}</td>
+          <td>{{ a.manufacturer }}</td>
+          <td>{{ a.model }}</td>
+          <td>{{ a.serial_number or '-' }}</td>
+          <td>{{ a.qr_code or '-' }}</td>
+          <td>
+            {% if a.wipe_record %}
+              {% if a.wipe_record.wipe_method.value == 'software' %}소프트웨어 파기
+              {% else %}물리적 파기{% endif %}
+              {% if a.wipe_record.is_on_site %}(현장){% endif %}
+            {% else %}-{% endif %}
+          </td>
+          <td>{% if a.wipe_record %}{{ a.wipe_record.wipe_date }}{% else %}-{% endif %}</td>
+          <td>{% if a.wipe_record %}{{ a.wipe_record.technician_name }}<br>
+            <small>{{ a.wipe_record.technician_company }}</small>{% else %}-{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <p class="issued">발급일: {{ issued_at }}</p>
+
+  <div class="sign-area">
+    <div class="sign-box">
+      <div class="label">파기 담당자</div>
+      <div class="name">{% if app.assets and app.assets[0].wipe_record %}{{ app.assets[0].wipe_record.technician_name }}{% endif %}&nbsp;</div>
+    </div>
+    <div class="sign-box">
+      <div class="label">발행 기관</div>
+      <div class="name">WorldMemory (주)</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

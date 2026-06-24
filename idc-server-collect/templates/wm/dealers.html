@@ -1,0 +1,91 @@
+{% extends "wm/base_wm.html" %}
+{% block title %}딜러 관리{% endblock %}
+{% block page_title %}<i class="bi bi-briefcase me-2"></i>딜러 관리{% endblock %}
+
+{% block content %}
+{% if session.role == 'super_admin' %}
+<div class="card mb-4">
+  <div class="card-header fw-semibold small">딜러 등록</div>
+  <div class="card-body">
+    <form method="post" action="/wm/dealers" class="row g-2">
+      <div class="col-md-3">
+        <input type="text" name="name" class="form-control form-control-sm" placeholder="딜러명 *" required />
+      </div>
+      <div class="col-md-2">
+        <input type="text" name="dealer_code" class="form-control form-control-sm" placeholder="딜러코드 * (영문대문자)" required />
+      </div>
+      <div class="col-md-2">
+        <input type="text" name="business_no" class="form-control form-control-sm" placeholder="사업자번호" />
+      </div>
+      <div class="col-md-2">
+        <input type="text" name="manager_name" class="form-control form-control-sm" placeholder="담당자명" />
+      </div>
+      <div class="col-md-2">
+        <input type="text" name="manager_phone" class="form-control form-control-sm" placeholder="담당자 연락처" />
+      </div>
+      <div class="col-md-3">
+        <select name="settlement_type" class="form-select form-select-sm">
+          <option value="direct">직지급 (WM→고객)</option>
+          <option value="via_dealer">딜러 경유</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select name="fee_type" class="form-select form-select-sm">
+          <option value="percent">수수료 (%)</option>
+          <option value="fixed">정액 (원)</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <input type="number" step="0.1" name="fee_value" class="form-control form-control-sm" placeholder="수수료 값" value="0" />
+      </div>
+      <div class="col-md-3">
+        <select name="idc_center_ids[]" class="form-select form-select-sm" multiple>
+          {% for c in centers %}
+          <option value="{{ c.id }}">{{ c.name }}</option>
+          {% endfor %}
+        </select>
+        <small class="text-muted">담당 IDC 센터 (복수 선택)</small>
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-primary btn-sm w-100">등록</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header fw-semibold small">딜러 목록 ({{ dealers|length }}개)</div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr><th>딜러명</th><th>코드</th><th>사업자번호</th><th>담당자</th><th>정산방식</th><th>수수료</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for d in dealers %}
+        <tr>
+          <td class="fw-semibold">{{ d.name }}</td>
+          <td><code>{{ d.dealer_code }}</code></td>
+          <td>{{ d.business_no or '-' }}</td>
+          <td>{{ d.manager_name or '-' }}<br><small class="text-muted">{{ d.manager_phone or '' }}</small></td>
+          <td>
+            {% if d.settlement_type.value == 'direct' %}
+            <span class="badge bg-success">직지급</span>
+            {% else %}
+            <span class="badge bg-info">딜러경유</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if d.fee_type.value == 'percent' %}{{ d.fee_value }}%
+            {% else %}{{ '{:,}'.format(d.fee_value|int) }}원{% endif %}
+          </td>
+          <td><a href="/wm/dealers/{{ d.id }}" class="btn btn-sm btn-outline-primary py-0">상세</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-4">등록된 딜러가 없습니다.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

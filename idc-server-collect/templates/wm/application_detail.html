@@ -1,0 +1,365 @@
+{% extends "wm/base_wm.html" %}
+{% block title %}신청 #{{ app.id }} 상세{% endblock %}
+{% block page_title %}<i class="bi bi-file-text me-2"></i>신청 #{{ app.id }} 상세{% endblock %}
+{% block breadcrumb %}<a href="/wm/applications">신청 목록</a> / #{{ app.id }}{% endblock %}
+
+{% block content %}
+{% set status = app.status.value %}
+
+{% if request.query_params.get('err') == 'unprice' %}
+<div class="alert alert-danger py-2 mb-3 small">
+  <i class="bi bi-exclamation-triangle me-1"></i>단가 미입력 자산이 있습니다. 모든 자산에 확정 단가를 입력 후 단가확정을 진행하세요.
+</div>
+{% endif %}
+
+<div class="row g-3">
+  <!-- ── 왼쪽: 신청 정보 + 액션 ── -->
+  <div class="col-md-4">
+
+    <!-- 신청 기본 정보 -->
+    <div class="card mb-3">
+      <div class="card-header fw-semibold small d-flex justify-content-between align-items-center">
+        신청 정보
+        <span class="badge bg-{{ STATUS_COLOR.get(status,'secondary') }}">
+          {{ STATUS_LABEL.get(status, status) }}
+        </span>
+      </div>
+      <div class="card-body small">
+        <dl class="row mb-0">
+          <dt class="col-5 text-muted">고객사</dt><dd class="col-7">{{ app.customer.name if app.customer else '-' }}</dd>
+          <dt class="col-5 text-muted">딜러</dt><dd class="col-7">{{ app.dealer.name if app.dealer else '-' }}</dd>
+          <dt class="col-5 text-muted">IDC 센터</dt><dd class="col-7">{{ app.idc_center.name if app.idc_center else '-' }}</dd>
+          <dt class="col-5 text-muted">현장 담당자</dt><dd class="col-7">{{ app.contact_name or '-' }}</dd>
+          <dt class="col-5 text-muted">연락처</dt><dd class="col-7">{{ app.contact_phone or '-' }}</dd>
+          <dt class="col-5 text-muted">신청일</dt><dd class="col-7">{{ app.submitted_at.strftime('%Y.%m.%d') if app.submitted_at else '-' }}</dd>
+          <dt class="col-5 text-muted">서버 수량</dt><dd class="col-7 fw-bold">{{ app.assets|length }}대</dd>
+          {% if app.quoted_at %}
+          <dt class="col-5 text-muted">단가확정일</dt><dd class="col-7">{{ app.quoted_at.strftime('%Y.%m.%d %H:%M') }}</dd>
+          {% endif %}
+        </dl>
+        {% if app.notes %}<hr class="my-2"/><p class="small text-muted mb-0">{{ app.notes }}</p>{% endif %}
+      </div>
+    </div>
+
+    <!-- 수거 일정 -->
+    {% if app.schedule %}
+    <div class="card mb-3">
+      <div class="card-header fw-semibold small">수거 일정</div>
+      <div class="card-body small">
+        <dl class="row mb-0">
+          <dt class="col-5 text-muted">일정</dt><dd class="col-7">{{ app.schedule.visit_date }} {{ app.schedule.visit_time }}</dd>
+          <dt class="col-5 text-muted">수거기사</dt><dd class="col-7">{{ app.schedule.collector_name or '-' }}</dd>
+          <dt class="col-5 text-muted">연락처</dt><dd class="col-7">{{ app.schedule.collector_phone or '-' }}</dd>
+        </dl>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- 정산 정보 -->
+    {% if app.settlement %}
+    <div class="card mb-3">
+      <div class="card-header fw-semibold small">정산 정보</div>
+      <div class="card-body small">
+        <dl class="row mb-0">
+          <dt class="col-6 text-muted">정산방식</dt>
+          <dd class="col-6">{% if app.settlement.settlement_type.value == 'direct' %}직지급{% else %}딜러경유{% endif %}</dd>
+          <dt class="col-6 text-muted">매입 합계</dt>
+          <dd class="col-6 fw-bold">{{ '{:,}'.format(app.settlement.total_amount|int) }}원</dd>
+          <dt class="col-6 text-muted">딜러 수수료</dt>
+          <dd class="col-6">{{ '{:,}'.format(app.settlement.dealer_fee_amount|int) }}원</dd>
+          <dt class="col-6 text-muted">고객 수령액</dt>
+          <dd class="col-6 fw-bold text-success">{{ '{:,}'.format(app.settlement.customer_amount|int) }}원</dd>
+          <dt class="col-6 text-muted">WM 지급</dt>
+          <dd class="col-6">
+            {% if app.settlement.wm_paid %}<span class="badge bg-success">완료</span>
+            {% else %}<span class="badge bg-secondary">미지급</span>{% endif %}
+          </dd>
+        </dl>
+        {% if app.settlement.pricing_notes %}
+        <hr class="my-2"/><p class="small text-muted mb-0">{{ app.settlement.pricing_notes }}</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- 액션 패널 -->
+    <div class="card">
+      <div class="card-header fw-semibold small">처리</div>
+      <div class="card-body d-grid gap-2">
+
+        {% if status == 'requested' %}
+        <form method="post" action="/wm/applications/{{ app.id }}/receive">
+          <button class="btn btn-info w-100 btn-sm"><i class="bi bi-check-circle me-1"></i>접수 확인</button>
+        </form>
+
+        {% elif status == 'received' %}
+        <button class="btn btn-primary w-100 btn-sm" data-bs-toggle="collapse" data-bs-target="#scheduleForm">
+          <i class="bi bi-calendar-plus me-1"></i>수거 일정 등록
+        </button>
+        <div class="collapse" id="scheduleForm">
+          <form method="post" action="/wm/applications/{{ app.id }}/schedule" class="row g-2 mt-1">
+            <div class="col-6"><input type="date" name="visit_date" class="form-control form-control-sm" required /></div>
+            <div class="col-6"><input type="time" name="visit_time" class="form-control form-control-sm" /></div>
+            <div class="col-6"><input type="text" name="collector_name" class="form-control form-control-sm" placeholder="수거기사명" /></div>
+            <div class="col-6"><input type="text" name="collector_phone" class="form-control form-control-sm" placeholder="연락처" /></div>
+            <div class="col-12">
+              <select name="idc_center_id" class="form-select form-select-sm">
+                <option value="">IDC 센터 변경(선택)</option>
+                {% for c in centers %}
+                <option value="{{ c.id }}" {% if app.idc_center_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12"><textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="메모"></textarea></div>
+            <div class="col-12"><button class="btn btn-primary btn-sm w-100">일정 등록</button></div>
+          </form>
+        </div>
+
+        {% elif status == 'scheduled' %}
+        <form method="post" action="/wm/applications/{{ app.id }}/collect">
+          <button class="btn btn-success w-100 btn-sm"><i class="bi bi-truck me-1"></i>수거 완료 처리</button>
+        </form>
+
+        {% elif status == 'collected' %}
+        {% if session.role in ('super_admin','wm_inspector') %}
+        <div class="alert alert-info py-2 small mb-0">
+          <i class="bi bi-info-circle me-1"></i>오른쪽에서 확정 단가를 입력 후 단가확정 버튼을 누르세요.
+        </div>
+        {% else %}
+        <div class="alert alert-secondary py-2 small mb-0">
+          검수자(wm_inspector) 또는 슈퍼관리자만 단가 확정 가능합니다.
+        </div>
+        {% endif %}
+
+        {% elif status == 'quoted' %}
+        <div class="text-muted small">고객사 승인/반려 대기 중</div>
+
+        {% elif status == 'approved' %}
+        <button class="btn btn-warning w-100 btn-sm" data-bs-toggle="collapse" data-bs-target="#wipeForm">
+          <i class="bi bi-hdd-fill me-1"></i>데이터 파기 완료 처리
+        </button>
+        <div class="collapse mt-2" id="wipeForm">
+          <form method="post" action="/wm/applications/{{ app.id }}/wipe-detail" class="row g-2">
+            <div class="col-6">
+              <label class="form-label small mb-0">파기일자</label>
+              <input type="date" name="wipe_date" class="form-control form-control-sm" required />
+            </div>
+            <div class="col-6">
+              <label class="form-label small mb-0">파기방법</label>
+              <select name="wipe_method" class="form-select form-select-sm">
+                <option value="software">소프트웨어</option>
+                <option value="physical">물리적 파기</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small mb-0">담당자명</label>
+              <input type="text" name="technician_name" class="form-control form-control-sm" placeholder="파기 담당자명" />
+            </div>
+            <div class="col-12">
+              <label class="form-label small mb-0">담당 업체</label>
+              <input type="text" name="technician_company" class="form-control form-control-sm" placeholder="파기 담당 업체명" />
+            </div>
+            <div class="col-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="is_on_site" id="onSiteCheck" />
+                <label class="form-check-label small" for="onSiteCheck">현장 파기</label>
+              </div>
+            </div>
+            <div class="col-12">
+              <button class="btn btn-warning btn-sm w-100">파기 완료 저장</button>
+            </div>
+          </form>
+        </div>
+
+        {% elif status == 'wiped' %}
+        <a href="/wm/applications/{{ app.id }}/wipe-cert" target="_blank" class="btn btn-outline-secondary w-100 btn-sm mb-1">
+          <i class="bi bi-file-earmark-text me-1"></i>파기 인증서 출력
+        </a>
+        <button class="btn btn-success w-100 btn-sm" data-bs-toggle="collapse" data-bs-target="#settleForm">
+          <i class="bi bi-cash-coin me-1"></i>정산 완료 처리
+        </button>
+        <div class="collapse" id="settleForm">
+          <form method="post" action="/wm/applications/{{ app.id }}/settle" class="mt-2">
+            <textarea name="pricing_notes" class="form-control form-control-sm mb-2" rows="2"
+              placeholder="정산 메모 (세금계산서 번호 등)"></textarea>
+            <button class="btn btn-success btn-sm w-100">정산 확정</button>
+          </form>
+        </div>
+
+        {% elif status == 'settled' %}
+        <form method="post" action="/wm/applications/{{ app.id }}/close">
+          <button class="btn btn-dark w-100 btn-sm"><i class="bi bi-archive me-1"></i>종결 처리</button>
+        </form>
+
+        {% else %}
+        <div class="text-muted small text-center">종결된 건입니다.</div>
+        {% endif %}
+
+        {% if app.status.value in ('quoted','approved','wiped','settled','closed') %}
+        <hr class="my-2"/>
+        <a href="/wm/applications/{{ app.id }}/edit-logs" class="btn btn-outline-secondary w-100 btn-sm">
+          <i class="bi bi-clock-history me-1"></i>수정이력 조회
+        </a>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 오른쪽: 서버 자산 목록 + 단가 입력 ── -->
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header fw-semibold small d-flex justify-content-between align-items-center">
+        서버 자산 목록 ({{ app.assets|length }}대)
+        {% if status == 'collected' and session.role in ('super_admin','wm_inspector') %}
+        <span class="badge bg-warning text-dark">단가 입력 모드</span>
+        {% endif %}
+      </div>
+
+      {% if status == 'collected' and session.role in ('super_admin','wm_inspector') %}
+      <!-- 단가 입력 폼 -->
+      <form method="post" action="/wm/applications/{{ app.id }}/bulk-price">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>#</th><th>제조사/모델</th><th>CPU/RAM</th><th>S/N</th>
+                <th>수량</th><th>등급</th>
+                <th style="width:140px">확정 단가(원)</th>
+                <th style="width:100px">기준가 참고</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in app.assets %}
+              <tr>
+                <td class="text-muted">{{ loop.index }}</td>
+                <td>
+                  <div class="fw-semibold">{{ a.manufacturer }} {{ a.model }}</div>
+                  <small class="text-muted">{{ a.form_factor or '' }} / {{ a.asset_tag or '' }}</small>
+                </td>
+                <td class="small">{{ a.cpu_count }}×{{ a.cpu_model or '-' }}<br>{{ a.ram_total_gb }}GB</td>
+                <td class="small text-muted">{{ a.serial_number or '-' }}</td>
+                <td>{{ a.quantity }}</td>
+                <td>
+                  <span class="badge {% if a.condition_grade == '상' %}bg-success{% elif a.condition_grade == '중' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                    {{ a.condition_grade }}
+                  </span>
+                </td>
+                <td>
+                  <input type="number" name="price_{{ a.id }}"
+                    class="form-control form-control-sm price-input"
+                    value="{{ a.unit_price_confirmed|int if a.unit_price_confirmed else '' }}"
+                    placeholder="0" min="0" step="1000"
+                    data-idx="{{ loop.index0 }}" />
+                </td>
+                <td>
+                  <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-1 small"
+                    onclick="lookupRef({{ loop.index0 }}, '{{ a.model|replace("'","\\'")|e }}')">
+                    <i class="bi bi-search"></i> 조회
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="d-flex gap-2 p-3 border-top">
+          <button type="submit" class="btn btn-secondary btn-sm">
+            <i class="bi bi-save me-1"></i>단가 저장 (임시)
+          </button>
+          <button type="button" class="btn btn-warning btn-sm ms-auto" id="quoteBtn"
+            onclick="confirmQuote()">
+            <i class="bi bi-lock-fill me-1"></i>단가 확정 (잠금)
+          </button>
+        </div>
+      </form>
+      <form method="post" action="/wm/applications/{{ app.id }}/quote" id="quoteForm" style="display:none"></form>
+
+      {% else %}
+      <!-- 일반 조회 모드 -->
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>#</th><th>제조사/모델</th><th>CPU/RAM</th><th>S/N</th>
+              <th>수량</th><th>등급</th>
+              <th class="text-end">확정 단가</th>
+              <th class="text-end">소계</th>
+              <th>QR</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% set ns = namespace(grand_total=0) %}
+            {% for a in app.assets %}
+            {% set subtotal = a.unit_price_confirmed * a.quantity %}
+            {% set ns.grand_total = ns.grand_total + subtotal %}
+            <tr class="{% if a.is_locked %}table-light{% endif %}">
+              <td class="text-muted">{{ loop.index }}</td>
+              <td>
+                <div class="fw-semibold">{{ a.manufacturer }} {{ a.model }}</div>
+                <small class="text-muted">{{ a.form_factor or '' }}
+                  {% if a.is_locked %}<i class="bi bi-lock-fill text-warning ms-1"></i>{% endif %}
+                </small>
+              </td>
+              <td class="small">{{ a.cpu_count }}×{{ a.cpu_model or '-' }}<br>{{ a.ram_total_gb }}GB</td>
+              <td class="small text-muted">{{ a.serial_number or '-' }}</td>
+              <td>{{ a.quantity }}</td>
+              <td>
+                <span class="badge {% if a.condition_grade == '상' %}bg-success{% elif a.condition_grade == '중' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                  {{ a.condition_grade }}
+                </span>
+              </td>
+              <td class="text-end fw-bold">
+                {% if a.unit_price_confirmed %}{{ '{:,}'.format(a.unit_price_confirmed|int) }}원
+                {% else %}<span class="text-muted">-</span>{% endif %}
+              </td>
+              <td class="text-end">
+                {% if subtotal %}{{ '{:,}'.format(subtotal|int) }}원
+                {% else %}<span class="text-muted">-</span>{% endif %}
+              </td>
+              <td class="small text-muted">{{ a.qr_code or '-' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          {% if ns.grand_total %}
+          <tfoot>
+            <tr class="table-secondary fw-bold">
+              <td colspan="7" class="text-end">합계</td>
+              <td class="text-end">{{ '{:,}'.format(ns.grand_total|int) }}원</td>
+              <td></td>
+            </tr>
+          </tfoot>
+          {% endif %}
+        </table>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function confirmQuote() {
+  if (confirm('모든 자산의 단가를 확정하고 잠금 처리하시겠습니까?\n확정 후에는 슈퍼관리자만 수정할 수 있습니다.')) {
+    document.getElementById('quoteForm').submit();
+  }
+}
+
+function lookupRef(idx, model) {
+  const q = model.trim();
+  fetch('/wm/api/price-refs?q=' + encodeURIComponent(q))
+    .then(r => r.json())
+    .then(data => {
+      if (!data.length) { alert('기준가 데이터 없음: ' + q); return; }
+      const ref = data[0];
+      const msg = `[${ref.manufacturer}] ${ref.model_display}\n${ref.spec_summary}\n기준가: ${ref.base_price.toLocaleString()}원\n\n이 기준가를 적용하시겠습니까?`;
+      if (confirm(msg)) {
+        const inputs = document.querySelectorAll('.price-input');
+        if (inputs[idx]) inputs[idx].value = ref.base_price;
+      }
+    });
+}
+</script>
+{% endblock %}

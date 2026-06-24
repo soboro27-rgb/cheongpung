@@ -1,0 +1,135 @@
+{% extends "customer/base_customer.html" %}
+{% block title %}새 신청서{% endblock %}
+{% block page_title %}<i class="bi bi-plus-circle me-2"></i>서버 수거 신청{% endblock %}
+{% block breadcrumb %}<a href="/customer/applications">신청 목록</a> / 새 신청서{% endblock %}
+
+{% block content %}
+<form method="post" action="/customer/applications/new" id="appForm">
+  <div class="card mb-3">
+    <div class="card-header fw-semibold small">신청 기본 정보</div>
+    <div class="card-body row g-3">
+      <div class="col-md-4">
+        <label class="form-label small">현장 담당자</label>
+        <input type="text" name="contact_name" class="form-control form-control-sm"
+          value="{{ customer.manager_name if customer else '' }}" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small">연락처</label>
+        <input type="text" name="contact_phone" class="form-control form-control-sm"
+          value="{{ customer.manager_phone if customer else '' }}" />
+      </div>
+      <div class="col-md-5">
+        <label class="form-label small">IDC 센터</label>
+        <select name="idc_center_id" class="form-select form-select-sm">
+          <option value="">기본 센터 사용</option>
+          {% for c in centers %}
+          <option value="{{ c.id }}" {% if customer and customer.default_idc_center_id == c.id %}selected{% endif %}>
+            {{ c.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12">
+        <label class="form-label small">특이사항</label>
+        <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="반출 제한, 특수 보안 절차 등"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header fw-semibold small d-flex justify-content-between align-items-center">
+      서버 자산 목록
+      <button type="button" class="btn btn-sm btn-outline-primary" onclick="addRow()">
+        <i class="bi bi-plus me-1"></i>행 추가
+      </button>
+    </div>
+    <div class="table-responsive">
+      <table class="table mb-0" id="assetTable">
+        <thead>
+          <tr>
+            <th style="width:40px">#</th>
+            <th>제조사</th>
+            <th>모델명</th>
+            <th style="width:80px">폼팩터</th>
+            <th style="width:60px">CPU수</th>
+            <th>CPU모델</th>
+            <th style="width:80px">RAM(GB)</th>
+            <th>스토리지</th>
+            <th>S/N</th>
+            <th>자산번호</th>
+            <th>랙위치</th>
+            <th style="width:60px">수량</th>
+            <th style="width:60px">등급</th>
+            <th style="width:50px">파기</th>
+            <th style="width:40px"></th>
+          </tr>
+        </thead>
+        <tbody id="assetRows">
+          <!-- JS가 동적 추가 -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2 justify-content-end">
+    <a href="/customer/applications" class="btn btn-outline-secondary">취소</a>
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-send me-1"></i>신청서 제출
+    </button>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let rowCount = 0;
+
+function addRow() {
+  const tbody = document.getElementById('assetRows');
+  const i = rowCount++;
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td class="text-muted small align-middle">${rowCount}</td>
+    <td><input type="text" name="manufacturer_${i}" class="form-control form-control-sm" placeholder="Dell" /></td>
+    <td><input type="text" name="model_${i}" class="form-control form-control-sm" placeholder="PowerEdge R740" /></td>
+    <td>
+      <select name="form_factor_${i}" class="form-select form-select-sm">
+        <option value="">-</option>
+        <option value="1U">1U</option><option value="2U">2U</option>
+        <option value="4U">4U</option><option value="타워">타워</option>
+        <option value="블레이드">블레이드</option>
+      </select>
+    </td>
+    <td><input type="number" name="cpu_count_${i}" class="form-control form-control-sm" value="2" min="1" /></td>
+    <td><input type="text" name="cpu_model_${i}" class="form-control form-control-sm" placeholder="Xeon Gold 6230" /></td>
+    <td><input type="number" name="ram_total_gb_${i}" class="form-control form-control-sm" value="0" min="0" /></td>
+    <td><input type="text" name="storage_config_${i}" class="form-control form-control-sm" placeholder="2TB×4 HDD" /></td>
+    <td><input type="text" name="serial_number_${i}" class="form-control form-control-sm" placeholder="SN123456" /></td>
+    <td><input type="text" name="asset_tag_${i}" class="form-control form-control-sm" placeholder="자산번호" /></td>
+    <td><input type="text" name="rack_location_${i}" class="form-control form-control-sm" placeholder="A-01-U10" /></td>
+    <td><input type="number" name="quantity_${i}" class="form-control form-control-sm" value="1" min="1" /></td>
+    <td>
+      <select name="condition_grade_${i}" class="form-select form-select-sm">
+        <option value="상">상</option><option value="중" selected>중</option><option value="하">하</option>
+      </select>
+    </td>
+    <td class="text-center">
+      <input type="checkbox" name="data_wipe_required_${i}" checked class="form-check-input" />
+    </td>
+    <td>
+      <button type="button" class="btn btn-sm btn-outline-danger py-0" onclick="removeRow(this)">
+        <i class="bi bi-trash"></i>
+      </button>
+    </td>
+  `;
+  tbody.appendChild(row);
+}
+
+function removeRow(btn) {
+  btn.closest('tr').remove();
+}
+
+// 첫 행 자동 추가
+addRow();
+</script>
+{% endblock %}

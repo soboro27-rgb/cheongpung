@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block sidebar_nav %}
+<div class="nav-section">대시보드</div>
+<a href="/customer/dashboard" class="nav-link {% if request.url.path == '/customer/dashboard' %}active{% endif %}">
+  <i class="bi bi-speedometer2"></i> 대시보드
+</a>
+<div class="nav-section">서버 수거 신청</div>
+<a href="/customer/applications" class="nav-link {% if '/customer/applications' in request.url.path and 'new' not in request.url.path %}active{% endif %}">
+  <i class="bi bi-inbox"></i> 신청 목록
+</a>
+<a href="/customer/applications/new" class="nav-link {% if '/customer/applications/new' in request.url.path %}active{% endif %}">
+  <i class="bi bi-plus-circle"></i> 새 신청서
+</a>
+{% endblock %}

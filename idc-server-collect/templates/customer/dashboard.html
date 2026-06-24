@@ -1,0 +1,75 @@
+{% extends "customer/base_customer.html" %}
+{% block title %}고객사 대시보드{% endblock %}
+{% block page_title %}<i class="bi bi-speedometer2 me-2"></i>대시보드{% endblock %}
+{% block breadcrumb %}{{ session.customer_name }}{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card text-center p-3">
+      <div class="text-muted small mb-1">전체 신청</div>
+      <div class="fs-3 fw-bold text-primary">{{ total }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card text-center p-3">
+      <div class="text-muted small mb-1">진행 중</div>
+      <div class="fs-3 fw-bold text-info">{{ active }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card text-center p-3">
+      <div class="text-muted small mb-1">승인 대기</div>
+      <div class="fs-3 fw-bold text-warning">{{ waiting_approval }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card text-center p-3">
+      <div class="text-muted small mb-1">정산 완료</div>
+      <div class="fs-3 fw-bold text-success">{{ settled }}</div>
+    </div>
+  </div>
+</div>
+
+{% if waiting_approval > 0 %}
+<div class="alert alert-warning d-flex align-items-center mb-4">
+  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+  <span>단가가 확정된 신청 건이 <strong>{{ waiting_approval }}건</strong> 있습니다. 확인 후 승인/반려해주세요.</span>
+  <a href="/customer/applications?status=quoted" class="btn btn-sm btn-warning ms-auto">바로가기</a>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header fw-semibold small d-flex justify-content-between align-items-center">
+    최근 신청 10건
+    <a href="/customer/applications/new" class="btn btn-sm btn-primary py-0">
+      <i class="bi bi-plus me-1"></i>새 신청서
+    </a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr><th>번호</th><th>IDC센터</th><th>상태</th><th>자산수</th><th>신청일</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for app in recent %}
+        <tr>
+          <td>#{{ app.id }}</td>
+          <td>{{ app.idc_center.name if app.idc_center else '-' }}</td>
+          <td>
+            <span class="badge bg-{{ STATUS_COLOR.get(app.status.value,'secondary') }} badge-status">
+              {{ STATUS_LABEL.get(app.status.value, app.status.value) }}
+            </span>
+          </td>
+          <td>{{ app.assets|length }}대</td>
+          <td class="text-muted">{{ app.created_at.strftime('%Y.%m.%d') }}</td>
+          <td><a href="/customer/applications/{{ app.id }}" class="btn btn-sm btn-outline-primary py-0">상세</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">신청 건이 없습니다.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

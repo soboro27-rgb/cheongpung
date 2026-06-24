@@ -1,0 +1,82 @@
+{% extends "wm/base_wm.html" %}
+{% block title %}대시보드 — IDC 수거 플랫폼{% endblock %}
+{% block page_title %}<i class="bi bi-speedometer2 me-2"></i>대시보드{% endblock %}
+{% block breadcrumb %}WM 관리{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card text-center p-3">
+      <div class="text-muted small mb-1">전체 신청</div>
+      <div class="fs-3 fw-bold text-primary">{{ total_apps }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card text-center p-3">
+      <div class="text-muted small mb-1">신규 접수</div>
+      <div class="fs-3 fw-bold text-warning">{{ pending_apps }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card text-center p-3">
+      <div class="text-muted small mb-1">진행 중</div>
+      <div class="fs-3 fw-bold text-info">{{ in_progress }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card text-center p-3">
+      <div class="text-muted small mb-1">완료</div>
+      <div class="fs-3 fw-bold text-success">{{ completed_apps }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card text-center p-3">
+      <div class="text-muted small mb-1">딜러 수</div>
+      <div class="fs-4 fw-bold">{{ total_dealers }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card text-center p-3">
+      <div class="text-muted small mb-1">고객사 수</div>
+      <div class="fs-4 fw-bold">{{ total_customers }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header fw-semibold small">최근 신청 10건</div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>번호</th><th>고객사</th><th>딜러</th><th>IDC센터</th>
+          <th>상태</th><th>자산수</th><th>최종수정</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for app in recent %}
+        <tr>
+          <td>#{{ app.id }}</td>
+          <td>{{ app.customer.name if app.customer else '-' }}</td>
+          <td>{{ app.dealer.name if app.dealer else '-' }}</td>
+          <td>{{ app.idc_center.name if app.idc_center else '-' }}</td>
+          <td>
+            <span class="badge bg-{{ STATUS_COLOR.get(app.status.value,'secondary') }} badge-status">
+              {{ STATUS_LABEL.get(app.status.value, app.status.value) }}
+            </span>
+          </td>
+          <td>{{ app.assets|length }}대</td>
+          <td class="text-muted">{{ app.updated_at.strftime('%m/%d %H:%M') }}</td>
+          <td><a href="/wm/applications/{{ app.id }}" class="btn btn-sm btn-outline-primary py-0">상세</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted py-4">신청 건이 없습니다.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

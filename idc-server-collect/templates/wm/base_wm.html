@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block sidebar_nav %}
+<div class="nav-section">대시보드</div>
+<a href="/wm/dashboard" class="nav-link {% if request.url.path == '/wm/dashboard' %}active{% endif %}">
+  <i class="bi bi-speedometer2"></i> 대시보드
+</a>
+<div class="nav-section">신청 관리</div>
+<a href="/wm/applications" class="nav-link {% if '/wm/applications' in request.url.path %}active{% endif %}">
+  <i class="bi bi-inbox"></i> 전체 신청 목록
+</a>
+<div class="nav-section">마스터 관리</div>
+<a href="/wm/idc-centers" class="nav-link {% if '/wm/idc-centers' in request.url.path %}active{% endif %}">
+  <i class="bi bi-building"></i> IDC 센터
+</a>
+<a href="/wm/dealers" class="nav-link {% if '/wm/dealers' in request.url.path %}active{% endif %}">
+  <i class="bi bi-briefcase"></i> 딜러
+</a>
+<a href="/wm/customers" class="nav-link {% if '/wm/customers' in request.url.path %}active{% endif %}">
+  <i class="bi bi-building-fill"></i> 고객사
+</a>
+{% if session.role == 'super_admin' %}
+<a href="/wm/users" class="nav-link {% if '/wm/users' in request.url.path %}active{% endif %}">
+  <i class="bi bi-people"></i> 계정 관리
+</a>
+{% endif %}
+<div class="nav-section">정산</div>
+<a href="/wm/settlements" class="nav-link {% if '/wm/settlements' in request.url.path %}active{% endif %}">
+  <i class="bi bi-cash-coin"></i> 정산 현황
+</a>
+<div class="nav-section">설정</div>
+<a href="/wm/price-refs" class="nav-link {% if '/wm/price-refs' in request.url.path %}active{% endif %}">
+  <i class="bi bi-currency-dollar"></i> 서버 기준가
+</a>
+{% endblock %}
