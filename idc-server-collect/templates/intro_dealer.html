@@ -3,187 +3,408 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>IDC브릿지 — 호스팅·IDC 운영사 소개</title>
+  <title>IDC브릿지 파트너 — 호스팅·IDC 운영사</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
   <style>
-    :root { --navy:#1a2035; --navy-mid:#2d3a57; --accent:#4f8ef7; --gold:#f4a82a; }
-    body { font-family:'Segoe UI','Noto Sans KR',sans-serif; color:#1f2937; }
+    :root {
+      --bg:       #080d1a;
+      --bg2:      #0e1629;
+      --bg3:      #141f38;
+      --border:   rgba(255,255,255,.08);
+      --border-hi:rgba(249,115,22,.45);
+      --orange:   #f97316;
+      --orange-lo:#7c3a12;
+      --amber:    #fbbf24;
+      --text:     #e2e8f0;
+      --sub:      #94a3b8;
+      --glow:     rgba(249,115,22,.18);
+    }
 
-    .top-nav { background:var(--navy); padding:.9rem 2rem; position:sticky; top:0; z-index:100; }
-    .top-nav .brand { color:#fff; font-size:1.1rem; font-weight:700; }
-    .top-nav .brand span { color:var(--accent); }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI','Noto Sans KR',sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+    }
 
+    /* ── 배경 그리드 패턴 ── */
+    .bg-grid {
+      background-image:
+        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    /* ── 네비 ── */
+    .nav-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8,13,26,.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: .85rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .brand { font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: -.3px; }
+    .brand span { color: var(--orange); }
+    .back-link {
+      color: var(--sub); font-size: .82rem; text-decoration: none;
+      transition: color .15s;
+    }
+    .back-link:hover { color: var(--text); }
+    .btn-cta {
+      background: var(--orange); color: #fff;
+      font-weight: 700; font-size: .88rem;
+      padding: .5rem 1.5rem; border-radius: .5rem; border: none;
+      text-decoration: none; transition: background .15s, transform .1s;
+    }
+    .btn-cta:hover { background: #ea6500; color: #fff; transform: translateY(-1px); }
+
+    /* ── 히어로 ── */
     .hero {
-      background:linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 60%,#1e3a6e 100%);
-      color:#fff; padding:90px 0 70px; position:relative; overflow:hidden;
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 80px 0 60px;
+      position: relative;
     }
-    .hero::before {
-      content:''; position:absolute; inset:0;
-      background:radial-gradient(ellipse at 70% 50%,rgba(79,142,247,.18) 0%,transparent 60%);
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(249,115,22,.12);
+      border: 1px solid rgba(249,115,22,.3);
+      color: var(--orange); font-size: .75rem; font-weight: 700; letter-spacing: .8px;
+      padding: .35rem 1rem; border-radius: 2rem; margin-bottom: 1.6rem;
     }
-    .hero-badge {
-      display:inline-block; background:rgba(244,168,42,.2); border:1px solid rgba(244,168,42,.5);
-      color:var(--gold); font-size:.75rem; font-weight:700; letter-spacing:.8px;
-      padding:.3rem 1rem; border-radius:2rem; margin-bottom:1.4rem;
+    .hero h1 {
+      font-size: 2.8rem; font-weight: 900; line-height: 1.2;
+      color: #fff; margin-bottom: 1.2rem;
     }
-    .hero h1 { font-size:2.5rem; font-weight:800; line-height:1.25; }
-    .hero h1 .hl { color:var(--gold); }
-    .hero .sub { color:rgba(255,255,255,.72); font-size:1rem; max-width:520px; line-height:1.85; }
+    .hero h1 em { color: var(--orange); font-style: normal; }
+    .hero .sub {
+      color: var(--sub); font-size: 1rem; line-height: 1.85;
+      max-width: 460px; margin-bottom: 2rem;
+    }
+    .hero-pill {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 2rem; padding: .4rem 1rem;
+      font-size: .8rem; color: var(--sub); margin-right: .5rem; margin-bottom: .5rem;
+    }
+    .hero-pill i { color: var(--orange); }
 
-    .stat-box { text-align:center; }
-    .stat-box .num { font-size:2.2rem; font-weight:900; color:var(--gold); }
-    .stat-box .label { font-size:.78rem; color:rgba(255,255,255,.55); margin-top:.2rem; }
-
-    .section-label { font-size:.72rem; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--accent); margin-bottom:.4rem; }
-    .section-title { font-size:1.75rem; font-weight:800; }
-
-    /* 수익 하이라이트 카드 */
-    .revenue-hero {
-      background:linear-gradient(135deg,#f4a82a,#f97316);
-      border-radius:1.5rem; padding:2.8rem; color:#fff;
+    /* ── 계산기 카드 ── */
+    .calc-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      padding: 2rem;
+      box-shadow: 0 0 60px var(--glow);
+      position: relative;
     }
-    .revenue-hero .big { font-size:3.5rem; font-weight:900; line-height:1; }
-
-    /* 혜택 카드 */
-    .benefit-card {
-      background:#fff; border:1.5px solid #e5eaf4; border-radius:1.1rem;
-      padding:1.8rem; height:100%; transition:box-shadow .2s,border-color .2s;
+    .calc-card::before {
+      content: '';
+      position: absolute; inset: -1px; border-radius: 1.25rem;
+      background: linear-gradient(135deg, rgba(249,115,22,.2), transparent 60%);
+      z-index: -1;
     }
-    .benefit-card:hover { box-shadow:0 8px 24px rgba(30,58,110,.1); border-color:#b8ccf5; }
-    .benefit-icon { font-size:1.8rem; color:var(--accent); margin-bottom:1rem; }
-    .benefit-card h5 { font-size:1rem; font-weight:800; margin-bottom:.4rem; }
-    .benefit-card p { font-size:.85rem; color:#6b7280; line-height:1.75; margin:0; }
-
-    /* 프로세스 */
-    .process-bg { background:#f1f5ff; }
-    .step-circle {
-      width:50px; height:50px; border-radius:50%;
-      background:var(--navy); color:#fff;
-      font-size:1.1rem; font-weight:800;
-      display:flex; align-items:center; justify-content:center;
-      margin:0 auto .9rem;
+    .calc-label {
+      font-size: .7rem; font-weight: 700; letter-spacing: .8px;
+      color: var(--sub); text-transform: uppercase; margin-bottom: .5rem;
     }
-    .step-title { font-size:.93rem; font-weight:700; margin-bottom:.25rem; }
-    .step-desc { font-size:.8rem; color:#6b7280; line-height:1.6; }
-    .step-arrow { position:absolute; top:25px; left:calc(50% + 34px); width:calc(100% - 68px); height:2px; background:#d1daf0; }
-    .step-arrow::after { content:'▶'; position:absolute; right:-6px; top:-8px; color:#d1daf0; font-size:.65rem; }
-
-    /* 고객사 카드 미리보기 */
-    .dashboard-preview {
-      background:var(--navy); border-radius:1.1rem; padding:1.6rem; color:#fff;
+    .calc-card h4 {
+      font-size: 1rem; font-weight: 700; color: #fff;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
     }
-    .mini-row {
-      display:flex; justify-content:space-between; align-items:center;
-      background:rgba(255,255,255,.07); border-radius:.6rem;
-      padding:.6rem .9rem; margin-bottom:.5rem; font-size:.82rem;
-    }
-    .mini-badge { font-size:.7rem; padding:.2rem .55rem; border-radius:1rem; }
 
-    /* CTA */
-    .cta-section { background:linear-gradient(135deg,var(--navy),#1e3a6e); color:#fff; text-align:center; }
-    .btn-gold { background:var(--gold); color:#1a1a1a; font-weight:700; border:none; }
-    .btn-gold:hover { background:#e09518; color:#1a1a1a; }
-    .footer { background:#111827; color:rgba(255,255,255,.45); font-size:.8rem; }
+    /* 슬라이더 */
+    .slider-row { margin-bottom: 1.4rem; }
+    .slider-row .label-line {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: .5rem;
+    }
+    .slider-row .lbl { font-size: .83rem; color: var(--sub); }
+    .slider-row .val {
+      font-size: 1.05rem; font-weight: 800; color: #fff;
+      min-width: 3.5rem; text-align: right;
+    }
+    input[type=range] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 4px;
+      background: var(--bg3); border-radius: 2px; outline: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 0 3px rgba(249,115,22,.25);
+      cursor: pointer; transition: box-shadow .15s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 0 5px rgba(249,115,22,.35);
+    }
+
+    /* 등급 선택 */
+    .grade-select {
+      display: flex; gap: .5rem; margin-top: .3rem;
+    }
+    .grade-btn {
+      flex: 1; padding: .5rem; text-align: center;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: .5rem; cursor: pointer; font-size: .78rem;
+      color: var(--sub); transition: all .15s; user-select: none;
+    }
+    .grade-btn.active {
+      background: rgba(249,115,22,.15);
+      border-color: var(--orange);
+      color: var(--orange); font-weight: 700;
+    }
+
+    /* 결과 */
+    .result-box {
+      background: linear-gradient(135deg,rgba(249,115,22,.12),rgba(251,191,36,.06));
+      border: 1px solid rgba(249,115,22,.25);
+      border-radius: 1rem; padding: 1.5rem; margin-top: 1.5rem; text-align: center;
+    }
+    .result-label { font-size: .7rem; color: var(--sub); letter-spacing: .6px; margin-bottom: .3rem; }
+    .result-num {
+      font-size: 2.6rem; font-weight: 900; color: var(--orange);
+      letter-spacing: -1px; line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .result-sub { font-size: .8rem; color: var(--sub); margin-top: .4rem; }
+    .result-row {
+      display: flex; gap: 1rem; margin-top: 1rem;
+    }
+    .result-mini {
+      flex: 1; background: var(--bg3); border: 1px solid var(--border);
+      border-radius: .7rem; padding: .8rem; text-align: center;
+    }
+    .result-mini .mn { font-size: 1.1rem; font-weight: 800; color: #fff; }
+    .result-mini .ml { font-size: .7rem; color: var(--sub); margin-top: .15rem; }
+
+    /* ── 스탯 바 ── */
+    .stat-bar {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+      padding: 2rem 0;
+    }
+    .stat-item { text-align: center; }
+    .stat-item .num {
+      font-size: 2rem; font-weight: 900;
+      background: linear-gradient(135deg,var(--orange),var(--amber));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .stat-item .lbl { font-size: .78rem; color: var(--sub); margin-top: .2rem; }
+
+    /* ── 페인포인트 ── */
+    .pain-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 1rem; padding: 1.8rem; height: 100%;
+      transition: border-color .2s;
+    }
+    .pain-card:hover { border-color: rgba(249,115,22,.3); }
+    .pain-icon { font-size: 1.8rem; color: var(--sub); margin-bottom: .9rem; }
+    .pain-card h6 { color: #fff; font-weight: 700; margin-bottom: .4rem; }
+    .pain-card p { font-size: .83rem; color: var(--sub); line-height: 1.7; margin: 0; }
+    .pain-resolve {
+      display: flex; align-items: center; gap: .4rem;
+      margin-top: .9rem; font-size: .8rem; color: var(--orange); font-weight: 600;
+    }
+
+    /* ── 대시보드 프리뷰 ── */
+    .preview-wrap {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 1.25rem; overflow: hidden;
+    }
+    .preview-topbar {
+      background: var(--bg3); border-bottom: 1px solid var(--border);
+      padding: .7rem 1.2rem;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .preview-body { padding: 1.2rem; }
+    .prev-stat-row { display: flex; gap: .8rem; margin-bottom: 1rem; }
+    .prev-stat {
+      flex: 1; background: var(--bg3); border: 1px solid var(--border);
+      border-radius: .7rem; padding: .8rem; text-align: center;
+    }
+    .prev-stat .pnum { font-size: 1.3rem; font-weight: 800; color: var(--orange); }
+    .prev-stat .plbl { font-size: .68rem; color: var(--sub); margin-top: .1rem; }
+    .prev-row {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: .6rem; padding: .65rem 1rem; margin-bottom: .5rem;
+      font-size: .82rem;
+    }
+    .prev-row .co { font-weight: 700; color: #fff; }
+    .prev-row .info { color: var(--sub); font-size: .74rem; margin-top: .1rem; }
+    .badge-o { background: rgba(249,115,22,.2); color:var(--orange); border:1px solid rgba(249,115,22,.3); font-size:.68rem; padding:.2rem .55rem; border-radius:.4rem; font-weight:700; }
+    .badge-g { background: rgba(46,204,138,.15); color:#2ecc8a; border:1px solid rgba(46,204,138,.3); font-size:.68rem; padding:.2rem .55rem; border-radius:.4rem; font-weight:700; }
+    .badge-b { background: rgba(79,142,247,.15); color:#4f8ef7; border:1px solid rgba(79,142,247,.3); font-size:.68rem; padding:.2rem .55rem; border-radius:.4rem; font-weight:700; }
+    .fee-line { font-weight: 800; color: var(--amber); font-size: .9rem; }
+
+    /* ── 프로세스 ── */
+    .process-step { text-align: center; }
+    .ps-num {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 2px solid var(--orange);
+      color: var(--orange); font-size: 1rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto .8rem;
+    }
+    .ps-title { font-size: .9rem; font-weight: 700; color: #fff; margin-bottom: .25rem; }
+    .ps-desc { font-size: .78rem; color: var(--sub); line-height: 1.55; }
+    .ps-arrow { position:absolute; top:22px; left:calc(50% + 30px); width:calc(100% - 60px); height:1px; background:linear-gradient(90deg,var(--orange-lo),transparent); }
+
+    /* ── CTA ── */
+    .cta-section {
+      background: radial-gradient(ellipse at 50% 0%,rgba(249,115,22,.15) 0%,transparent 65%),
+                  var(--bg);
+      border-top: 1px solid var(--border);
+      text-align: center; padding: 80px 1rem;
+    }
+    .cta-section h2 { font-size: 2rem; font-weight: 900; color: #fff; }
+    .cta-section p { color: var(--sub); font-size: .95rem; margin-top: .7rem; }
+
+    .footer {
+      background: var(--bg2); border-top: 1px solid var(--border);
+      color: var(--sub); font-size: .78rem; text-align: center; padding: 1.5rem;
+    }
+
+    /* 섹션 레이블 */
+    .sec-label {
+      font-size: .7rem; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--orange); margin-bottom: .4rem;
+    }
+    .sec-title { font-size: 1.7rem; font-weight: 800; color: #fff; }
+    .sec-sub { color: var(--sub); font-size: .9rem; margin-top: .5rem; line-height: 1.75; }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2rem; }
+      .result-num { font-size: 2rem; }
+    }
   </style>
 </head>
-<body>
+<body class="bg-grid">
 
-<nav class="top-nav d-flex align-items-center justify-content-between">
-  <div>
-    <a href="/intro" style="color:rgba(255,255,255,.5); font-size:.82rem; text-decoration:none; margin-right:1.2rem;">
-      <i class="bi bi-chevron-left me-1"></i>대상 선택
-    </a>
-    <span class="brand"><i class="bi bi-server me-2"></i>IDC<span>브릿지</span></span>
+<!-- 네비 -->
+<nav class="nav-bar">
+  <div class="d-flex align-items-center gap-3">
+    <a href="/intro" class="back-link"><i class="bi bi-chevron-left me-1"></i>돌아가기</a>
+    <div class="brand" style="border-left:1px solid rgba(255,255,255,.12); padding-left:1rem;">
+      <i class="bi bi-server me-1"></i>IDC<span>브릿지</span>
+      <span style="font-size:.7rem; background:rgba(249,115,22,.15); color:var(--orange); border:1px solid rgba(249,115,22,.3); border-radius:.3rem; padding:.1rem .5rem; margin-left:.5rem; font-weight:600;">파트너</span>
+    </div>
   </div>
-  <a href="/login" class="btn btn-sm btn-gold px-4">
-    <i class="bi bi-box-arrow-in-right me-1"></i>로그인
-  </a>
+  <a href="/login" class="btn-cta"><i class="bi bi-box-arrow-in-right me-1"></i>파트너 로그인</a>
 </nav>
 
-<!-- 히어로 -->
+<!-- 히어로 + 계산기 -->
 <section class="hero">
   <div class="container">
-    <div class="row align-items-center gy-5">
-      <div class="col-lg-7">
-        <div class="hero-badge">🏢 호스팅·IDC 운영사 전용 소개</div>
-        <h1>관리 중인 고객사 서버가<br><span class="hl">새로운 수익원</span>이 됩니다</h1>
-        <p class="sub mt-3">
-          고객사 랙에 잠들어 있는 노후 서버, 그냥 두면 공간만 차지합니다.
-          IDC브릿지를 통해 고객사 서버 매각을 중개하면
-          수거·검수·정산은 WorldMemory가 전담하고,
-          <strong style="color:#fff;">중계 수수료는 귀사의 수익이 됩니다.</strong>
+    <div class="row align-items-center g-5">
+
+      <!-- 왼쪽 카피 -->
+      <div class="col-lg-5">
+        <div class="hero-eyebrow">
+          <i class="bi bi-building"></i> 호스팅·IDC 운영사 전용
+        </div>
+        <h1>
+          관리 중인<br>고객사 서버가<br>
+          <em>수수료 수익</em>이<br>됩니다
+        </h1>
+        <p class="sub">
+          수거·검수·파기·정산은 WorldMemory가 전담합니다.
+          귀사는 고객사를 연결하기만 하면 됩니다.
         </p>
-        <div class="d-flex gap-3 mt-4 flex-wrap">
-          <a href="/login" class="btn btn-gold btn-lg px-4">
-            <i class="bi bi-box-arrow-in-right me-2"></i>딜러 계정으로 시작
-          </a>
-        </div>
-      </div>
-      <div class="col-lg-5">
-        <div class="row g-3">
-          <div class="col-4 stat-box"><div class="num">0원</div><div class="label">딜러 초기 투자</div></div>
-          <div class="col-4 stat-box"><div class="num">100%</div><div class="label">수거·검수 WM 전담</div></div>
-          <div class="col-4 stat-box"><div class="num">자동</div><div class="label">수수료 정산</div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- 핵심 가치 -->
-<section class="py-5">
-  <div class="container">
-    <div class="row g-4 align-items-center">
-
-      <div class="col-lg-5">
-        <div class="revenue-hero">
-          <div style="font-size:2.4rem; margin-bottom:.8rem;"><i class="bi bi-cash-stack"></i></div>
-          <h3 style="font-size:1.4rem; font-weight:800;">중계 수수료,<br>플랫폼이 자동 계산</h3>
-          <p style="font-size:.88rem; opacity:.85; margin:1rem 0 1.4rem; line-height:1.8;">
-            매각이 성사되면 딜러 수수료가 자동 산정됩니다.
-            청구서 발행이나 별도 정산 요청 없이 플랫폼이 처리합니다.
-          </p>
-          <div class="d-flex align-items-baseline gap-2 mb-1">
-            <div class="big">5%</div>
-            <div style="font-size:.9rem; opacity:.85;">~ 협의율 적용</div>
-          </div>
-          <small style="opacity:.65;">고객사 매각가 기준 딜러 수수료 (예시)</small>
+        <div>
+          <div class="hero-pill"><i class="bi bi-check2"></i> 초기 투자 0원</div>
+          <div class="hero-pill"><i class="bi bi-check2"></i> 수거·검수 WM 전담</div>
+          <div class="hero-pill"><i class="bi bi-check2"></i> 수수료 자동 정산</div>
+          <div class="hero-pill"><i class="bi bi-check2"></i> 파기 인증서 발급</div>
         </div>
       </div>
 
+      <!-- 오른쪽: 수익 계산기 -->
       <div class="col-lg-7">
-        <div class="section-label">WHY IDC브릿지</div>
-        <h2 class="section-title mb-4">딜러가 얻는 것</h2>
-        <div class="row g-3">
-          <div class="col-sm-6">
-            <div class="benefit-card">
-              <div class="benefit-icon"><i class="bi bi-cash-coin"></i></div>
-              <h5>신규 수익 라인 확보</h5>
-              <p>기존 고객사에게 서비스를 소개하는 것만으로 중계 수수료가 발생합니다. 별도 인력 투입 없이 매출이 늘어납니다.</p>
+        <div class="calc-card">
+          <div class="calc-label">수익 시뮬레이터</div>
+          <h4><i class="bi bi-calculator me-2" style="color:var(--orange);"></i>귀사의 예상 수수료를 계산해 보세요</h4>
+
+          <!-- 슬라이더 1: 고객사 수 -->
+          <div class="slider-row">
+            <div class="label-line">
+              <span class="lbl">보유 고객사 수</span>
+              <span class="val" id="valCustomers">10<span style="font-size:.75rem; color:var(--sub); font-weight:400;"> 개사</span></span>
+            </div>
+            <input type="range" id="sliderCustomers" min="1" max="100" value="10" oninput="updateCalc()" />
+            <div class="d-flex justify-content-between" style="font-size:.68rem; color:var(--sub); margin-top:.3rem;">
+              <span>1개사</span><span>100개사</span>
             </div>
           </div>
-          <div class="col-sm-6">
-            <div class="benefit-card">
-              <div class="benefit-icon"><i class="bi bi-building-check"></i></div>
-              <h5>랙 공간 정리로 고객 만족</h5>
-              <p>방치 장비가 제거되면 가용 랙이 확보됩니다. 고객사의 서비스 연장을 자연스럽게 유도할 수 있습니다.</p>
+
+          <!-- 슬라이더 2: 고객사당 서버 대수 -->
+          <div class="slider-row">
+            <div class="label-line">
+              <span class="lbl">고객사당 평균 수거 서버 대수</span>
+              <span class="val" id="valServers">8<span style="font-size:.75rem; color:var(--sub); font-weight:400;"> 대</span></span>
+            </div>
+            <input type="range" id="sliderServers" min="1" max="50" value="8" oninput="updateCalc()" />
+            <div class="d-flex justify-content-between" style="font-size:.68rem; color:var(--sub); margin-top:.3rem;">
+              <span>1대</span><span>50대</span>
             </div>
           </div>
-          <div class="col-sm-6">
-            <div class="benefit-card">
-              <div class="benefit-icon"><i class="bi bi-diagram-3"></i></div>
-              <h5>고객사 포트폴리오 통합 관리</h5>
-              <p>보유 고객사별 신청·수거·정산 현황을 딜러 대시보드에서 한눈에 파악합니다.</p>
+
+          <!-- 서버 등급 선택 -->
+          <div class="slider-row">
+            <div class="label-line">
+              <span class="lbl">평균 서버 등급</span>
+              <span id="gradePrice" style="font-size:.82rem; color:var(--sub);">대당 700,000원</span>
+            </div>
+            <div class="grade-select" id="gradeSelect">
+              <div class="grade-btn" data-price="300000" onclick="selectGrade(this)">
+                <div style="font-weight:700; margin-bottom:.2rem;">보급형</div>
+                <div style="font-size:.7rem;">30만원</div>
+              </div>
+              <div class="grade-btn active" data-price="700000" onclick="selectGrade(this)">
+                <div style="font-weight:700; margin-bottom:.2rem;">중급형</div>
+                <div style="font-size:.7rem;">70만원</div>
+              </div>
+              <div class="grade-btn" data-price="1500000" onclick="selectGrade(this)">
+                <div style="font-weight:700; margin-bottom:.2rem;">엔터프라이즈</div>
+                <div style="font-size:.7rem;">150만원</div>
+              </div>
             </div>
           </div>
-          <div class="col-sm-6">
-            <div class="benefit-card">
-              <div class="benefit-icon"><i class="bi bi-shield-check"></i></div>
-              <h5>파기 인증서로 신뢰도 강화</h5>
-              <p>공인 데이터 파기 인증서를 고객사에 제공합니다. 귀사의 부가서비스로 활용하여 계약 유지율을 높이세요.</p>
+
+          <!-- 결과 -->
+          <div class="result-box">
+            <div class="result-label">예상 연간 수수료 수익</div>
+            <div class="result-num" id="resultAnnual">28,000,000원</div>
+            <div class="result-sub">수수료율 5% 기준 · 고객사당 1회 처리 시</div>
+          </div>
+          <div class="result-row">
+            <div class="result-mini">
+              <div class="mn" id="resultPerDeal">35,000원</div>
+              <div class="ml">건당 수수료</div>
+            </div>
+            <div class="result-mini">
+              <div class="mn" id="resultTotal">10개사</div>
+              <div class="ml">처리 고객사 수</div>
+            </div>
+            <div class="result-mini">
+              <div class="mn" id="resultMonthly">2,333,333원</div>
+              <div class="ml">월 환산 수익</div>
             </div>
           </div>
+
+          <p style="font-size:.72rem; color:var(--sub); margin:1rem 0 0; line-height:1.6;">
+            * 실제 수수료는 계약 조건·서버 상태·매각 성사 여부에 따라 달라질 수 있습니다.
+          </p>
         </div>
       </div>
 
@@ -191,61 +412,139 @@
   </div>
 </section>
 
-<!-- 고객사 관리 미리보기 -->
-<section class="py-5" style="background:#f8faff;">
+<!-- 스탯 바 -->
+<div class="stat-bar">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-6 col-md-3 stat-item">
+        <div class="num">₩0</div>
+        <div class="lbl">딜러 초기 투자</div>
+      </div>
+      <div class="col-6 col-md-3 stat-item">
+        <div class="num">5%</div>
+        <div class="lbl">딜러 기본 수수료율</div>
+      </div>
+      <div class="col-6 col-md-3 stat-item">
+        <div class="num">100%</div>
+        <div class="lbl">수거·검수 WM 전담</div>
+      </div>
+      <div class="col-6 col-md-3 stat-item">
+        <div class="num">자동</div>
+        <div class="lbl">수수료 정산</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 페인포인트 → 해결 -->
+<section class="py-5" style="background:var(--bg);">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="sec-label">THE PROBLEM WE SOLVE</div>
+      <h2 class="sec-title">호스팅업체가 겪는 3가지 문제</h2>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="pain-card">
+          <div class="pain-icon"><i class="bi bi-box-seam"></i></div>
+          <h6>랙 공간을 점유하는 구형 서버</h6>
+          <p>고객사가 방치해 둔 노후 장비가 귀중한 랙 유닛을 차지하고 있습니다. 철거를 요청하기도 눈치 보입니다.</p>
+          <div class="pain-resolve"><i class="bi bi-arrow-right-circle-fill"></i> 수거를 제안하면 공간이 확보됩니다</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="pain-card">
+          <div class="pain-icon"><i class="bi bi-graph-down-arrow"></i></div>
+          <h6>고객사 관리 외 추가 수익이 없다</h6>
+          <p>관리비·전기료 마진은 한계가 있습니다. 기존 고객사 기반으로 추가 매출을 올릴 구조가 필요합니다.</p>
+          <div class="pain-resolve"><i class="bi bi-arrow-right-circle-fill"></i> 중계만으로 수수료 수익이 생깁니다</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="pain-card">
+          <div class="pain-icon"><i class="bi bi-file-earmark-x"></i></div>
+          <h6>고객사가 데이터 파기를 못 믿는다</h6>
+          <p>서버를 처분하고 싶어도 데이터 유출이 걱정돼 결정을 못 하는 고객사가 많습니다. 공인 절차가 없기 때문입니다.</p>
+          <div class="pain-resolve"><i class="bi bi-arrow-right-circle-fill"></i> 공인 파기 인증서로 신뢰를 드립니다</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 대시보드 미리보기 -->
+<section class="py-5" style="background:var(--bg2); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
   <div class="container">
     <div class="row g-5 align-items-center">
       <div class="col-lg-5">
-        <div class="section-label">DASHBOARD PREVIEW</div>
-        <h2 class="section-title mb-3">고객사별 진행 현황을 한눈에</h2>
-        <p class="text-muted" style="line-height:1.85; font-size:.92rem;">
-          딜러 대시보드에서 연결된 모든 고객사의 수거 신청·처리 상태·정산 현황을 실시간으로 조회합니다.
-          건별 수수료도 플랫폼이 자동 계산하여 정산 내역에 기록합니다.
-        </p>
-        <ul class="mt-3" style="color:#374151; font-size:.88rem; line-height:2; padding-left:1.2rem;">
-          <li>고객사별 신청·처리 현황 조회</li>
-          <li>수거 예정·완료·정산 상태 추적</li>
-          <li>건별 딜러 수수료 자동 산정</li>
-          <li>정산 완료 후 지급 확인</li>
+        <div class="sec-label">PARTNER DASHBOARD</div>
+        <h2 class="sec-title">고객사 현황을<br>한 화면에서</h2>
+        <p class="sec-sub">딜러 대시보드에서 연결된 고객사별 수거 진행 상태, 예상 단가, 정산 완료 수수료를 실시간으로 조회합니다.</p>
+        <ul style="list-style:none; padding:0; margin-top:1.5rem;">
+          <li style="display:flex; align-items:center; gap:.7rem; margin-bottom:.9rem; font-size:.88rem; color:var(--sub);">
+            <i class="bi bi-check-circle-fill" style="color:var(--orange); flex-shrink:0;"></i>
+            고객사별 신청·수거·정산 현황
+          </li>
+          <li style="display:flex; align-items:center; gap:.7rem; margin-bottom:.9rem; font-size:.88rem; color:var(--sub);">
+            <i class="bi bi-check-circle-fill" style="color:var(--orange); flex-shrink:0;"></i>
+            건별 딜러 수수료 자동 산정
+          </li>
+          <li style="display:flex; align-items:center; gap:.7rem; margin-bottom:.9rem; font-size:.88rem; color:var(--sub);">
+            <i class="bi bi-check-circle-fill" style="color:var(--orange); flex-shrink:0;"></i>
+            정산 완료 내역 및 지급 확인
+          </li>
+          <li style="display:flex; align-items:center; gap:.7rem; font-size:.88rem; color:var(--sub);">
+            <i class="bi bi-check-circle-fill" style="color:var(--orange); flex-shrink:0;"></i>
+            파기 인증서 고객사 직접 발행
+          </li>
         </ul>
       </div>
       <div class="col-lg-7">
-        <div class="dashboard-preview">
-          <div style="font-size:.75rem; color:rgba(255,255,255,.4); margin-bottom:1rem; font-weight:600; letter-spacing:.6px;">딜러 대시보드 — 고객사 수거 현황</div>
-          <div class="mini-row">
-            <div>
-              <div style="font-weight:700; font-size:.85rem;">카카오 (주)</div>
-              <div style="color:rgba(255,255,255,.5); font-size:.76rem;">서버 12대 · Dell R740 외</div>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-              <span class="mini-badge bg-success text-white">정산완료</span>
-              <span style="font-size:.85rem; font-weight:700; color:#f4a82a;">320,000원</span>
-            </div>
+        <div class="preview-wrap">
+          <div class="preview-topbar">
+            <div class="dot" style="background:#ef4444;"></div>
+            <div class="dot" style="background:#f59e0b;"></div>
+            <div class="dot" style="background:#22c55e;"></div>
+            <span style="font-size:.72rem; color:var(--sub); margin-left:.8rem;">IDC브릿지 파트너 — 딜러 대시보드</span>
           </div>
-          <div class="mini-row">
-            <div>
-              <div style="font-weight:700; font-size:.85rem;">넥슨코리아</div>
-              <div style="color:rgba(255,255,255,.5); font-size:.76rem;">서버 6대 · HP DL380 외</div>
+          <div class="preview-body">
+            <div class="prev-stat-row">
+              <div class="prev-stat"><div class="pnum">3</div><div class="plbl">처리 중인 건</div></div>
+              <div class="prev-stat"><div class="pnum">₩320K</div><div class="plbl">이번 달 수수료</div></div>
+              <div class="prev-stat"><div class="pnum">12</div><div class="plbl">연결 고객사</div></div>
+              <div class="prev-stat"><div class="pnum">₩1.8M</div><div class="plbl">올해 누계</div></div>
             </div>
-            <div class="d-flex align-items-center gap-2">
-              <span class="mini-badge bg-warning text-dark">검수중</span>
-              <span style="font-size:.85rem; font-weight:700; color:rgba(255,255,255,.4);">산정 중</span>
+            <div style="font-size:.7rem; color:var(--sub); margin-bottom:.5rem; letter-spacing:.4px;">최근 신청 현황</div>
+            <div class="prev-row">
+              <div>
+                <div class="co">카카오 (주)</div>
+                <div class="info">Dell R740 × 8대 · 2025.06.18 신청</div>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge-g">정산완료</span>
+                <span class="fee-line">+320,000원</span>
+              </div>
             </div>
-          </div>
-          <div class="mini-row">
-            <div>
-              <div style="font-weight:700; font-size:.85rem;">스타트업A</div>
-              <div style="color:rgba(255,255,255,.5); font-size:.76rem;">서버 3대 · Lenovo SR650</div>
+            <div class="prev-row">
+              <div>
+                <div class="co">넥슨코리아</div>
+                <div class="info">HP DL380 × 6대 · 2025.06.22 신청</div>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge-o">검수중</span>
+                <span style="font-size:.82rem; color:var(--sub);">산정 중</span>
+              </div>
             </div>
-            <div class="d-flex align-items-center gap-2">
-              <span class="mini-badge bg-info text-white">수거예정</span>
-              <span style="font-size:.85rem; font-weight:700; color:rgba(255,255,255,.4);">-</span>
+            <div class="prev-row">
+              <div>
+                <div class="co">스타트업 A</div>
+                <div class="info">Lenovo SR650 × 3대 · 2025.06.24 신청</div>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge-b">수거예정</span>
+                <span style="font-size:.82rem; color:var(--sub);">—</span>
+              </div>
             </div>
-          </div>
-          <hr style="border-color:rgba(255,255,255,.12); margin:1rem 0;" />
-          <div class="d-flex justify-content-between" style="font-size:.82rem;">
-            <span style="color:rgba(255,255,255,.5);">이번 달 딜러 수수료 합계</span>
-            <span style="font-weight:800; color:#f4a82a; font-size:1rem;">320,000원</span>
           </div>
         </div>
       </div>
@@ -254,67 +553,131 @@
 </section>
 
 <!-- 프로세스 -->
-<section class="process-bg py-5">
+<section class="py-5" style="background:var(--bg);">
   <div class="container">
     <div class="text-center mb-5">
-      <div class="section-label">HOW IT WORKS</div>
-      <h2 class="section-title">딜러의 역할은 연결뿐</h2>
-      <p class="text-muted mt-2">수거·검수·파기·정산은 WorldMemory가 전담합니다.</p>
+      <div class="sec-label">HOW IT WORKS</div>
+      <h2 class="sec-title">딜러의 역할은 딱 하나</h2>
+      <p class="sec-sub" style="max-width:440px; margin-inline:auto;">나머지는 전부 WorldMemory가 합니다.</p>
     </div>
     <div class="row g-0">
-      <div class="col text-center position-relative">
-        <div class="step-circle">1</div>
-        <div class="step-title">고객사 등록</div>
-        <div class="step-desc">플랫폼에 고객사<br>계정 연결</div>
-        <div class="step-arrow d-none d-md-block"></div>
+      <div class="col text-center process-step position-relative">
+        <div class="ps-num">1</div>
+        <div class="ps-title">고객사 연결</div>
+        <div class="ps-desc">플랫폼에<br>고객사 계정 등록</div>
+        <div class="ps-arrow d-none d-md-block"></div>
       </div>
-      <div class="col text-center position-relative">
-        <div class="step-circle">2</div>
-        <div class="step-title">신청 접수</div>
-        <div class="step-desc">고객사가 서버<br>수거 신청 제출</div>
-        <div class="step-arrow d-none d-md-block"></div>
+      <div class="col text-center process-step position-relative">
+        <div class="ps-num">2</div>
+        <div class="ps-title">신청 접수</div>
+        <div class="ps-desc">고객사가<br>온라인 신청 제출</div>
+        <div class="ps-arrow d-none d-md-block"></div>
       </div>
-      <div class="col text-center position-relative">
-        <div class="step-circle">3</div>
-        <div class="step-title">WM 수거·검수</div>
-        <div class="step-desc">WorldMemory가<br>전담 처리</div>
-        <div class="step-arrow d-none d-md-block"></div>
+      <div class="col text-center process-step position-relative">
+        <div class="ps-num">3</div>
+        <div class="ps-title">WM 전담</div>
+        <div class="ps-desc">수거·검수·파기<br>WorldMemory 처리</div>
+        <div class="ps-arrow d-none d-md-block"></div>
       </div>
-      <div class="col text-center position-relative">
-        <div class="step-circle">4</div>
-        <div class="step-title">정산 확정</div>
-        <div class="step-desc">고객사 승인 후<br>수수료 자동 산정</div>
-        <div class="step-arrow d-none d-md-block"></div>
+      <div class="col text-center process-step position-relative">
+        <div class="ps-num">4</div>
+        <div class="ps-title">정산 확정</div>
+        <div class="ps-desc">수수료 자동<br>산정 완료</div>
+        <div class="ps-arrow d-none d-md-block"></div>
       </div>
-      <div class="col text-center">
-        <div class="step-circle" style="background:var(--gold); color:#1a1a1a;">5</div>
-        <div class="step-title">수수료 수령</div>
-        <div class="step-desc">딜러 계정에<br>정산 완료 알림</div>
+      <div class="col text-center process-step">
+        <div class="ps-num" style="background:var(--orange); border-color:var(--orange); color:#fff;">5</div>
+        <div class="ps-title" style="color:var(--orange);">수수료 수령</div>
+        <div class="ps-desc">딜러 계정에<br>지급 완료</div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- CTA -->
-<section class="cta-section py-5 px-3">
+<section class="cta-section">
   <div class="container">
-    <h2 style="font-size:2rem; font-weight:800;">지금 딜러 계정으로 시작하세요</h2>
-    <p class="mt-2 mb-4" style="color:rgba(255,255,255,.68);">
-      고객사를 플랫폼에 등록하는 순간부터 수익이 시작됩니다.
-    </p>
-    <a href="/login" class="btn btn-gold btn-lg px-5">
-      <i class="bi bi-box-arrow-in-right me-2"></i>딜러 로그인
-    </a>
+    <div style="display:inline-block; background:rgba(249,115,22,.1); border:1px solid rgba(249,115,22,.25); border-radius:2rem; padding:.3rem 1rem; font-size:.75rem; color:var(--orange); font-weight:700; margin-bottom:1.2rem; letter-spacing:.6px;">
+      파트너 신청
+    </div>
+    <h2>지금 딜러 계정을 신청하세요</h2>
+    <p>고객사 등록 즉시 수익 파이프라인이 시작됩니다.</p>
+    <div class="mt-4">
+      <a href="/login" class="btn-cta" style="padding:.75rem 2.5rem; font-size:1rem; border-radius:.6rem; text-decoration:none;">
+        <i class="bi bi-box-arrow-in-right me-2"></i>파트너 로그인
+      </a>
+    </div>
   </div>
 </section>
 
-<footer class="footer py-4 text-center">
-  <div class="container">
-    <p class="mb-1"><strong style="color:#fff;">IDC브릿지</strong> — WorldMemory 운영</p>
-    <p class="mb-0">본 페이지는 호스팅·IDC 운영사(딜러)를 위한 안내입니다.</p>
-  </div>
+<footer class="footer">
+  <span style="color:rgba(255,255,255,.6); font-weight:700;">IDC브릿지</span> — WorldMemory 파트너 프로그램 · 본 페이지는 딜러 파트너 전용입니다
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  let selectedPrice = 700000;
+
+  function selectGrade(el) {
+    document.querySelectorAll('.grade-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    selectedPrice = parseInt(el.dataset.price);
+    const labels = {300000:'대당 300,000원', 700000:'대당 700,000원', 1500000:'대당 1,500,000원'};
+    document.getElementById('gradePrice').textContent = labels[selectedPrice];
+    updateCalc();
+  }
+
+  function fmt(n) {
+    return Math.round(n).toLocaleString('ko-KR') + '원';
+  }
+
+  let animFrame = null;
+  function animateTo(el, target) {
+    const start = parseInt(el.dataset.current || 0);
+    const delta = target - start;
+    const dur = 400;
+    const t0 = performance.now();
+    if (animFrame) cancelAnimationFrame(animFrame);
+    function step(t) {
+      const p = Math.min((t - t0) / dur, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      const cur = Math.round(start + delta * ease);
+      el.textContent = Math.round(cur).toLocaleString('ko-KR') + '원';
+      el.dataset.current = cur;
+      if (p < 1) animFrame = requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function updateCalc() {
+    const c = parseInt(document.getElementById('sliderCustomers').value);
+    const s = parseInt(document.getElementById('sliderServers').value);
+    document.getElementById('valCustomers').innerHTML = `${c}<span style="font-size:.75rem; color:var(--sub); font-weight:400;"> 개사</span>`;
+    document.getElementById('valServers').innerHTML = `${s}<span style="font-size:.75rem; color:var(--sub); font-weight:400;"> 대</span>`;
+
+    const perDeal = s * selectedPrice * 0.05;
+    const annual  = c * perDeal;
+    const monthly = annual / 12;
+
+    animateTo(document.getElementById('resultAnnual'), annual);
+
+    document.getElementById('resultPerDeal').textContent = fmt(perDeal);
+    document.getElementById('resultTotal').textContent = c + '개사';
+    document.getElementById('resultMonthly').textContent = fmt(monthly);
+  }
+
+  // 슬라이더 채우기 효과
+  function updateSliderFill(slider) {
+    const min = slider.min || 0, max = slider.max || 100;
+    const pct = ((slider.value - min) / (max - min)) * 100;
+    slider.style.background = `linear-gradient(90deg, var(--orange) ${pct}%, var(--bg3) ${pct}%)`;
+  }
+  document.querySelectorAll('input[type=range]').forEach(s => {
+    s.addEventListener('input', () => updateSliderFill(s));
+    updateSliderFill(s);
+  });
+
+  updateCalc();
+</script>
 </body>
 </html>
