@@ -38,6 +38,16 @@ def intro(request: Request):
     return templates.TemplateResponse(request, "intro.html", {})
 
 
+@app.get("/intro/dealer")
+def intro_dealer(request: Request):
+    return templates.TemplateResponse(request, "intro_dealer.html", {})
+
+
+@app.get("/intro/customer")
+def intro_customer(request: Request):
+    return templates.TemplateResponse(request, "intro_customer.html", {})
+
+
 @app.get("/")
 def root(request: Request):
     if not request.session.get("user_id"):
