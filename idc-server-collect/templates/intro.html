@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IDC브릿지 — IDC 서버 매각·데이터 파기 통합 플랫폼</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <style>
+    :root {
+      --navy: #1a2035;
+      --navy-mid: #2d3a57;
+      --accent: #4f8ef7;
+      --accent-soft: #e8f0fe;
+      --gold: #f4a82a;
+      --green: #2ecc8a;
+      --text-sub: #6b7280;
+    }
+    body { font-family: 'Segoe UI', 'Noto Sans KR', sans-serif; color: #1f2937; }
+
+    /* ── 네비 ── */
+    .top-nav {
+      background: var(--navy);
+      padding: 1rem 2rem;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .top-nav .brand { color: #fff; font-size: 1.15rem; font-weight: 700; letter-spacing: -0.3px; }
+    .top-nav .brand span { color: var(--accent); }
+
+    /* ── 히어로 ── */
+    .hero {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 60%, #1e3a6e 100%);
+      color: #fff;
+      padding: 100px 0 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(79,142,247,.15) 0%, transparent 60%);
+    }
+    .hero-eyebrow {
+      display: inline-block;
+      background: rgba(79,142,247,.2);
+      border: 1px solid rgba(79,142,247,.4);
+      color: var(--accent);
+      font-size: .78rem; font-weight: 600; letter-spacing: .8px;
+      padding: .3rem .9rem; border-radius: 2rem;
+      margin-bottom: 1.4rem;
+    }
+    .hero h1 { font-size: 2.6rem; font-weight: 800; line-height: 1.25; }
+    .hero h1 .hl { color: var(--accent); }
+    .hero .sub { color: rgba(255,255,255,.72); font-size: 1.05rem; max-width: 520px; line-height: 1.8; }
+    .hero-stat { text-align: center; }
+    .hero-stat .num { font-size: 2rem; font-weight: 800; color: var(--accent); }
+    .hero-stat .label { font-size: .8rem; color: rgba(255,255,255,.6); margin-top: .2rem; }
+
+    /* ── 섹션 공통 ── */
+    .section-label {
+      font-size: .75rem; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--accent);
+      margin-bottom: .5rem;
+    }
+    .section-title { font-size: 1.75rem; font-weight: 800; }
+
+    /* ── 대상별 카드 ── */
+    .audience-card {
+      border-radius: 1.25rem;
+      padding: 2.5rem;
+      height: 100%;
+    }
+    .audience-card.dealer {
+      background: linear-gradient(145deg, #1a2035, #243050);
+      color: #fff;
+      border: 1px solid rgba(79,142,247,.25);
+    }
+    .audience-card.customer {
+      background: #f8faff;
+      border: 1.5px solid #dce6f7;
+    }
+    .audience-card .badge-type {
+      display: inline-block;
+      font-size: .7rem; font-weight: 700; letter-spacing: .6px;
+      padding: .3rem .8rem; border-radius: 2rem;
+      margin-bottom: 1.2rem;
+    }
+    .dealer .badge-type  { background: rgba(79,142,247,.2); color: var(--accent); }
+    .customer .badge-type { background: #e8f0fe; color: #2563eb; }
+    .audience-card h3 { font-size: 1.3rem; font-weight: 800; margin-bottom: .5rem; }
+    .dealer h3 { color: #fff; }
+    .customer h3 { color: var(--navy); }
+    .audience-card .desc { font-size: .92rem; line-height: 1.75; margin-bottom: 1.5rem; }
+    .dealer .desc { color: rgba(255,255,255,.72); }
+    .customer .desc { color: var(--text-sub); }
+    .benefit-item {
+      display: flex; align-items: flex-start; gap: .7rem;
+      margin-bottom: .85rem; font-size: .92rem;
+    }
+    .benefit-item .icon-wrap {
+      width: 32px; height: 32px; border-radius: .5rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 1rem;
+    }
+    .dealer .icon-wrap { background: rgba(79,142,247,.18); color: var(--accent); }
+    .customer .icon-wrap { background: #e8f0fe; color: #2563eb; }
+    .benefit-item .text strong { display: block; font-weight: 700; margin-bottom: .1rem; }
+    .dealer .text strong { color: #fff; }
+    .customer .text strong { color: var(--navy); }
+    .dealer .text span { color: rgba(255,255,255,.6); font-size: .83rem; }
+    .customer .text span { color: var(--text-sub); font-size: .83rem; }
+
+    /* ── 프로세스 ── */
+    .process-section { background: #f1f5ff; }
+    .process-step {
+      text-align: center;
+      position: relative;
+    }
+    .step-num {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--navy);
+      color: #fff; font-size: 1.1rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1rem;
+    }
+    .step-title { font-size: .95rem; font-weight: 700; margin-bottom: .3rem; }
+    .step-desc { font-size: .82rem; color: var(--text-sub); line-height: 1.6; }
+    .step-arrow {
+      position: absolute; top: 26px; left: calc(50% + 36px);
+      width: calc(100% - 72px);
+      height: 2px; background: #d1daf0;
+    }
+    .step-arrow::after {
+      content: '▶';
+      position: absolute; right: -6px; top: -8px;
+      color: #d1daf0; font-size: .7rem;
+    }
+
+    /* ── 수익 하이라이트 ── */
+    .revenue-card {
+      background: linear-gradient(135deg, #f4a82a 0%, #f97316 100%);
+      border-radius: 1.25rem; color: #fff; padding: 2.5rem;
+    }
+    .revenue-card h3 { font-size: 1.4rem; font-weight: 800; }
+    .revenue-card .big-num { font-size: 3rem; font-weight: 900; line-height: 1; }
+    .revenue-card .sub-text { font-size: .88rem; opacity: .85; }
+
+    /* ── 신뢰 배지 ── */
+    .trust-item {
+      display: flex; align-items: center; gap: 1rem;
+      background: #fff; border: 1px solid #e5eaf4;
+      border-radius: 1rem; padding: 1.4rem 1.6rem;
+    }
+    .trust-icon { font-size: 1.8rem; color: var(--accent); }
+
+    /* ── CTA ── */
+    .cta-section {
+      background: linear-gradient(135deg, var(--navy) 0%, #1e3a6e 100%);
+      color: #fff; text-align: center;
+    }
+    .cta-section h2 { font-size: 2rem; font-weight: 800; }
+    .cta-section p { color: rgba(255,255,255,.7); font-size: 1rem; }
+
+    /* ── 버튼 ── */
+    .btn-accent {
+      background: var(--accent); color: #fff;
+      padding: .75rem 2rem; border-radius: .6rem;
+      font-weight: 700; font-size: 1rem; border: none;
+      transition: background .2s;
+    }
+    .btn-accent:hover { background: #3b7de8; color: #fff; }
+    .btn-outline-light-custom {
+      border: 1.5px solid rgba(255,255,255,.4);
+      color: #fff; background: transparent;
+      padding: .75rem 2rem; border-radius: .6rem;
+      font-weight: 600; transition: all .2s;
+    }
+    .btn-outline-light-custom:hover { background: rgba(255,255,255,.1); color: #fff; }
+
+    /* ── 푸터 ── */
+    .footer { background: #111827; color: rgba(255,255,255,.5); font-size: .82rem; }
+  </style>
+</head>
+<body>
+
+<!-- 네비게이션 -->
+<nav class="top-nav d-flex align-items-center justify-content-between">
+  <div class="brand"><i class="bi bi-server me-2"></i>IDC<span>브릿지</span></div>
+  <a href="/login" class="btn btn-sm btn-accent px-4">
+    <i class="bi bi-box-arrow-in-right me-1"></i>로그인
+  </a>
+</nav>
+
+<!-- 히어로 -->
+<section class="hero">
+  <div class="container">
+    <div class="row align-items-center gy-5">
+      <div class="col-lg-7">
+        <div class="hero-eyebrow">IDC 서버 자산 재활용 플랫폼</div>
+        <h1>방치된 서버를<br>
+          <span class="hl">수익과 안심</span>으로<br>바꿉니다</h1>
+        <p class="sub mt-3">
+          노후 서버 매각부터 공인 데이터 파기까지 —<br>
+          IDC브릿지 하나로 수거·검수·정산을 완전 자동화합니다.
+        </p>
+        <div class="d-flex gap-3 flex-wrap mt-4">
+          <a href="/login" class="btn btn-accent"><i class="bi bi-box-arrow-in-right me-2"></i>플랫폼 시작하기</a>
+          <a href="#audience" class="btn btn-outline-light-custom"><i class="bi bi-chevron-down me-1"></i>자세히 보기</a>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="row g-3">
+          <div class="col-4 hero-stat">
+            <div class="num">100%</div>
+            <div class="label">디지털 프로세스</div>
+          </div>
+          <div class="col-4 hero-stat">
+            <div class="num">3계층</div>
+            <div class="label">WM·딜러·고객사</div>
+          </div>
+          <div class="col-4 hero-stat">
+            <div class="num">0원</div>
+            <div class="label">고객사 초기비용</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 대상별 소개 -->
+<section class="py-6 py-5" id="audience">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-label">WHO WE SERVE</div>
+      <h2 class="section-title">누구를 위한 플랫폼인가요?</h2>
+      <p class="text-muted mt-2">호스팅·IDC 딜러사와 서버를 보유한 기업 고객사, 모두를 위해 설계되었습니다.</p>
+    </div>
+    <div class="row g-4">
+
+      <!-- 딜러 (호스팅·IDC 운영사) -->
+      <div class="col-lg-6">
+        <div class="audience-card dealer">
+          <div class="badge-type">DEALER · 호스팅·IDC 운영사</div>
+          <h3>고객사 서버를<br>새로운 수익원으로</h3>
+          <p class="desc">
+            관리 중인 고객사의 랙 공간엔 오랫동안 운영이 멈춘 서버가 쌓여 있습니다.
+            IDC브릿지를 통해 서버 매각을 중개하면, 고객사의 공간을 정리해 드리면서
+            <strong style="color:#fff;">중계수수료를 신규 수익으로</strong> 챙길 수 있습니다.
+          </p>
+          <div class="benefit-item">
+            <div class="icon-wrap"><i class="bi bi-diagram-3"></i></div>
+            <div class="text">
+              <strong>고객사 포트폴리오 통합 관리</strong>
+              <span>보유 고객사별 신청·수거·정산 현황을 대시보드에서 한눈에</span>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="icon-wrap"><i class="bi bi-cash-coin"></i></div>
+            <div class="text">
+              <strong>중계수수료 자동 정산</strong>
+              <span>매각 금액 기준 딜러 수수료 자동 계산 및 정산 보고서 제공</span>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="icon-wrap"><i class="bi bi-building-check"></i></div>
+            <div class="text">
+              <strong>랙 공간 확보로 고객 만족도 향상</strong>
+              <span>방치 장비 제거 → 가용 랙 확보 → 고객사 서비스 연장 유도</span>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="icon-wrap"><i class="bi bi-shield-lock"></i></div>
+            <div class="text">
+              <strong>데이터 파기 인증서 제공</strong>
+              <span>고객사에게 공인 파기 인증서를 발행해 신뢰도 제고</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 고객사 (기업) -->
+      <div class="col-lg-6">
+        <div class="audience-card customer">
+          <div class="badge-type">CUSTOMER · 기업 고객사</div>
+          <h3 style="color:var(--navy);">방치 서버 정리,<br>한 번에 해결합니다</h3>
+          <p class="desc">
+            몇 년째 꺼져 있는 서버가 랙을 차지하고 있진 않으신가요?
+            장기 방치 장비는 관리 비용이 발생하면서, 내부 데이터 유출 위험도 남깁니다.
+            IDC브릿지로 <strong style="color:var(--navy);">매각 수익을 얻으면서</strong> 깔끔하게 정리하세요.
+          </p>
+          <div class="benefit-item">
+            <div class="icon-wrap"><i class="bi bi-clipboard2-data"></i></div>
+            <div class="text">
+              <strong>서버 자산 현황 파악</strong>
+              <span>보유 서버의 제조사·모델·스펙·S/N을 온라인 대장으로 정리</span>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="icon-wrap"><i class="bi bi-currency-exchange"></i></div>
+            <div class="text">
+              <strong>중고 서버 매각으로 수익 창출</strong>
+              <span>폐기 대신 매각 — 예정단가 확인 후 승인만 하면 정산 완료</span>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="icon-wrap"><i class="bi bi-hdd-fill"></i></div>
+            <div class="text">
+              <strong>공인 데이터 파기 인증</strong>
+              <span>소프트웨어·물리적 파기 선택, 파기 인증서 발급으로 법적 안심</span>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="icon-wrap"><i class="bi bi-eye-slash"></i></div>
+            <div class="text">
+              <strong>방치 정보 유출 리스크 제거</strong>
+              <span>장기 미운영 서버의 개인정보·영업비밀을 안전하게 소각</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- 프로세스 -->
+<section class="process-section py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-label">HOW IT WORKS</div>
+      <h2 class="section-title">신청부터 정산까지, 5단계</h2>
+    </div>
+    <div class="row g-4">
+      <div class="col process-step">
+        <div class="step-num">1</div>
+        <div class="step-title">수거 신청</div>
+        <div class="step-desc">고객사가 온라인으로<br>서버 자산 목록 제출</div>
+        <div class="step-arrow d-none d-md-block"></div>
+      </div>
+      <div class="col process-step">
+        <div class="step-num">2</div>
+        <div class="step-title">일정 조율</div>
+        <div class="step-desc">WM이 수거 기사<br>방문 일정 확정</div>
+        <div class="step-arrow d-none d-md-block"></div>
+      </div>
+      <div class="col process-step">
+        <div class="step-num">3</div>
+        <div class="step-title">수거·검수</div>
+        <div class="step-desc">현장 수거 후<br>등급·단가 산정</div>
+        <div class="step-arrow d-none d-md-block"></div>
+      </div>
+      <div class="col process-step">
+        <div class="step-num">4</div>
+        <div class="step-title">데이터 파기</div>
+        <div class="step-desc">공인 파기 수행<br>인증서 발급</div>
+        <div class="step-arrow d-none d-md-block"></div>
+      </div>
+      <div class="col process-step">
+        <div class="step-num">5</div>
+        <div class="step-title">정산 완료</div>
+        <div class="step-desc">고객사 입금<br>딜러 수수료 지급</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 딜러 수익 포인트 -->
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4 align-items-center">
+      <div class="col-lg-5">
+        <div class="revenue-card">
+          <div class="mb-3" style="font-size:2.2rem;"><i class="bi bi-cash-stack"></i></div>
+          <h3>중계 수수료,<br>자동으로 정산</h3>
+          <p class="sub-text mt-2 mb-4">
+            고객사 매각 금액의 일정 비율이<br>
+            딜러에게 자동 정산됩니다.<br>
+            별도 청구 없이 플랫폼이 처리합니다.
+          </p>
+          <div class="d-flex align-items-baseline gap-2">
+            <div class="big-num">5%</div>
+            <div style="font-size:.9rem; opacity:.9;">~<br>협의 비율 적용</div>
+          </div>
+          <small style="opacity:.7;">매각가 기준 딜러 수수료율 (예시)</small>
+        </div>
+      </div>
+      <div class="col-lg-7">
+        <div class="section-label">FOR DEALERS</div>
+        <h2 class="section-title mb-3">고객사를 보유한 딜러라면<br>당장 수익이 됩니다</h2>
+        <p class="text-muted mb-4" style="line-height:1.9;">
+          기존 관리 중인 고객사에게 IDC브릿지를 소개하는 것만으로
+          새 사업 라인이 생깁니다. 수거·검수·파기는 WorldMemory가 전담하고,
+          딜러는 고객 연결과 정산 수령만 하면 됩니다.
+        </p>
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <div class="trust-item">
+              <i class="bi bi-check-circle-fill trust-icon"></i>
+              <div>
+                <div class="fw-bold small">고객사별 독립 관리</div>
+                <div class="text-muted" style="font-size:.8rem;">여러 고객사를 하나의 계정으로</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="trust-item">
+              <i class="bi bi-file-earmark-spreadsheet trust-icon"></i>
+              <div>
+                <div class="fw-bold small">정산 현황 대시보드</div>
+                <div class="text-muted" style="font-size:.8rem;">건별 수수료 내역 실시간 조회</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="trust-item">
+              <i class="bi bi-shield-check trust-icon"></i>
+              <div>
+                <div class="fw-bold small">파기 인증서 발행</div>
+                <div class="text-muted" style="font-size:.8rem;">고객사 신뢰도 강화 무기</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="trust-item">
+              <i class="bi bi-people trust-icon"></i>
+              <div>
+                <div class="fw-bold small">전담 WorldMemory 팀</div>
+                <div class="text-muted" style="font-size:.8rem;">수거·검수는 WM이 직접 수행</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 고객사 데이터 보안 포인트 -->
+<section class="py-5" style="background:#f8faff;">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-label">DATA SECURITY</div>
+      <h2 class="section-title">데이터, 제대로 지워야 합니다</h2>
+      <p class="text-muted mt-2 mx-auto" style="max-width:540px; line-height:1.8;">
+        단순 폐기한 서버에서 개인정보가 복구된 사례는 드물지 않습니다.
+        IDC브릿지는 공인된 절차로 파기하고 인증서를 발급합니다.
+      </p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="text-center p-4">
+          <div style="font-size:2.5rem; color:var(--accent);" class="mb-3"><i class="bi bi-hdd-network"></i></div>
+          <h5 class="fw-bold">소프트웨어 파기</h5>
+          <p class="text-muted small mt-2" style="line-height:1.8;">
+            국제 표준(DoD 5220.22-M 등) 기반 다중 덮어쓰기로
+            데이터를 복구 불가능하게 삭제합니다.
+          </p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-center p-4">
+          <div style="font-size:2.5rem; color:var(--accent);" class="mb-3"><i class="bi bi-hammer"></i></div>
+          <h5 class="fw-bold">물리적 파기</h5>
+          <p class="text-muted small mt-2" style="line-height:1.8;">
+            드릴링·파쇄 방식으로 저장 매체를 물리적으로 파괴합니다.
+            소프트웨어 파기가 불가한 장비에 적용합니다.
+          </p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-center p-4">
+          <div style="font-size:2.5rem; color:var(--accent);" class="mb-3"><i class="bi bi-file-earmark-text"></i></div>
+          <h5 class="fw-bold">파기 인증서 발급</h5>
+          <p class="text-muted small mt-2" style="line-height:1.8;">
+            파기 방법·일시·담당자·S/N이 기재된 인증서를 발급합니다.
+            감사·컴플라이언스 대응 자료로 활용 가능합니다.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section py-5 px-3">
+  <div class="container">
+    <h2>지금 바로 시작하세요</h2>
+    <p class="mt-2 mb-4">딜러 계정이 있으면 고객사 연결과 수익 창출이 즉시 가능합니다.</p>
+    <div class="d-flex gap-3 justify-content-center flex-wrap">
+      <a href="/login" class="btn btn-accent btn-lg px-5">
+        <i class="bi bi-box-arrow-in-right me-2"></i>플랫폼 로그인
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- 푸터 -->
+<footer class="footer py-4">
+  <div class="container text-center">
+    <p class="mb-1"><strong style="color:#fff;">IDC브릿지</strong> — WorldMemory 운영</p>
+    <p class="mb-0">IDC 서버 자산 매각 · 데이터 파기 · 정산 통합 플랫폼</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

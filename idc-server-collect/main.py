@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import RedirectResponse, JSONResponse
 from pathlib import Path
@@ -18,6 +19,9 @@ STATIC_DIR = Path(__file__).resolve().parent / "static"
 STATIC_DIR.mkdir(exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
+TMPL_DIR = Path(__file__).resolve().parent / "templates"
+templates = Jinja2Templates(directory=str(TMPL_DIR))
+
 app.include_router(auth_router.router)
 app.include_router(wm_router.router,       prefix="/wm")
 app.include_router(dealer_router.router,   prefix="/dealer")
@@ -27,6 +31,11 @@ app.include_router(customer_router.router, prefix="/customer")
 @app.get("/health")
 def health():
     return JSONResponse({"status": "ok"})
+
+
+@app.get("/intro")
+def intro(request: Request):
+    return templates.TemplateResponse(request, "intro.html", {})
 
 
 @app.get("/")
