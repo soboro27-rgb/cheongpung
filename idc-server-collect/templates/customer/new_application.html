@@ -86,20 +86,23 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <table class="table table-sm mb-2" id="ramRows">
-          <thead>
+        <p class="text-muted small mb-2">서버에 장착된 DIMM 용량별로 행을 추가하세요.</p>
+        <table class="table table-sm mb-2">
+          <thead class="table-light">
             <tr>
-              <th>용량(GB)</th>
-              <th style="width:80px">수량</th>
+              <th>DIMM 용량</th>
+              <th style="width:90px">수량 (개)</th>
               <th style="width:34px"></th>
             </tr>
           </thead>
           <tbody id="ramRowBody"></tbody>
         </table>
         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addRamRow()">
-          <i class="bi bi-plus me-1"></i>DIMM 추가
+          <i class="bi bi-plus me-1"></i>DIMM 행 추가
         </button>
-        <div class="mt-2 text-muted small">합계: <span id="ramTotal">0</span> GB</div>
+        <div class="mt-2 p-2 bg-light rounded small">
+          총 RAM: <strong><span id="ramTotal">0</span> GB</strong>
+        </div>
       </div>
       <div class="modal-footer py-2">
         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button>
@@ -111,18 +114,24 @@
 
 <!-- 스토리지 구성 모달 -->
 <div class="modal fade" id="storageModal" tabindex="-1">
-  <div class="modal-dialog modal-md">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header py-2">
-        <h6 class="modal-title"><i class="bi bi-hdd-stack me-2"></i>스토리지 구성 입력</h6>
+        <h6 class="modal-title"><i class="bi bi-hdd-stack me-2"></i>저장장치 구성 입력</h6>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
+        <div class="alert alert-light border small py-2 mb-3">
+          <i class="bi bi-info-circle me-1 text-primary"></i>
+          <strong>인터페이스</strong>(SAS/SATA/NVMe)와 <strong>매체</strong>(HDD/SSD)를 구분하여 입력하세요.
+          SAS 2.4TB는 SAS HDD, NVMe는 항상 SSD입니다.
+        </div>
         <table class="table table-sm mb-2">
-          <thead>
+          <thead class="table-light">
             <tr>
-              <th style="width:90px">타입</th>
-              <th style="width:70px">용량</th>
+              <th style="width:100px">인터페이스</th>
+              <th style="width:80px">매체</th>
+              <th style="width:90px">용량</th>
               <th style="width:64px">단위</th>
               <th style="width:64px">수량</th>
               <th style="width:34px"></th>
@@ -207,11 +216,12 @@ function addRow() {
 function removeRow(btn) { btn.closest('tr').remove(); }
 
 // ─── RAM 모달 ───────────────────────────────────────────
+const RAM_SIZES = [8, 16, 32, 64, 128, 256];
+
 function openRamModal(idx) {
   activeRowIdx = idx;
   const body = document.getElementById('ramRowBody');
   body.innerHTML = '';
-  // 기존 값 복원
   const existing = document.getElementById(`ram_config_${idx}`).value;
   if (existing) {
     existing.split(',').forEach(part => {
@@ -226,12 +236,17 @@ function openRamModal(idx) {
   new bootstrap.Modal(document.getElementById('ramModal')).show();
 }
 
-function addRamRow(gb = '', qty = 1) {
+function addRamRow(gb = 32, qty = 1) {
   const body = document.getElementById('ramRowBody');
   const tr = document.createElement('tr');
+  const opts = RAM_SIZES.map(s => `<option value="${s}"${s===gb?' selected':''}>${s}GB</option>`).join('');
   tr.innerHTML = `
-    <td><input type="number" class="form-control form-control-sm ram-gb" value="${gb}" min="1" placeholder="예: 32" oninput="updateRamTotal()" /></td>
-    <td><input type="number" class="form-control form-control-sm ram-qty" value="${qty}" min="1" oninput="updateRamTotal()" /></td>
+    <td>
+      <select class="form-select form-select-sm ram-gb" onchange="updateRamTotal()">
+        ${opts}
+      </select>
+    </td>
+    <td><input type="number" class="form-control form-control-sm ram-qty" value="${qty}" min="1" max="64" oninput="updateRamTotal()" /></td>
     <td><button type="button" class="btn btn-sm btn-outline-danger py-0" onclick="this.closest('tr').remove(); updateRamTotal()"><i class="bi bi-x"></i></button></td>
   `;
   body.appendChild(tr);
@@ -261,23 +276,33 @@ function confirmRam() {
   const config = parts.join(', ');
   document.getElementById(`ram_total_${activeRowIdx}`).value = total;
   document.getElementById(`ram_config_${activeRowIdx}`).value = config;
-  document.getElementById(`ram_label_${activeRowIdx}`).textContent = config || '미입력';
+  document.getElementById(`ram_label_${activeRowIdx}`).textContent = config ? `${config} (${total}GB)` : '미입력';
   document.getElementById(`ram_label_${activeRowIdx}`).classList.toggle('text-muted', !config);
   bootstrap.Modal.getInstance(document.getElementById('ramModal')).hide();
 }
 
 // ─── 스토리지 모달 ─────────────────────────────────────
+// 인터페이스(SAS/SATA/NVMe) + 매체(HDD/SSD) 분리
+// config 형식: "2.4TB SAS HDD×4, 960GB SATA SSD×2, 3.84TB NVMe SSD×1"
 function openStorageModal(idx) {
   activeRowIdx = idx;
   const body = document.getElementById('storageRowBody');
   body.innerHTML = '';
   const existing = document.getElementById(`storage_config_${idx}`).value;
   if (existing) {
-    // "2TB HDD×3, 960GB SSD×1" 형태 파싱
     existing.split(',').forEach(part => {
-      const m = part.trim().match(/^(\d+)(GB|TB)\s+(HDD|SSD|NVMe)×(\d+)$/);
-      if (m) addStorageRow(m[3], m[1], m[2], parseInt(m[4]));
-      else addStorageRow();
+      // 새 형식: "2.4TB SAS HDD×4"
+      const m = part.trim().match(/^([\d.]+)(GB|TB)\s+(SAS|SATA|NVMe)\s+(HDD|SSD)×(\d+)$/);
+      if (m) addStorageRow(m[3], m[4], m[1], m[2], parseInt(m[5]));
+      else {
+        // 구 형식 호환: "2TB HDD×3"
+        const old = part.trim().match(/^([\d.]+)(GB|TB)\s+(HDD|SSD|NVMe)×(\d+)$/);
+        if (old) {
+          const iface = old[3] === 'NVMe' ? 'NVMe' : 'SAS';
+          const media = old[3] === 'HDD' ? 'HDD' : 'SSD';
+          addStorageRow(iface, media, old[1], old[2], parseInt(old[4]));
+        } else addStorageRow();
+      }
     });
   } else {
     addStorageRow();
@@ -285,36 +310,63 @@ function openStorageModal(idx) {
   new bootstrap.Modal(document.getElementById('storageModal')).show();
 }
 
-function addStorageRow(type = 'HDD', cap = '', unit = 'TB', qty = 1) {
+function addStorageRow(iface = 'SAS', media = 'HDD', cap = '', unit = 'TB', qty = 1) {
   const body = document.getElementById('storageRowBody');
   const tr = document.createElement('tr');
+  const ifaceOpts = ['SAS','SATA','NVMe'].map(v =>
+    `<option value="${v}"${v===iface?' selected':''}>${v}</option>`).join('');
+  const mediaOpts = ['HDD','SSD'].map(v =>
+    `<option value="${v}"${v===media?' selected':''}>${v}</option>`).join('');
   tr.innerHTML = `
     <td>
-      <select class="form-select form-select-sm st-type">
-        ${['HDD','SSD','NVMe'].map(t => `<option${t===type?' selected':''}>${t}</option>`).join('')}
+      <select class="form-select form-select-sm st-iface" onchange="onIfaceChange(this)">
+        ${ifaceOpts}
       </select>
     </td>
-    <td><input type="number" class="form-control form-control-sm st-cap" value="${cap}" min="1" placeholder="예: 2" /></td>
+    <td>
+      <select class="form-select form-select-sm st-media">
+        ${mediaOpts}
+      </select>
+    </td>
+    <td><input type="number" class="form-control form-control-sm st-cap" value="${cap}" min="0.1" step="0.1" placeholder="예: 2.4" /></td>
     <td>
       <select class="form-select form-select-sm st-unit">
-        <option${unit==='GB'?' selected':''}>GB</option>
-        <option${unit==='TB'?' selected':''}>TB</option>
+        <option value="GB"${unit==='GB'?' selected':''}>GB</option>
+        <option value="TB"${unit==='TB'?' selected':''}>TB</option>
       </select>
     </td>
     <td><input type="number" class="form-control form-control-sm st-qty" value="${qty}" min="1" /></td>
     <td><button type="button" class="btn btn-sm btn-outline-danger py-0" onclick="this.closest('tr').remove()"><i class="bi bi-x"></i></button></td>
   `;
   body.appendChild(tr);
+  // NVMe는 항상 SSD
+  if (iface === 'NVMe') {
+    const sel = tr.querySelector('.st-media');
+    sel.value = 'SSD';
+    sel.disabled = true;
+  }
+}
+
+function onIfaceChange(sel) {
+  const tr = sel.closest('tr');
+  const mediaSel = tr.querySelector('.st-media');
+  if (sel.value === 'NVMe') {
+    mediaSel.value = 'SSD';
+    mediaSel.disabled = true;
+  } else {
+    mediaSel.disabled = false;
+  }
 }
 
 function confirmStorage() {
   const parts = [];
   document.querySelectorAll('#storageRowBody tr').forEach(tr => {
-    const type = tr.querySelector('.st-type').value;
-    const cap  = tr.querySelector('.st-cap').value;
-    const unit = tr.querySelector('.st-unit').value;
-    const qty  = parseInt(tr.querySelector('.st-qty').value || 0);
-    if (cap && qty > 0) parts.push(`${cap}${unit} ${type}×${qty}`);
+    const iface = tr.querySelector('.st-iface').value;
+    const media = tr.querySelector('.st-media').value;
+    const cap   = tr.querySelector('.st-cap').value;
+    const unit  = tr.querySelector('.st-unit').value;
+    const qty   = parseInt(tr.querySelector('.st-qty').value || 0);
+    if (cap && qty > 0) parts.push(`${cap}${unit} ${iface} ${media}×${qty}`);
   });
   const config = parts.join(', ');
   document.getElementById(`storage_config_${activeRowIdx}`).value = config;
