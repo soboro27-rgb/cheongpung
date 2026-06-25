@@ -99,7 +99,8 @@ def seed():
         print("- 고객사 카카오 이미 존재")
 
     # ── 고객사 관리자 계정 ───────────────────
-    if not db.query(models.User).filter(models.User.login_id == "customer1").first():
+    existing_c1 = db.query(models.User).filter(models.User.login_id == "customer1").first()
+    if not existing_c1:
         db.add(models.User(
             login_id="customer1",
             password_hash=_hash("customer1234"),
@@ -109,6 +110,20 @@ def seed():
             customer_id=customer.id,
         ))
         print("✓ customer1 계정 생성")
+    elif existing_c1.customer_id is None:
+        existing_c1.customer_id = customer.id
+        existing_c1.dealer_id = dealer.id
+        print("✓ customer1 customer_id 업데이트")
+
+    # ── customer_id 누락된 고객사 역할 유저 일괄 보정 ──
+    orphan_users = db.query(models.User).filter(
+        models.User.role.in_([UserRole.CUSTOMER_ADMIN, UserRole.CUSTOMER_STAFF]),
+        models.User.customer_id == None,
+    ).all()
+    for u in orphan_users:
+        u.customer_id = customer.id
+        u.dealer_id = dealer.id
+        print(f"✓ {u.login_id} customer_id 보정")
 
     # ── WM 수거기사 계정 ─────────────────────
     if not db.query(models.User).filter(models.User.login_id == "collector1").first():
