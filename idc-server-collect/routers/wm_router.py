@@ -369,6 +369,28 @@ async def set_schedule(request: Request, app_id: int, db: Session = Depends(get_
     return RedirectResponse(f"/wm/applications/{app_id}", status_code=302)
 
 
+@router.post("/applications/{app_id}/estimated-price")
+async def save_estimated_price(request: Request, app_id: int, db: Session = Depends(get_db)):
+    """수거 전 예정단가 저장 (received/scheduled 상태)"""
+    u, redir = _check(request)
+    if redir: return redir
+    form = await request.form()
+    app = db.query(models.Application).filter(
+        models.Application.id == app_id,
+        models.Application.status.in_([AppStatus.RECEIVED, AppStatus.SCHEDULED]),
+    ).first()
+    if app:
+        for asset in app.assets:
+            raw = form.get(f"eprice_{asset.id}", "")
+            try:
+                asset.unit_price_estimated = float(str(raw).replace(",", "") or 0)
+            except ValueError:
+                pass
+        app.updated_at = datetime.now()
+        db.commit()
+    return RedirectResponse(f"/wm/applications/{app_id}", status_code=302)
+
+
 @router.post("/applications/{app_id}/collect")
 def mark_collected(request: Request, app_id: int, db: Session = Depends(get_db)):
     u, redir = _check(request)
