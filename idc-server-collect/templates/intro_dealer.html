@@ -162,6 +162,50 @@
       color: var(--orange); font-weight: 700;
     }
 
+    /* 파트너 등급 버튼 */
+    .tier-btn {
+      flex: 1; padding: .55rem .4rem; text-align: center;
+      border-radius: .5rem; cursor: pointer; font-size: .78rem;
+      color: var(--sub); transition: all .15s; user-select: none;
+      border: 1px solid var(--border); background: var(--bg3);
+    }
+    .tier-btn .tier-name { font-weight: 700; margin-bottom: .2rem; font-size: .82rem; }
+    .tier-btn .tier-rate { font-size: .95rem; font-weight: 900; }
+    .tier-btn[data-tier="bronze"].active { background:rgba(205,127,50,.15); border-color:#cd7f32; color:#cd7f32; }
+    .tier-btn[data-tier="silver"].active { background:rgba(148,163,184,.15); border-color:#94a3b8; color:#e2e8f0; }
+    .tier-btn[data-tier="gold"].active   { background:rgba(251,191,36,.15); border-color:#fbbf24; color:#fbbf24; }
+
+    /* 등급표 */
+    .tier-table-row {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem; margin-top: 1.5rem;
+    }
+    .tier-col {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 1.1rem; padding: 1.8rem; text-align: center;
+      transition: border-color .2s, transform .2s;
+    }
+    .tier-col:hover { transform: translateY(-3px); }
+    .tier-col.bronze { border-color: rgba(205,127,50,.3); }
+    .tier-col.silver { border-color: rgba(148,163,184,.3); }
+    .tier-col.gold   { border-color: rgba(251,191,36,.4); box-shadow: 0 0 30px rgba(251,191,36,.08); }
+    .tier-badge {
+      display: inline-block; padding: .3rem 1rem; border-radius: 2rem;
+      font-size: .72rem; font-weight: 700; letter-spacing: .6px; margin-bottom: 1rem;
+    }
+    .bronze .tier-badge { background:rgba(205,127,50,.15); border:1px solid rgba(205,127,50,.4); color:#cd7f32; }
+    .silver .tier-badge { background:rgba(148,163,184,.15); border:1px solid rgba(148,163,184,.4); color:#e2e8f0; }
+    .gold   .tier-badge { background:rgba(251,191,36,.15);  border:1px solid rgba(251,191,36,.4);  color:#fbbf24; }
+    .tier-col .rate { font-size: 2.6rem; font-weight: 900; line-height: 1; margin-bottom: .3rem; }
+    .bronze .rate { color: #cd7f32; }
+    .silver .rate { color: #e2e8f0; }
+    .gold   .rate { color: #fbbf24; }
+    .tier-col .rate-label { font-size: .75rem; color: var(--sub); margin-bottom: 1.2rem; }
+    .tier-col ul { list-style: none; padding: 0; text-align: left; }
+    .tier-col ul li { font-size: .82rem; color: var(--sub); padding: .4rem 0; border-bottom: 1px solid var(--border); display: flex; gap: .5rem; }
+    .tier-col ul li:last-child { border-bottom: none; }
+    .tier-col ul li i { flex-shrink: 0; margin-top: .1rem; }
+
     /* 결과 */
     .result-box {
       background: linear-gradient(135deg,rgba(249,115,22,.12),rgba(251,191,36,.06));
@@ -362,7 +406,7 @@
           <!-- 서버 등급 선택 -->
           <div class="slider-row">
             <div class="label-line">
-              <span class="lbl">평균 서버 등급</span>
+              <span class="lbl">평균 서버 단가</span>
               <span id="gradePrice" style="font-size:.82rem; color:var(--sub);">대당 700,000원</span>
             </div>
             <div class="grade-select" id="gradeSelect">
@@ -381,11 +425,33 @@
             </div>
           </div>
 
+          <!-- 파트너 등급 선택 -->
+          <div class="slider-row">
+            <div class="label-line">
+              <span class="lbl">파트너 등급</span>
+              <span id="tierLabel" style="font-size:.82rem; color:var(--sub);">브론즈 · 5%</span>
+            </div>
+            <div class="grade-select" id="tierSelect">
+              <div class="tier-btn active" data-tier="bronze" data-rate="0.05" onclick="selectTier(this)">
+                <div class="tier-name">🥉 브론즈</div>
+                <div class="tier-rate">5%</div>
+              </div>
+              <div class="tier-btn" data-tier="silver" data-rate="0.07" onclick="selectTier(this)">
+                <div class="tier-name">🥈 실버</div>
+                <div class="tier-rate">7%</div>
+              </div>
+              <div class="tier-btn" data-tier="gold" data-rate="0.09" onclick="selectTier(this)">
+                <div class="tier-name">🥇 골드</div>
+                <div class="tier-rate">9%</div>
+              </div>
+            </div>
+          </div>
+
           <!-- 결과 -->
           <div class="result-box">
             <div class="result-label">예상 연간 수수료 수익</div>
             <div class="result-num" id="resultAnnual">28,000,000원</div>
-            <div class="result-sub">수수료율 5% 기준 · 고객사당 1회 처리 시</div>
+            <div class="result-sub" id="resultSub">수수료율 5% (브론즈) 기준 · 고객사당 1회 처리 시</div>
           </div>
           <div class="result-row">
             <div class="result-mini">
@@ -421,8 +487,8 @@
         <div class="lbl">딜러 초기 투자</div>
       </div>
       <div class="col-6 col-md-3 stat-item">
-        <div class="num">5%</div>
-        <div class="lbl">딜러 기본 수수료율</div>
+        <div class="num">5~9%</div>
+        <div class="lbl">파트너 등급별 수수료율</div>
       </div>
       <div class="col-6 col-md-3 stat-item">
         <div class="num">100%</div>
@@ -435,6 +501,68 @@
     </div>
   </div>
 </div>
+
+<!-- 파트너 등급표 -->
+<section class="py-5" style="background:var(--bg); border-bottom:1px solid var(--border);">
+  <div class="container">
+    <div class="text-center mb-2">
+      <div class="sec-label">PARTNER TIER</div>
+      <h2 class="sec-title">파트너 등급 수수료</h2>
+      <p class="sec-sub" style="max-width:480px; margin-inline:auto;">
+        매각 금액(매입가) 기준으로 딜러 수수료가 정산됩니다.<br>
+        처리 실적이 쌓이면 등급이 올라갑니다.
+      </p>
+    </div>
+    <div class="tier-table-row">
+
+      <!-- 브론즈 -->
+      <div class="tier-col bronze">
+        <div class="tier-badge">🥉 BRONZE</div>
+        <div class="rate">5%</div>
+        <div class="rate-label">매입금액 기준</div>
+        <ul>
+          <li><i class="bi bi-check2 text-success"></i>파트너 가입 즉시 적용</li>
+          <li><i class="bi bi-check2 text-success"></i>실적 조건 없음</li>
+          <li><i class="bi bi-check2 text-success"></i>딜러 대시보드 제공</li>
+          <li><i class="bi bi-check2 text-success"></i>파기 인증서 발행</li>
+          <li><i class="bi bi-dash" style="color:var(--sub);"></i>전담 매니저 없음</li>
+        </ul>
+      </div>
+
+      <!-- 실버 -->
+      <div class="tier-col silver">
+        <div class="tier-badge">🥈 SILVER</div>
+        <div class="rate">7%</div>
+        <div class="rate-label">매입금액 기준</div>
+        <ul>
+          <li><i class="bi bi-check2 text-success"></i>연간 누적 처리 5건 이상</li>
+          <li><i class="bi bi-check2 text-success"></i>전담 매니저 배정</li>
+          <li><i class="bi bi-check2 text-success"></i>딜러 대시보드 제공</li>
+          <li><i class="bi bi-check2 text-success"></i>파기 인증서 발행</li>
+          <li><i class="bi bi-check2 text-success"></i>우선 수거 일정 배정</li>
+        </ul>
+      </div>
+
+      <!-- 골드 -->
+      <div class="tier-col gold">
+        <div class="tier-badge">🥇 GOLD</div>
+        <div class="rate">9%</div>
+        <div class="rate-label">매입금액 기준</div>
+        <ul>
+          <li><i class="bi bi-check2 text-success"></i>연간 누적 처리 20건 이상</li>
+          <li><i class="bi bi-check2 text-success"></i>전담 매니저 배정</li>
+          <li><i class="bi bi-check2 text-success"></i>딜러 대시보드 제공</li>
+          <li><i class="bi bi-check2 text-success"></i>파기 인증서 발행</li>
+          <li><i class="bi bi-check2 text-success"></i>최우선 수거 일정 배정</li>
+        </ul>
+      </div>
+
+    </div>
+    <p style="text-align:center; font-size:.75rem; color:var(--sub); margin-top:1.2rem;">
+      * 등급 산정 기준 및 수수료율은 계약 조건에 따라 조정될 수 있습니다.
+    </p>
+  </div>
+</section>
 
 <!-- 페인포인트 → 해결 -->
 <section class="py-5" style="background:var(--bg);">
@@ -617,6 +745,9 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   let selectedPrice = 700000;
+  let selectedRate  = 0.05;
+
+  const tierNames = { '0.05':'브론즈', '0.07':'실버', '0.09':'골드' };
 
   function selectGrade(el) {
     document.querySelectorAll('.grade-btn').forEach(b => b.classList.remove('active'));
@@ -624,6 +755,16 @@
     selectedPrice = parseInt(el.dataset.price);
     const labels = {300000:'대당 300,000원', 700000:'대당 700,000원', 1500000:'대당 1,500,000원'};
     document.getElementById('gradePrice').textContent = labels[selectedPrice];
+    updateCalc();
+  }
+
+  function selectTier(el) {
+    document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    selectedRate = parseFloat(el.dataset.rate);
+    const pct = Math.round(selectedRate * 100);
+    const name = tierNames[String(selectedRate)] || '';
+    document.getElementById('tierLabel').textContent = `${name} · ${pct}%`;
     updateCalc();
   }
 
@@ -655,7 +796,7 @@
     document.getElementById('valCustomers').innerHTML = `${c}<span style="font-size:.75rem; color:var(--sub); font-weight:400;"> 개사</span>`;
     document.getElementById('valServers').innerHTML = `${s}<span style="font-size:.75rem; color:var(--sub); font-weight:400;"> 대</span>`;
 
-    const perDeal = s * selectedPrice * 0.05;
+    const perDeal = s * selectedPrice * selectedRate;
     const annual  = c * perDeal;
     const monthly = annual / 12;
 
@@ -664,6 +805,9 @@
     document.getElementById('resultPerDeal').textContent = fmt(perDeal);
     document.getElementById('resultTotal').textContent = c + '개사';
     document.getElementById('resultMonthly').textContent = fmt(monthly);
+    const pct  = Math.round(selectedRate * 100);
+    const name = tierNames[String(selectedRate)] || '';
+    document.getElementById('resultSub').textContent = `수수료율 ${pct}% (${name}) 기준 · 고객사당 1회 처리 시`;
   }
 
   // 슬라이더 채우기 효과
