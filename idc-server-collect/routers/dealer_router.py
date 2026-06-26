@@ -7,6 +7,7 @@ from models import AppStatus
 from auth import require_dealer
 from config import templates
 from datetime import datetime
+import bcrypt
 
 router = APIRouter()
 
@@ -116,6 +117,78 @@ def customer_detail(request: Request, customer_id: int, db: Session = Depends(ge
     users = db.query(models.User).filter(models.User.customer_id == customer_id).all()
     return templates.TemplateResponse(request, "dealer/customer_detail.html", {"session": request.session,
         "customer": customer, "applications": apps, "users": users})
+
+
+# ─── 고객사 계정 생성 ─────────────────────────────────
+
+@router.post("/customers/{customer_id}/users")
+async def customer_user_create(request: Request, customer_id: int, db: Session = Depends(get_db)):
+    u, redir = _check(request)
+    if redir: return redir
+    if u["role"] != "dealer_admin":
+        return RedirectResponse(f"/dealer/customers/{customer_id}", status_code=302)
+
+    dealer_id = u["dealer_id"]
+    customer = db.query(models.Customer).filter(
+        models.Customer.id == customer_id,
+        models.Customer.dealer_id == dealer_id,
+    ).first()
+    if not customer:
+        return RedirectResponse("/dealer/customers", status_code=302)
+
+    form = await request.form()
+    login_id = form.get("login_id", "").strip()
+    password = form.get("password", "").strip()
+    name     = form.get("name", "").strip()
+    role_str = form.get("role", "customer_admin")
+
+    if role_str not in ("customer_admin", "customer_staff"):
+        role_str = "customer_admin"
+
+    if not login_id or not password or not name:
+        return RedirectResponse(f"/dealer/customers/{customer_id}?error=required", status_code=302)
+
+    if db.query(models.User).filter(models.User.login_id == login_id).first():
+        return RedirectResponse(f"/dealer/customers/{customer_id}?error=duplicate", status_code=302)
+
+    pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    db.add(models.User(
+        login_id=login_id,
+        password_hash=pw_hash,
+        name=name,
+        role=models.UserRole(role_str),
+        customer_id=customer_id,
+        dealer_id=None,
+    ))
+    db.commit()
+    return RedirectResponse(f"/dealer/customers/{customer_id}?success=1", status_code=302)
+
+
+# ─── 고객사 계정 비활성화 ──────────────────────────────
+
+@router.post("/customers/{customer_id}/users/{user_id}/toggle")
+async def customer_user_toggle(request: Request, customer_id: int, user_id: int, db: Session = Depends(get_db)):
+    u, redir = _check(request)
+    if redir: return redir
+    if u["role"] != "dealer_admin":
+        return RedirectResponse(f"/dealer/customers/{customer_id}", status_code=302)
+
+    dealer_id = u["dealer_id"]
+    customer = db.query(models.Customer).filter(
+        models.Customer.id == customer_id,
+        models.Customer.dealer_id == dealer_id,
+    ).first()
+    if not customer:
+        return RedirectResponse("/dealer/customers", status_code=302)
+
+    usr = db.query(models.User).filter(
+        models.User.id == user_id,
+        models.User.customer_id == customer_id,
+    ).first()
+    if usr:
+        usr.is_active = not usr.is_active
+        db.commit()
+    return RedirectResponse(f"/dealer/customers/{customer_id}", status_code=302)
 
 
 # ─── 신청 목록 ─────────────────────────────────────────
