@@ -4,29 +4,29 @@
 {% block breadcrumb %}{{ dealer_medal(session.dealer_fee_type, session.dealer_fee_value) }} {{ session.dealer_name }}{% endblock %}
 
 {% block content %}
-<div class="row g-3 mb-4">
-  <div class="col-6 col-lg-3">
-    <div class="card text-center p-3">
-      <div class="text-muted small mb-1">전체 신청</div>
-      <div class="fs-3 fw-bold text-primary">{{ total }}</div>
+<div class="row g-2 g-md-3 mb-3 mb-md-4">
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3 px-2">
+      <div class="text-muted mb-1" style="font-size:.75rem">전체 신청</div>
+      <div class="fw-bold text-primary" style="font-size:1.75rem;line-height:1.1">{{ total }}</div>
     </div>
   </div>
-  <div class="col-6 col-lg-3">
-    <div class="card text-center p-3">
-      <div class="text-muted small mb-1">처리 대기</div>
-      <div class="fs-3 fw-bold text-warning">{{ pending }}</div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3 px-2">
+      <div class="text-muted mb-1" style="font-size:.75rem">처리 대기</div>
+      <div class="fw-bold text-warning" style="font-size:1.75rem;line-height:1.1">{{ pending }}</div>
     </div>
   </div>
-  <div class="col-6 col-lg-3">
-    <div class="card text-center p-3">
-      <div class="text-muted small mb-1">진행 중</div>
-      <div class="fs-3 fw-bold text-info">{{ in_prog }}</div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3 px-2">
+      <div class="text-muted mb-1" style="font-size:.75rem">진행 중</div>
+      <div class="fw-bold text-info" style="font-size:1.75rem;line-height:1.1">{{ in_prog }}</div>
     </div>
   </div>
-  <div class="col-6 col-lg-3">
-    <div class="card text-center p-3">
-      <div class="text-muted small mb-1">완료</div>
-      <div class="fs-3 fw-bold text-success">{{ done }}</div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3 px-2">
+      <div class="text-muted mb-1" style="font-size:.75rem">완료</div>
+      <div class="fw-bold text-success" style="font-size:1.75rem;line-height:1.1">{{ done }}</div>
     </div>
   </div>
 </div>
