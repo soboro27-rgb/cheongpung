@@ -27,7 +27,7 @@
       <div class="card-body small">
         <dl class="row mb-0">
           <dt class="col-5 text-muted">고객사</dt><dd class="col-7">{{ app.customer.name if app.customer else '-' }}</dd>
-          <dt class="col-5 text-muted">딜러</dt><dd class="col-7">{{ app.dealer.name if app.dealer else '-' }}</dd>
+          <dt class="col-5 text-muted">딜러</dt><dd class="col-7">{% if app.dealer %}{{ dealer_medal(app.dealer.fee_type.value, app.dealer.fee_value) }} {{ app.dealer.name }}{% else %}-{% endif %}</dd>
           <dt class="col-5 text-muted">IDC 센터</dt><dd class="col-7">{{ app.idc_center.name if app.idc_center else '-' }}</dd>
           <dt class="col-5 text-muted">현장 담당자</dt><dd class="col-7">{{ app.contact_name or '-' }}</dd>
           <dt class="col-5 text-muted">연락처</dt><dd class="col-7">{{ app.contact_phone or '-' }}</dd>

@@ -56,7 +56,7 @@
     {% if role in ("super_admin","wm_collector","wm_inspector") %}
     <small>WorldMemory</small>
     {% elif role in ("dealer_admin","dealer_staff") %}
-    <small>{{ session.dealer_name }}</small>
+    <small>{{ dealer_medal(session.dealer_fee_type, session.dealer_fee_value) }} {{ session.dealer_name }}</small>
     {% else %}
     <small>{{ session.customer_name }}</small>
     {% endif %}

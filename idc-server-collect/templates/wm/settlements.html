@@ -61,7 +61,7 @@
         <tr>
           <td>#{{ app.id if app else '-' }}</td>
           <td>{{ app.customer.name if app and app.customer else '-' }}</td>
-          <td>{{ app.dealer.name if app and app.dealer else '-' }}</td>
+          <td>{% if app and app.dealer %}{{ dealer_medal(app.dealer.fee_type.value, app.dealer.fee_value) }} {{ app.dealer.name }}{% else %}-{% endif %}</td>
           <td>
             {% if s.settlement_type.value == 'direct' %}
             <span class="badge bg-success">직지급</span>

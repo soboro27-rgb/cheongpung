@@ -1,7 +1,7 @@
 {% extends "wm/base_wm.html" %}
 {% block title %}{{ dealer.name }} — 딜러 상세{% endblock %}
-{% block page_title %}<i class="bi bi-briefcase me-2"></i>{{ dealer.name }}{% endblock %}
-{% block breadcrumb %}<a href="/wm/dealers">딜러 목록</a> / {{ dealer.name }}{% endblock %}
+{% block page_title %}<i class="bi bi-briefcase me-2"></i>{{ dealer_medal(dealer.fee_type.value, dealer.fee_value) }} {{ dealer.name }}{% endblock %}
+{% block breadcrumb %}<a href="/wm/dealers">딜러 목록</a> / {{ dealer_medal(dealer.fee_type.value, dealer.fee_value) }} {{ dealer.name }}{% endblock %}
 
 {% block content %}
 <div class="row g-3">
@@ -10,7 +10,7 @@
       <div class="card-header fw-semibold small">딜러 정보</div>
       <div class="card-body small">
         <dl class="row mb-0">
-          <dt class="col-5 text-muted">딜러명</dt><dd class="col-7">{{ dealer.name }}</dd>
+          <dt class="col-5 text-muted">딜러명</dt><dd class="col-7">{{ dealer_medal(dealer.fee_type.value, dealer.fee_value) }} {{ dealer.name }}</dd>
           <dt class="col-5 text-muted">딜러코드</dt><dd class="col-7"><code>{{ dealer.dealer_code }}</code></dd>
           <dt class="col-5 text-muted">사업자번호</dt><dd class="col-7">{{ dealer.business_no or '-' }}</dd>
           <dt class="col-5 text-muted">담당자</dt><dd class="col-7">{{ dealer.manager_name or '-' }}</dd>

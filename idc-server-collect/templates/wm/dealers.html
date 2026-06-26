@@ -64,7 +64,7 @@
       <tbody>
         {% for d in dealers %}
         <tr>
-          <td class="fw-semibold">{{ d.name }}</td>
+          <td class="fw-semibold">{{ dealer_medal(d.fee_type.value, d.fee_value) }} {{ d.name }}</td>
           <td><code>{{ d.dealer_code }}</code></td>
           <td>{{ d.business_no or '-' }}</td>
           <td>{{ d.manager_name or '-' }}<br><small class="text-muted">{{ d.manager_phone or '' }}</small></td>

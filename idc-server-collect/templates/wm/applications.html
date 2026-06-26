@@ -41,7 +41,7 @@
         <tr>
           <td>#{{ app.id }}</td>
           <td>{{ app.customer.name if app.customer else '-' }}</td>
-          <td>{{ app.dealer.name if app.dealer else '-' }}</td>
+          <td>{% if app.dealer %}{{ dealer_medal(app.dealer.fee_type.value, app.dealer.fee_value) }} {{ app.dealer.name }}{% else %}-{% endif %}</td>
           <td>{{ app.idc_center.name if app.idc_center else '-' }}</td>
           <td>
             <span class="badge bg-{{ STATUS_COLOR.get(app.status.value,'secondary') }} badge-status">

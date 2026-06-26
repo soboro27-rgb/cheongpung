@@ -50,8 +50,25 @@ FORM_FACTORS = ["1U", "2U", "4U", "타워", "블레이드", "기타"]
 CONDITION_GRADES = ["상", "중", "하"]
 SERVER_CATEGORIES = ["서버", "스토리지", "네트워크장비", "기타"]
 
+def dealer_medal(fee_type=None, fee_value=None) -> str:
+    """수수료율에 따른 메달 이모지 반환 (% 타입 전용)"""
+    if fee_type != "percent":
+        return ""
+    try:
+        fv = float(fee_value or 0)
+    except (TypeError, ValueError):
+        return ""
+    if fv >= 9:
+        return "🥇"
+    elif fv >= 7:
+        return "🥈"
+    elif fv >= 5:
+        return "🥉"
+    return ""
+
 templates.env.globals["STATUS_LABEL"]  = STATUS_LABEL
 templates.env.globals["STATUS_COLOR"]  = STATUS_COLOR
 templates.env.globals["STATUS_ORDER"]  = STATUS_ORDER
 templates.env.globals["ROLE_LABEL"]    = ROLE_LABEL
 templates.env.globals["FORM_FACTORS"]  = FORM_FACTORS
+templates.env.globals["dealer_medal"]  = dealer_medal

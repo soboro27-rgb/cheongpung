@@ -67,7 +67,7 @@
         <tr>
           <td class="fw-semibold">{{ c.name }}</td>
           <td><code>{{ c.customer_code }}</code></td>
-          <td>{{ c.dealer.name if c.dealer else '-' }}</td>
+          <td>{% if c.dealer %}{{ dealer_medal(c.dealer.fee_type.value, c.dealer.fee_value) }} {{ c.dealer.name }}{% else %}-{% endif %}</td>
           <td>{{ c.manager_name or '-' }}<br><small class="text-muted">{{ c.manager_phone or '' }}</small></td>
           <td>{{ c.default_idc.name if c.default_idc else '-' }}</td>
           <td class="text-muted">{{ c.created_at.strftime('%Y.%m.%d') }}</td>

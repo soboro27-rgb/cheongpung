@@ -1,7 +1,7 @@
 {% extends "dealer/base_dealer.html" %}
 {% block title %}딜러 대시보드{% endblock %}
 {% block page_title %}<i class="bi bi-speedometer2 me-2"></i>대시보드{% endblock %}
-{% block breadcrumb %}{{ session.dealer_name }}{% endblock %}
+{% block breadcrumb %}{{ dealer_medal(session.dealer_fee_type, session.dealer_fee_value) }} {{ session.dealer_name }}{% endblock %}
 
 {% block content %}
 <div class="row g-3 mb-4">
