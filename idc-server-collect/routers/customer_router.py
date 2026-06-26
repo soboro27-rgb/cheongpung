@@ -172,7 +172,31 @@ def app_detail(request: Request, app_id: int, db: Session = Depends(get_db)):
     if not app:
         return RedirectResponse("/customer/applications", status_code=302)
     has_estimated = any(a.unit_price_estimated > 0 for a in app.assets)
-    return templates.TemplateResponse(request, "customer/application_detail.html", {"session": request.session, "app": app, "has_estimated": has_estimated})
+
+    # 딜러 수수료 적용 후 고객 지급 단가 계산
+    dealer = app.dealer
+    asset_net_prices = {}
+    for a in app.assets:
+        if dealer and dealer.fee_type.value == "percent":
+            ratio = 1 - dealer.fee_value / 100
+            net_est  = a.unit_price_estimated * ratio
+            net_conf = a.unit_price_confirmed * ratio
+        elif dealer and dealer.fee_type.value == "fixed":
+            total_est  = sum(x.unit_price_estimated * x.quantity for x in app.assets) or 1
+            total_conf = sum(x.unit_price_confirmed  * x.quantity for x in app.assets) or 1
+            net_est  = a.unit_price_estimated - dealer.fee_value * (a.unit_price_estimated / total_est)
+            net_conf = a.unit_price_confirmed  - dealer.fee_value * (a.unit_price_confirmed  / total_conf)
+        else:
+            net_est  = a.unit_price_estimated
+            net_conf = a.unit_price_confirmed
+        asset_net_prices[a.id] = {"estimated": max(net_est, 0), "confirmed": max(net_conf, 0)}
+
+    return templates.TemplateResponse(request, "customer/application_detail.html", {
+        "session": request.session,
+        "app": app,
+        "has_estimated": has_estimated,
+        "asset_net_prices": asset_net_prices,
+    })
 
 
 @router.post("/applications/{app_id}/approve")

@@ -43,9 +43,7 @@
       <div class="card-header fw-semibold small">정산 정보</div>
       <div class="card-body small">
         <dl class="row mb-0">
-          <dt class="col-6 text-muted">매입 합계</dt>
-          <dd class="col-6 fw-bold">{{ '{:,}'.format(app.settlement.total_amount|int) }}원</dd>
-          <dt class="col-6 text-muted">수령 금액</dt>
+          <dt class="col-6 text-muted">지급 금액</dt>
           <dd class="col-6 fw-bold text-success">{{ '{:,}'.format(app.settlement.customer_amount|int) }}원</dd>
         </dl>
       </div>
@@ -112,11 +110,12 @@
               </td>
               {% if show_estimated %}
               <td class="text-end fw-bold text-primary">
-                {% if a.unit_price_estimated %}{{ '{:,}'.format(a.unit_price_estimated|int) }}원{% else %}-{% endif %}
+                {% set net = asset_net_prices[a.id]['estimated'] %}
+                {% if net > 0 %}{{ '{:,}'.format(net|int) }}원{% else %}-{% endif %}
               </td>
               {% endif %}
               {% if show_confirmed %}
-              <td class="text-end fw-bold">{{ '{:,}'.format(a.unit_price_confirmed|int) }}원</td>
+              <td class="text-end fw-bold">{{ '{:,}'.format(asset_net_prices[a.id]['confirmed']|int) }}원</td>
               {% endif %}
             </tr>
             {% else %}
