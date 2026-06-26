@@ -27,7 +27,7 @@
 
     {% if app.schedule %}
     <div class="card mb-3">
-      <div class="card-header fw-semibold small">수거 일정</div>
+      <div class="card-header fw-semibold small">배송일정</div>
       <div class="card-body small">
         <dl class="row mb-0">
           <dt class="col-5 text-muted">일정</dt><dd class="col-7">{{ app.schedule.visit_date }} {{ app.schedule.visit_time }}</dd>
@@ -83,13 +83,15 @@
       <div class="card-header fw-semibold small">서버 자산 목록 ({{ app.assets|length }}대)</div>
       <div class="table-responsive">
         <table class="table table-hover mb-0">
+          {% set confirmed_statuses = ('quoted','approved','wiped','settled','closed') %}
+          {% set show_estimated = has_estimated and app.status.value not in confirmed_statuses %}
+          {% set show_confirmed = app.status.value in confirmed_statuses %}
           <thead>
             <tr>
               <th>#</th><th>제조사/모델</th><th>CPU</th><th>RAM</th>
-              <th>S/N</th><th>랙위치</th><th>수량</th><th>등급</th>
-              {% if app.status.value in ('quoted','approved','wiped','settled','closed') %}
-              <th class="text-end">확정단가</th>
-              {% endif %}
+              <th>수량</th><th>등급</th>
+              {% if show_estimated %}<th class="text-end">예상단가</th>{% endif %}
+              {% if show_confirmed %}<th class="text-end">확정단가</th>{% endif %}
             </tr>
           </thead>
           <tbody>
@@ -102,20 +104,23 @@
               </td>
               <td class="small">{{ a.cpu_count }}×{{ a.cpu_model or '-' }}</td>
               <td class="small">{{ a.ram_total_gb }}GB</td>
-              <td class="small text-muted">{{ a.serial_number or '-' }}</td>
-              <td class="small text-muted">{{ a.rack_location or '-' }}</td>
               <td>{{ a.quantity }}</td>
               <td>
                 <span class="badge {% if a.condition_grade == '상' %}bg-success{% elif a.condition_grade == '중' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
                   {{ a.condition_grade }}
                 </span>
               </td>
-              {% if app.status.value in ('quoted','approved','wiped','settled','closed') %}
+              {% if show_estimated %}
+              <td class="text-end fw-bold text-primary">
+                {% if a.unit_price_estimated %}{{ '{:,}'.format(a.unit_price_estimated|int) }}원{% else %}-{% endif %}
+              </td>
+              {% endif %}
+              {% if show_confirmed %}
               <td class="text-end fw-bold">{{ '{:,}'.format(a.unit_price_confirmed|int) }}원</td>
               {% endif %}
             </tr>
             {% else %}
-            <tr><td colspan="9" class="text-center text-muted py-3">자산 없음</td></tr>
+            <tr><td colspan="{{ 6 + (1 if show_estimated else 0) + (1 if show_confirmed else 0) }}" class="text-center text-muted py-3">자산 없음</td></tr>
             {% endfor %}
           </tbody>
         </table>

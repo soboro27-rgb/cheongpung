@@ -171,7 +171,8 @@ def app_detail(request: Request, app_id: int, db: Session = Depends(get_db)):
     ).first()
     if not app:
         return RedirectResponse("/customer/applications", status_code=302)
-    return templates.TemplateResponse(request, "customer/application_detail.html", {"session": request.session, "app": app})
+    has_estimated = any(a.unit_price_estimated > 0 for a in app.assets)
+    return templates.TemplateResponse(request, "customer/application_detail.html", {"session": request.session, "app": app, "has_estimated": has_estimated})
 
 
 @router.post("/applications/{app_id}/approve")
