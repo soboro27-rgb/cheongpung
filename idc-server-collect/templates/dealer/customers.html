@@ -3,6 +3,13 @@
 {% block page_title %}<i class="bi bi-building-fill me-2"></i>고객사 관리{% endblock %}
 
 {% block content %}
+{% set q_deleted = request.query_params.get('deleted','') %}
+{% if q_deleted == 'ok' %}
+<div class="alert alert-success py-2 small mb-3"><i class="bi bi-check-circle me-1"></i>고객사가 삭제되었습니다.</div>
+{% elif q_deleted == 'deactivated' %}
+<div class="alert alert-warning py-2 small mb-3"><i class="bi bi-exclamation-circle me-1"></i>신청 이력이 있어 고객사가 비활성화되었습니다.</div>
+{% endif %}
+
 {% if session.role == 'dealer_admin' %}
 <div class="card mb-4">
   <div class="card-header fw-semibold small">고객사 등록</div>
@@ -54,7 +61,16 @@
           <td>{{ c.manager_name or '-' }}<br><small class="text-muted">{{ c.manager_phone or '' }}</small></td>
           <td>{{ c.default_idc.name if c.default_idc else '-' }}</td>
           <td class="text-muted">{{ c.created_at.strftime('%Y.%m.%d') }}</td>
-          <td><a href="/dealer/customers/{{ c.id }}" class="btn btn-sm btn-outline-primary py-0">상세</a></td>
+          <td class="d-flex gap-1">
+            <a href="/dealer/customers/{{ c.id }}" class="btn btn-sm btn-outline-primary py-0">상세</a>
+            {% if session.role == 'dealer_admin' %}
+            <form id="delCust{{ c.id }}" method="post" action="/dealer/customers/{{ c.id }}/delete" style="display:none"></form>
+            <button type="button" class="btn btn-sm btn-outline-danger py-0"
+              onclick="if(confirm('{{ c.name }} 고객사를 삭제하시겠습니까?\n신청 이력이 있으면 비활성화됩니다.')) document.getElementById('delCust{{ c.id }}').submit()">
+              <i class="bi bi-trash"></i>
+            </button>
+            {% endif %}
+          </td>
         </tr>
         {% else %}
         <tr><td colspan="6" class="text-center text-muted py-4">고객사가 없습니다.</td></tr>

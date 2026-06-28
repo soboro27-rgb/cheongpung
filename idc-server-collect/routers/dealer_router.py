@@ -66,8 +66,9 @@ def customer_list(request: Request, db: Session = Depends(get_db)):
     dealer_id = u["dealer_id"]
     customers = db.query(models.Customer).filter(
         models.Customer.dealer_id == dealer_id,
+        models.Customer.is_active == True,
     ).order_by(models.Customer.name).all()
-    centers = db.query(models.IdcCenter).filter(models.IdcCenter.is_active == True).all() if hasattr(models, 'IdcCenter') else []
+    centers = db.query(models.IdcCenter).filter(models.IdcCenter.is_active == True).all()
     return templates.TemplateResponse(request, "dealer/customers.html", {"session": request.session,
         "customers": customers, "centers": centers})
 
@@ -115,8 +116,76 @@ def customer_detail(request: Request, customer_id: int, db: Session = Depends(ge
         models.Application.dealer_id == dealer_id,
     ).order_by(models.Application.updated_at.desc()).all()
     users = db.query(models.User).filter(models.User.customer_id == customer_id).all()
+    centers = db.query(models.IdcCenter).filter(models.IdcCenter.is_active == True).all()
     return templates.TemplateResponse(request, "dealer/customer_detail.html", {"session": request.session,
-        "customer": customer, "applications": apps, "users": users})
+        "customer": customer, "applications": apps, "users": users, "centers": centers})
+
+
+# ─── 고객사 정보 수정 ─────────────────────────────────
+
+@router.post("/customers/{customer_id}/edit")
+async def customer_edit(request: Request, customer_id: int, db: Session = Depends(get_db)):
+    u, redir = _check(request)
+    if redir: return redir
+    if u["role"] != "dealer_admin":
+        return RedirectResponse(f"/dealer/customers/{customer_id}?error=no_permission", status_code=302)
+
+    dealer_id = u["dealer_id"]
+    customer = db.query(models.Customer).filter(
+        models.Customer.id == customer_id,
+        models.Customer.dealer_id == dealer_id,
+    ).first()
+    if not customer:
+        return RedirectResponse("/dealer/customers", status_code=302)
+
+    form = await request.form()
+    try:
+        idc_id = int(form.get("default_idc_center_id") or 0) or None
+    except (ValueError, TypeError):
+        idc_id = None
+
+    name = form.get("name", "").strip()
+    if name:
+        customer.name = name
+    customer.business_no = form.get("business_no", "").strip()
+    customer.manager_name = form.get("manager_name", "").strip()
+    customer.manager_phone = form.get("manager_phone", "").strip()
+    customer.manager_email = form.get("manager_email", "").strip()
+    customer.default_idc_center_id = idc_id
+    db.commit()
+    return RedirectResponse(f"/dealer/customers/{customer_id}?success=edited", status_code=302)
+
+
+# ─── 고객사 삭제 ───────────────────────────────────────
+
+@router.post("/customers/{customer_id}/delete")
+def customer_delete(request: Request, customer_id: int, db: Session = Depends(get_db)):
+    u, redir = _check(request)
+    if redir: return redir
+    if u["role"] != "dealer_admin":
+        return RedirectResponse(f"/dealer/customers/{customer_id}?error=no_permission", status_code=302)
+
+    dealer_id = u["dealer_id"]
+    customer = db.query(models.Customer).filter(
+        models.Customer.id == customer_id,
+        models.Customer.dealer_id == dealer_id,
+    ).first()
+    if not customer:
+        return RedirectResponse("/dealer/customers", status_code=302)
+
+    has_apps = db.query(models.Application).filter(
+        models.Application.customer_id == customer_id
+    ).count() > 0
+
+    if has_apps:
+        customer.is_active = False
+        db.commit()
+        return RedirectResponse("/dealer/customers?deleted=deactivated", status_code=302)
+    else:
+        db.query(models.User).filter(models.User.customer_id == customer_id).delete()
+        db.delete(customer)
+        db.commit()
+        return RedirectResponse("/dealer/customers?deleted=ok", status_code=302)
 
 
 # ─── 고객사 계정 생성 ─────────────────────────────────

@@ -3,6 +3,20 @@
 {% block page_title %}<i class="bi bi-people me-2"></i>계정 관리{% endblock %}
 
 {% block content %}
+{% set q_reset   = request.query_params.get('reset','') %}
+{% set q_err     = request.query_params.get('err','') %}
+{% set q_edited  = request.query_params.get('edited','') %}
+{% set q_deleted = request.query_params.get('deleted','') %}
+{% if q_reset == 'ok' %}
+<div class="alert alert-success py-2 small mb-3"><i class="bi bi-check-circle me-1"></i>비밀번호가 초기화되었습니다.</div>
+{% elif q_edited == 'ok' %}
+<div class="alert alert-success py-2 small mb-3"><i class="bi bi-check-circle me-1"></i>계정이 수정되었습니다.</div>
+{% elif q_deleted == 'ok' %}
+<div class="alert alert-success py-2 small mb-3"><i class="bi bi-check-circle me-1"></i>계정이 삭제되었습니다.</div>
+{% elif q_err == 'short_pw' %}
+<div class="alert alert-danger py-2 small mb-3">비밀번호는 6자 이상이어야 합니다.</div>
+{% endif %}
+
 <div class="card mb-4">
   <div class="card-header fw-semibold small">계정 등록</div>
   <div class="card-body">
@@ -77,16 +91,107 @@
             {% else %}<span class="badge bg-secondary">비활성</span>{% endif %}
           </td>
           <td class="text-muted">{{ usr.last_login.strftime('%m/%d %H:%M') if usr.last_login else '-' }}</td>
-          <td>
+          <td class="d-flex gap-1 flex-wrap">
             {% if usr.id != session.user_id %}
             <form method="post" action="/wm/users/{{ usr.id }}/toggle" style="display:inline">
               <button class="btn btn-sm btn-outline-{% if usr.is_active %}danger{% else %}success{% endif %} py-0">
                 {% if usr.is_active %}비활성화{% else %}활성화{% endif %}
               </button>
             </form>
+            <button class="btn btn-sm btn-outline-warning py-0" type="button"
+              data-bs-toggle="collapse" data-bs-target="#resetPw{{ usr.id }}" title="비밀번호 초기화">
+              <i class="bi bi-key"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary py-0" type="button"
+              data-bs-toggle="collapse" data-bs-target="#editUser{{ usr.id }}" title="계정 수정">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <form id="delUser{{ usr.id }}" method="post" action="/wm/users/{{ usr.id }}/delete" style="display:none"></form>
+            <button class="btn btn-sm btn-outline-danger py-0" type="button" title="계정 삭제"
+              onclick="if(confirm('{{ usr.name }}({{ usr.login_id }}) 계정을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) document.getElementById('delUser{{ usr.id }}').submit()">
+              <i class="bi bi-trash"></i>
+            </button>
             {% endif %}
           </td>
         </tr>
+        {% if usr.id != session.user_id %}
+        <tr class="collapse" id="resetPw{{ usr.id }}">
+          <td colspan="7" class="bg-light py-2 px-3">
+            <form method="post" action="/wm/users/{{ usr.id }}/reset-password" class="row g-2 align-items-center">
+              <div class="col-auto">
+                <span class="small text-muted"><i class="bi bi-key me-1"></i><strong>{{ usr.login_id }}</strong> 비밀번호 초기화</span>
+              </div>
+              <div class="col-auto">
+                <input type="password" name="new_password" class="form-control form-control-sm"
+                  placeholder="새 비밀번호 (6자 이상)" required minlength="6" style="width:200px" autocomplete="new-password" />
+              </div>
+              <div class="col-auto">
+                <button class="btn btn-warning btn-sm">초기화</button>
+              </div>
+            </form>
+          </td>
+        </tr>
+        <tr class="collapse" id="editUser{{ usr.id }}">
+          <td colspan="7" class="bg-light py-2 px-3">
+            <form method="post" action="/wm/users/{{ usr.id }}/edit" class="row g-2 align-items-end">
+              <div class="col-auto">
+                <label class="form-label form-label-sm text-muted mb-0">이름</label>
+                <input type="text" name="name" class="form-control form-control-sm" value="{{ usr.name }}" required style="width:100px" />
+              </div>
+              <div class="col-auto">
+                <label class="form-label form-label-sm text-muted mb-0">이메일</label>
+                <input type="text" name="email" class="form-control form-control-sm" value="{{ usr.email }}" style="width:160px" />
+              </div>
+              <div class="col-auto">
+                <label class="form-label form-label-sm text-muted mb-0">전화</label>
+                <input type="text" name="phone" class="form-control form-control-sm" value="{{ usr.phone }}" style="width:120px" />
+              </div>
+              <div class="col-auto">
+                <label class="form-label form-label-sm text-muted mb-0">역할</label>
+                <select name="role" class="form-select form-select-sm" style="width:140px"
+                  onchange="onEditRoleChange({{ usr.id }}, this.value)">
+                  <optgroup label="WorldMemory">
+                    <option value="super_admin" {% if usr.role.value == 'super_admin' %}selected{% endif %}>슈퍼관리자</option>
+                    <option value="wm_collector" {% if usr.role.value == 'wm_collector' %}selected{% endif %}>수거기사</option>
+                    <option value="wm_inspector" {% if usr.role.value == 'wm_inspector' %}selected{% endif %}>검수자</option>
+                  </optgroup>
+                  <optgroup label="딜러">
+                    <option value="dealer_admin" {% if usr.role.value == 'dealer_admin' %}selected{% endif %}>딜러 관리자</option>
+                    <option value="dealer_staff" {% if usr.role.value == 'dealer_staff' %}selected{% endif %}>딜러 직원</option>
+                  </optgroup>
+                  <optgroup label="고객사">
+                    <option value="customer_admin" {% if usr.role.value == 'customer_admin' %}selected{% endif %}>고객사 관리자</option>
+                    <option value="customer_staff" {% if usr.role.value == 'customer_staff' %}selected{% endif %}>고객사 직원</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div class="col-auto" id="editDealerSel{{ usr.id }}"
+                style="display:{% if usr.role.value in ('dealer_admin', 'dealer_staff') %}block{% else %}none{% endif %}">
+                <label class="form-label form-label-sm text-muted mb-0">딜러</label>
+                <select name="dealer_id" class="form-select form-select-sm" style="width:140px">
+                  <option value="">딜러 선택</option>
+                  {% for d in dealers %}
+                  <option value="{{ d.id }}" {% if usr.dealer_id == d.id %}selected{% endif %}>{{ d.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-auto" id="editCustomerSel{{ usr.id }}"
+                style="display:{% if usr.role.value in ('customer_admin', 'customer_staff') %}block{% else %}none{% endif %}">
+                <label class="form-label form-label-sm text-muted mb-0">고객사</label>
+                <select name="customer_id" class="form-select form-select-sm" style="width:140px">
+                  <option value="">고객사 선택</option>
+                  {% for c in customers %}
+                  <option value="{{ c.id }}" {% if usr.customer_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-auto">
+                <button class="btn btn-primary btn-sm">저장</button>
+              </div>
+            </form>
+          </td>
+        </tr>
+        {% endif %}
         {% else %}
         <tr><td colspan="7" class="text-center text-muted py-4">계정이 없습니다.</td></tr>
         {% endfor %}
@@ -103,6 +208,12 @@ function onRoleChange() {
   document.getElementById('dealerSel').style.display =
     (role === 'dealer_admin' || role === 'dealer_staff') ? 'block' : 'none';
   document.getElementById('customerSel').style.display =
+    (role === 'customer_admin' || role === 'customer_staff') ? 'block' : 'none';
+}
+function onEditRoleChange(userId, role) {
+  document.getElementById('editDealerSel' + userId).style.display =
+    (role === 'dealer_admin' || role === 'dealer_staff') ? 'block' : 'none';
+  document.getElementById('editCustomerSel' + userId).style.display =
     (role === 'customer_admin' || role === 'customer_staff') ? 'block' : 'none';
 }
 </script>

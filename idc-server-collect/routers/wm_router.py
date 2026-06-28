@@ -272,6 +272,72 @@ def user_toggle(request: Request, user_id: int, db: Session = Depends(get_db)):
     return RedirectResponse("/wm/users", status_code=302)
 
 
+@router.post("/users/{user_id}/reset-password")
+async def user_reset_password(request: Request, user_id: int, db: Session = Depends(get_db)):
+    u, redir = _check_super(request)
+    if redir: return redir
+    form = await request.form()
+    new_pw = str(form.get("new_password", "")).strip()
+    if len(new_pw) < 6:
+        return RedirectResponse("/wm/users?err=short_pw", status_code=302)
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if user:
+        user.password_hash = _hash(new_pw)
+        db.commit()
+    return RedirectResponse("/wm/users?reset=ok", status_code=302)
+
+
+@router.post("/users/{user_id}/edit")
+async def user_edit(request: Request, user_id: int, db: Session = Depends(get_db)):
+    u, redir = _check_super(request)
+    if redir: return redir
+    form = await request.form()
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        return RedirectResponse("/wm/users", status_code=302)
+
+    role_str = form.get("role", "")
+    try:
+        role = UserRole(role_str)
+    except ValueError:
+        return RedirectResponse("/wm/users?error=invalid_role", status_code=302)
+
+    dealer_id = None
+    customer_id = None
+    if role in (UserRole.DEALER_ADMIN, UserRole.DEALER_STAFF):
+        try: dealer_id = int(form.get("dealer_id") or 0) or None
+        except: pass
+    elif role in (UserRole.CUSTOMER_ADMIN, UserRole.CUSTOMER_STAFF):
+        try: customer_id = int(form.get("customer_id") or 0) or None
+        except: pass
+        if customer_id:
+            cust = db.query(models.Customer).filter(models.Customer.id == customer_id).first()
+            if cust:
+                dealer_id = cust.dealer_id
+
+    name = form.get("name", "").strip()
+    if name:
+        user.name = name
+    user.email = form.get("email", "").strip()
+    user.phone = form.get("phone", "").strip()
+    user.role = role
+    user.dealer_id = dealer_id
+    user.customer_id = customer_id
+    db.commit()
+    return RedirectResponse("/wm/users?edited=ok", status_code=302)
+
+
+@router.post("/users/{user_id}/delete")
+def user_delete(request: Request, user_id: int, db: Session = Depends(get_db)):
+    u, redir = _check_super(request)
+    if redir: return redir
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if user and user.id != u["user_id"]:
+        db.delete(user)
+        db.commit()
+    return RedirectResponse("/wm/users?deleted=ok", status_code=302)
+
+
 # ─── 전체 신청 목록 ───────────────────────────────────
 
 @router.get("/applications", response_class=HTMLResponse)
