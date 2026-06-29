@@ -425,7 +425,6 @@ async def set_schedule(request: Request, app_id: int, db: Session = Depends(get_
         app.schedule.notes          = form.get("notes", "")
         app.status = AppStatus.SCHEDULED
         app.updated_at = datetime.now()
-        # IDC 센터 업데이트
         try:
             idc_id = int(form.get("idc_center_id") or 0) or None
             app.idc_center_id = idc_id
@@ -433,6 +432,30 @@ async def set_schedule(request: Request, app_id: int, db: Session = Depends(get_
             pass
         db.commit()
     return RedirectResponse(f"/wm/applications/{app_id}", status_code=302)
+
+
+@router.post("/applications/{app_id}/schedule-edit")
+async def edit_schedule(request: Request, app_id: int, db: Session = Depends(get_db)):
+    u, redir = _check(request)
+    if redir: return redir
+    form = await request.form()
+    app = db.query(models.Application).filter(models.Application.id == app_id).first()
+    if not app or not app.schedule:
+        return RedirectResponse(f"/wm/applications/{app_id}", status_code=302)
+
+    app.schedule.visit_date      = form.get("visit_date", "")
+    app.schedule.visit_time      = form.get("visit_time", "")
+    app.schedule.collector_name  = form.get("collector_name", "")
+    app.schedule.collector_phone = form.get("collector_phone", "")
+    app.schedule.notes           = form.get("notes", "")
+    try:
+        idc_id = int(form.get("idc_center_id") or 0) or None
+        app.idc_center_id = idc_id
+    except (ValueError, TypeError):
+        pass
+    app.updated_at = datetime.now()
+    db.commit()
+    return RedirectResponse(f"/wm/applications/{app_id}?schedule_ok=1", status_code=302)
 
 
 @router.post("/applications/{app_id}/estimated-price")

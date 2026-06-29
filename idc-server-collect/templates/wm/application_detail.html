@@ -10,6 +10,10 @@
 <div class="alert alert-danger py-2 mb-3 small">
   <i class="bi bi-exclamation-triangle me-1"></i>단가 미입력 자산이 있습니다. 모든 자산에 확정 단가를 입력 후 단가확정을 진행하세요.
 </div>
+{% elif request.query_params.get('schedule_ok') %}
+<div class="alert alert-success py-2 mb-3 small">
+  <i class="bi bi-check-circle me-1"></i>수거 일정이 수정되었습니다.
+</div>
 {% endif %}
 
 <div class="row g-3">
@@ -85,13 +89,66 @@
 
     {% elif app.schedule %}
     <div class="card mb-3">
-      <div class="card-header fw-semibold small">수거 일정</div>
+      <div class="card-header fw-semibold small d-flex justify-content-between align-items-center">
+        수거 일정
+        <button class="btn btn-outline-secondary btn-sm py-0 px-2" type="button"
+          data-bs-toggle="collapse" data-bs-target="#editScheduleForm">
+          <i class="bi bi-pencil"></i> 수정
+        </button>
+      </div>
       <div class="card-body small">
         <dl class="row mb-0">
           <dt class="col-5 text-muted">일정</dt><dd class="col-7">{{ app.schedule.visit_date }} {{ app.schedule.visit_time }}</dd>
           <dt class="col-5 text-muted">수거기사</dt><dd class="col-7">{{ app.schedule.collector_name or '-' }}</dd>
           <dt class="col-5 text-muted">연락처</dt><dd class="col-7">{{ app.schedule.collector_phone or '-' }}</dd>
+          {% if app.schedule.notes %}
+          <dt class="col-5 text-muted">메모</dt><dd class="col-7">{{ app.schedule.notes }}</dd>
+          {% endif %}
         </dl>
+      </div>
+      <div class="collapse{% if request.query_params.get('schedule_ok') %} show{% endif %}" id="editScheduleForm">
+        <div class="card-body border-top bg-light py-2">
+          <form method="post" action="/wm/applications/{{ app.id }}/schedule-edit" class="row g-2">
+            <div class="col-6">
+              <label class="form-label small mb-0">수거일</label>
+              <input type="date" name="visit_date" class="form-control form-control-sm"
+                value="{{ app.schedule.visit_date }}" required />
+            </div>
+            <div class="col-6">
+              <label class="form-label small mb-0">시간</label>
+              <input type="time" name="visit_time" class="form-control form-control-sm"
+                value="{{ app.schedule.visit_time }}" />
+            </div>
+            <div class="col-6">
+              <label class="form-label small mb-0">수거기사명</label>
+              <input type="text" name="collector_name" class="form-control form-control-sm"
+                value="{{ app.schedule.collector_name or '' }}" />
+            </div>
+            <div class="col-6">
+              <label class="form-label small mb-0">연락처</label>
+              <input type="text" name="collector_phone" class="form-control form-control-sm"
+                value="{{ app.schedule.collector_phone or '' }}" />
+            </div>
+            <div class="col-12">
+              <label class="form-label small mb-0">IDC 센터</label>
+              <select name="idc_center_id" class="form-select form-select-sm">
+                <option value="">현재 유지</option>
+                {% for c in centers %}
+                <option value="{{ c.id }}" {% if app.idc_center_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small mb-0">메모</label>
+              <textarea name="notes" class="form-control form-control-sm" rows="2">{{ app.schedule.notes or '' }}</textarea>
+            </div>
+            <div class="col-12">
+              <button class="btn btn-primary btn-sm w-100">
+                <i class="bi bi-save me-1"></i>일정 수정 저장
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
     {% endif %}
