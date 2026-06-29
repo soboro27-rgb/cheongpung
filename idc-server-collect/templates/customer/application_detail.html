@@ -86,7 +86,7 @@
           {% set show_confirmed = app.status.value in confirmed_statuses %}
           <thead>
             <tr>
-              <th>#</th><th>제조사/모델</th><th>CPU</th><th>RAM</th>
+              <th>#</th><th>제조사/모델</th><th>CPU</th><th>RAM / 저장장치</th>
               <th>수량</th><th>등급</th>
               {% if show_estimated %}<th class="text-end">예상단가</th>{% endif %}
               {% if show_confirmed %}<th class="text-end">확정단가</th>{% endif %}
@@ -101,7 +101,10 @@
                 <small class="text-muted">{{ a.form_factor or '' }} / {{ a.asset_tag or '' }}</small>
               </td>
               <td class="small">{{ a.cpu_count }}×{{ a.cpu_model or '-' }}</td>
-              <td class="small">{{ a.ram_total_gb }}GB</td>
+              <td class="small">
+                <div>{{ a.ram_total_gb }}GB</div>
+                {% if a.storage_config %}<div class="text-muted"><i class="bi bi-hdd me-1"></i>{{ a.storage_config }}</div>{% endif %}
+              </td>
               <td>{{ a.quantity }}</td>
               <td>
                 <span class="badge {% if a.condition_grade == '상' %}bg-success{% elif a.condition_grade == '중' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
