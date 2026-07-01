@@ -335,10 +335,10 @@
                   </span>
                 </td>
                 <td class="align-middle">
-                  <input type="number" name="eprice_{{ a.id }}"
-                    class="form-control form-control-sm"
-                    value="{{ a.unit_price_estimated|int if a.unit_price_estimated else '' }}"
-                    placeholder="0" min="0" step="1000" />
+                  <input type="text" name="eprice_{{ a.id }}"
+                    class="form-control form-control-sm price-comma"
+                    value="{{ '{:,}'.format(a.unit_price_estimated|int) if a.unit_price_estimated else '' }}"
+                    placeholder="0" />
                 </td>
               </tr>
               {% endfor %}
@@ -409,10 +409,10 @@
                   {% if a.unit_price_estimated %}{{ '{:,}'.format(a.unit_price_estimated|int) }}원{% else %}-{% endif %}
                 </td>
                 <td class="align-middle">
-                  <input type="number" name="price_{{ a.id }}"
-                    class="form-control form-control-sm price-input"
-                    value="{{ a.unit_price_confirmed|int if a.unit_price_confirmed else '' }}"
-                    placeholder="0" min="0" step="1000"
+                  <input type="text" name="price_{{ a.id }}"
+                    class="form-control form-control-sm price-input price-comma"
+                    value="{{ '{:,}'.format(a.unit_price_confirmed|int) if a.unit_price_confirmed else '' }}"
+                    placeholder="0"
                     data-idx="{{ loop.index0 }}" />
                 </td>
                 <td class="align-middle">
@@ -538,9 +538,30 @@ function lookupRef(idx, model) {
       const msg = `[${ref.manufacturer}] ${ref.model_display}\n${ref.spec_summary}\n기준가: ${ref.base_price.toLocaleString()}원\n\n이 기준가를 적용하시겠습니까?`;
       if (confirm(msg)) {
         const inputs = document.querySelectorAll('.price-input');
-        if (inputs[idx]) inputs[idx].value = ref.base_price;
+        if (inputs[idx]) inputs[idx].value = ref.base_price.toLocaleString('ko-KR');
       }
     });
 }
+
+// 1,000단위 콤마
+function formatComma(el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  el.value = raw ? parseInt(raw, 10).toLocaleString('ko-KR') : '';
+}
+document.querySelectorAll('.price-comma').forEach(el => {
+  el.addEventListener('input', () => formatComma(el));
+  el.addEventListener('keydown', e => {
+    const allow = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Home','End'];
+    if (!allow.includes(e.key) && !/^\d$/.test(e.key)) e.preventDefault();
+  });
+});
+// 제출 전 콤마 제거
+document.querySelectorAll('form').forEach(form => {
+  form.addEventListener('submit', () => {
+    form.querySelectorAll('.price-comma').forEach(el => {
+      el.value = el.value.replace(/,/g, '');
+    });
+  });
+});
 </script>
 {% endblock %}
