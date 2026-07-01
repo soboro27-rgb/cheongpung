@@ -70,6 +70,43 @@ async def login(request: Request, db: Session = Depends(get_db)):
     return RedirectResponse("/", status_code=302)
 
 
+@router.get("/change-password", response_class=HTMLResponse)
+def change_password_form(request: Request):
+    if not request.session.get("user_id"):
+        return RedirectResponse("/login", status_code=302)
+    return templates.TemplateResponse(request, "change_password.html",
+        {"session": request.session, "error": "", "success": False})
+
+
+@router.post("/change-password")
+async def change_password(request: Request, db: Session = Depends(get_db)):
+    if not request.session.get("user_id"):
+        return RedirectResponse("/login", status_code=302)
+    form = await request.form()
+    current_pw  = str(form.get("current_password", ""))
+    new_pw      = str(form.get("new_password", "")).strip()
+    confirm_pw  = str(form.get("confirm_password", "")).strip()
+
+    user = db.query(models.User).filter(models.User.id == request.session["user_id"]).first()
+    if not user:
+        return RedirectResponse("/login", status_code=302)
+
+    if not _verify(current_pw, user.password_hash):
+        return templates.TemplateResponse(request, "change_password.html",
+            {"session": request.session, "error": "현재 비밀번호가 올바르지 않습니다.", "success": False})
+    if len(new_pw) < 6:
+        return templates.TemplateResponse(request, "change_password.html",
+            {"session": request.session, "error": "새 비밀번호는 6자 이상이어야 합니다.", "success": False})
+    if new_pw != confirm_pw:
+        return templates.TemplateResponse(request, "change_password.html",
+            {"session": request.session, "error": "새 비밀번호가 일치하지 않습니다.", "success": False})
+
+    user.password_hash = _hash(new_pw)
+    db.commit()
+    return templates.TemplateResponse(request, "change_password.html",
+        {"session": request.session, "error": "", "success": True})
+
+
 @router.get("/logout")
 def logout(request: Request, db: Session = Depends(get_db)):
     user_id = request.session.get("user_id")

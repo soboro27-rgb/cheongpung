@@ -237,6 +237,54 @@ def approve_quote(request: Request, app_id: int, db: Session = Depends(get_db)):
     return RedirectResponse(f"/customer/applications/{app_id}", status_code=302)
 
 
+@router.get("/applications/{app_id}/quotation", response_class=HTMLResponse)
+def quotation(request: Request, app_id: int, db: Session = Depends(get_db)):
+    u, redir = _check(request)
+    if redir: return redir
+    customer_id = u["customer_id"]
+    app = db.query(models.Application).filter(
+        models.Application.id == app_id,
+        models.Application.customer_id == customer_id,
+    ).first()
+    if not app:
+        return RedirectResponse("/customer/applications", status_code=302)
+
+    confirmed_statuses = {AppStatus.QUOTED, AppStatus.APPROVED, AppStatus.WIPED, AppStatus.SETTLED, AppStatus.CLOSED}
+    use_confirmed = app.status in confirmed_statuses
+
+    dealer = app.dealer
+    total_raw = sum(
+        (a.unit_price_confirmed if use_confirmed else a.unit_price_estimated) * a.quantity
+        for a in app.assets
+    ) or 1
+
+    asset_prices = []
+    grand_total = 0.0
+    for a in app.assets:
+        unit_raw = a.unit_price_confirmed if use_confirmed else a.unit_price_estimated
+        if dealer and dealer.fee_type.value == "percent":
+            net = unit_raw * (1 - dealer.fee_value / 100)
+        elif dealer and dealer.fee_type.value == "fixed":
+            item_raw = unit_raw * a.quantity
+            fee_share = dealer.fee_value * (item_raw / total_raw)
+            net = (item_raw - fee_share) / a.quantity if a.quantity else 0
+        else:
+            net = unit_raw
+        net = max(net, 0)
+        subtotal = net * a.quantity
+        grand_total += subtotal
+        asset_prices.append({"asset": a, "unit_net": net, "subtotal": subtotal})
+
+    return templates.TemplateResponse(request, "customer/quotation.html", {
+        "session": request.session,
+        "app": app,
+        "asset_prices": asset_prices,
+        "grand_total": grand_total,
+        "use_confirmed": use_confirmed,
+        "today": datetime.now(),
+    })
+
+
 @router.post("/applications/{app_id}/reject")
 async def reject_quote(request: Request, app_id: int, db: Session = Depends(get_db)):
     """단가확정(QUOTED) 상태에서 고객이 반려"""

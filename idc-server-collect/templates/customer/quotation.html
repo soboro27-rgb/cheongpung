@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>매입견적서 #{{ app.id }} — {{ app.customer.name if app.customer else '' }}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Malgun Gothic', '맑은 고딕', AppleGothic, sans-serif; font-size: 11pt; background: #f0f2f5; color: #222; }
+
+    .toolbar {
+      position: sticky; top: 0; z-index: 100;
+      background: #1e3a6e; color: white;
+      padding: 10px 24px; display: flex; align-items: center; gap: 10px;
+    }
+    .toolbar .title { flex: 1; font-size: 13pt; font-weight: bold; }
+    .toolbar .badge-type {
+      font-size: 10pt; padding: 2px 10px; border-radius: 12px; font-weight: bold;
+    }
+    .badge-estimated { background: #fef3c7; color: #92400e; }
+    .badge-confirmed { background: #d1fae5; color: #065f46; }
+    .toolbar button {
+      border: none; padding: 7px 18px; border-radius: 5px; cursor: pointer;
+      font-family: inherit; font-size: 11pt; font-weight: bold;
+    }
+    .btn-print { background: #3b82f6; color: white; }
+    .btn-back  { background: rgba(255,255,255,0.15); color: white; }
+
+    .page-wrap {
+      max-width: 860px; margin: 28px auto 40px;
+      background: white; padding: 50px 55px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+
+    /* ── 제목 ── */
+    .doc-title {
+      text-align: center; font-size: 26pt; font-weight: bold;
+      letter-spacing: 12px; border-bottom: 3px double #222;
+      padding-bottom: 12px; margin-bottom: 12px;
+    }
+    .doc-meta {
+      display: flex; justify-content: space-between;
+      font-size: 9.5pt; color: #555; margin-bottom: 22px;
+    }
+
+    /* ── 공급자/매도인 ── */
+    .company-block { display: flex; margin-bottom: 20px; border: 1px solid #999; }
+    .company-side { flex: 1; }
+    .company-side + .company-side { border-left: 1px solid #999; }
+    .company-header {
+      background: #1e3a6e; color: white; text-align: center;
+      padding: 6px; font-weight: bold; font-size: 10.5pt;
+    }
+    .company-row { display: flex; border-top: 1px solid #ddd; }
+    .company-row:first-of-type { border-top: none; }
+    .c-label {
+      width: 88px; background: #f5f5f5; padding: 5px 8px;
+      font-weight: bold; font-size: 9.5pt; flex-shrink: 0;
+      border-right: 1px solid #ddd;
+    }
+    .c-value { padding: 5px 10px; font-size: 10pt; word-break: break-all; }
+
+    /* ── 합계 강조 ── */
+    .total-box {
+      border: 2px solid #1d4ed8; background: #eff6ff;
+      padding: 12px 20px; margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-radius: 4px;
+    }
+    .total-label { font-size: 12pt; font-weight: bold; }
+    .total-amount { font-size: 18pt; font-weight: bold; color: #1d4ed8; }
+
+    /* ── 자산 테이블 ── */
+    .asset-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10pt; }
+    .asset-table th {
+      background: #374151; color: white; padding: 7px 8px;
+      text-align: center; border: 1px solid #374151;
+    }
+    .asset-table td { border: 1px solid #ccc; padding: 6px 8px; vertical-align: middle; }
+    .asset-table tr:nth-child(even) td { background: #f9fafb; }
+    .asset-table tfoot td {
+      background: #e9ecef; font-weight: bold; border: 1px solid #999;
+      text-align: right;
+    }
+    .t-center { text-align: center; }
+    .t-right  { text-align: right; }
+    .spec-text { font-size: 8.5pt; color: #555; line-height: 1.5; }
+    .item-name { font-weight: 600; }
+
+    /* ── 비고 ── */
+    .notes {
+      border: 1px solid #ccc; background: #fafafa;
+      padding: 10px 14px; font-size: 9.5pt; line-height: 1.8;
+      margin-bottom: 30px; border-radius: 3px;
+    }
+
+    /* ── 서명란 ── */
+    .signature-wrap { display: flex; justify-content: flex-end; }
+    .signature-box {
+      border: 1px solid #aaa; width: 210px; padding: 14px 16px;
+      text-align: center; font-size: 10pt;
+    }
+    .sig-company { font-weight: bold; font-size: 11pt; margin-bottom: 4px; }
+    .sig-rep     { color: #555; font-size: 9.5pt; margin-bottom: 35px; }
+    .sig-seal    { border-top: 1px solid #aaa; padding-top: 5px; color: #666; font-size: 9pt; }
+
+    /* ── 인쇄 ── */
+    @media print {
+      body { background: white; }
+      .toolbar { display: none !important; }
+      .page-wrap { box-shadow: none; margin: 0; padding: 0; max-width: none; }
+      @page { margin: 15mm 18mm; size: A4 portrait; }
+      .asset-table tr { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 화면 전용 툴바 -->
+<div class="toolbar">
+  <div class="title">
+    매입 견적서 — 신청 #{{ app.id }}
+    {% if use_confirmed %}
+    <span class="badge-type badge-confirmed">확정</span>
+    {% else %}
+    <span class="badge-type badge-estimated">예정</span>
+    {% endif %}
+  </div>
+  <button class="btn-print" onclick="window.print()">🖨 프린트</button>
+  <button class="btn-back"  onclick="history.back()">← 돌아가기</button>
+</div>
+
+<div class="page-wrap">
+
+  <!-- 제목 -->
+  <div class="doc-title">매 입 견 적 서</div>
+  <div class="doc-meta">
+    <span>견적번호: WM-{{ '%04d'|format(app.id) }}-{{ today.strftime('%Y%m%d') }}</span>
+    <span>견적일자: {{ today.strftime('%Y년 %m월 %d일') }}</span>
+    <span>유효기간: 견적일로부터 30일</span>
+  </div>
+
+  <!-- 공급자 / 공급받는자 -->
+  <div class="company-block">
+    <!-- 매수인: WM -->
+    <div class="company-side">
+      <div class="company-header">공급자 (매수인)</div>
+      <div class="company-row"><div class="c-label">상호</div><div class="c-value">주식회사 월드와이드메모리</div></div>
+      <div class="company-row"><div class="c-label">등록번호</div><div class="c-value">000-00-00000</div></div>
+      <div class="company-row"><div class="c-label">대표자</div><div class="c-value">(대표자명)</div></div>
+      <div class="company-row"><div class="c-label">주소</div><div class="c-value">(주소)</div></div>
+      <div class="company-row"><div class="c-label">TEL</div><div class="c-value">(대표 전화번호)</div></div>
+      <div class="company-row"><div class="c-label">이메일</div><div class="c-value">(이메일)</div></div>
+    </div>
+    <!-- 매도인: 고객사 -->
+    <div class="company-side">
+      <div class="company-header">공급받는자 (매도인)</div>
+      <div class="company-row"><div class="c-label">상호</div><div class="c-value">{{ app.customer.name if app.customer else '-' }}</div></div>
+      <div class="company-row"><div class="c-label">등록번호</div><div class="c-value">{{ app.customer.business_no if app.customer and app.customer.business_no else '-' }}</div></div>
+      <div class="company-row"><div class="c-label">담당자</div><div class="c-value">{{ app.contact_name or (app.customer.manager_name if app.customer else '-') or '-' }}</div></div>
+      <div class="company-row"><div class="c-label">연락처</div><div class="c-value">{{ app.contact_phone or (app.customer.manager_phone if app.customer else '-') or '-' }}</div></div>
+      <div class="company-row"><div class="c-label">이메일</div><div class="c-value">{{ app.customer.manager_email if app.customer and app.customer.manager_email else '-' }}</div></div>
+      <div class="company-row"><div class="c-label">신청일</div><div class="c-value">{{ app.submitted_at.strftime('%Y.%m.%d') if app.submitted_at else '-' }}</div></div>
+    </div>
+  </div>
+
+  <!-- 합계 강조 -->
+  <div class="total-box">
+    <span class="total-label">
+      {% if use_confirmed %}확정 매입 금액{% else %}예정 매입 금액{% endif %}
+    </span>
+    <span class="total-amount">₩ {{ '{:,.0f}'.format(grand_total) }}</span>
+  </div>
+
+  <!-- 자산 목록 -->
+  <table class="asset-table">
+    <thead>
+      <tr>
+        <th style="width:36px">No.</th>
+        <th>품목명</th>
+        <th>규격</th>
+        <th style="width:48px">수량</th>
+        <th style="width:115px">단가 (원)</th>
+        <th style="width:125px">공급가액 (원)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in asset_prices %}
+      {% set a = item.asset %}
+      <tr>
+        <td class="t-center">{{ loop.index }}</td>
+        <td>
+          <div class="item-name">{{ a.manufacturer }} {{ a.model }}</div>
+          {% if a.asset_tag %}<div class="spec-text">자산번호: {{ a.asset_tag }}</div>{% endif %}
+          {% if a.serial_number %}<div class="spec-text">S/N: {{ a.serial_number }}</div>{% endif %}
+        </td>
+        <td>
+          <div class="spec-text">
+            {% if a.form_factor %}<div>{{ a.form_factor }}</div>{% endif %}
+            <div>CPU {{ a.cpu_count }}×{{ a.cpu_model or '-' }}</div>
+            <div>RAM {{ a.ram_total_gb }}GB{% if a.ram_config %} / {{ a.ram_config }}{% endif %}</div>
+            {% if a.storage_config %}<div>{{ a.storage_config }}</div>{% endif %}
+          </div>
+        </td>
+        <td class="t-center">{{ a.quantity }}</td>
+        <td class="t-right">
+          {% if item.unit_net > 0 %}{{ '{:,.0f}'.format(item.unit_net) }}{% else %}—{% endif %}
+        </td>
+        <td class="t-right">
+          {% if item.subtotal > 0 %}{{ '{:,.0f}'.format(item.subtotal) }}{% else %}—{% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="t-center" style="color:#999; padding:16px;">자산 정보 없음</td></tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="5" style="text-align:right; padding-right:14px;">합 &nbsp; 계</td>
+        <td>{{ '{:,.0f}'.format(grand_total) }}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- 비고 -->
+  <div class="notes">
+    {% if use_confirmed %}
+    <div>※ 본 견적서는 검수 확정 단가 기준으로 작성된 견적서입니다.</div>
+    {% else %}
+    <div>※ 본 견적서는 예정 매입가 기준으로 작성되었으며, 실물 검수 후 최종 단가가 확정됩니다.</div>
+    {% endif %}
+    <div>※ 상기 금액은 부가세(VAT) 별도 금액입니다.</div>
+    <div>※ 데이터 파기 인증서는 파기 완료 후 별도 발행됩니다.</div>
+    <div>※ 신청번호: #{{ app.id }}{% if app.idc_center %} / IDC: {{ app.idc_center.name }}{% endif %}</div>
+  </div>
+
+  <!-- 서명란 -->
+  <div class="signature-wrap">
+    <div class="signature-box">
+      <div class="sig-company">주식회사 월드와이드메모리</div>
+      <div class="sig-rep">대표이사</div>
+      <div class="sig-seal">(인)</div>
+    </div>
+  </div>
+
+</div><!-- /page-wrap -->
+</body>
+</html>

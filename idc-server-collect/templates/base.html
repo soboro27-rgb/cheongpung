@@ -148,6 +148,9 @@
   {% block sidebar_nav %}{% endblock %}
   <div class="mt-auto p-3 border-top border-secondary">
     <div class="text-white-50 small mb-2">{{ session.name }} <span class="badge bg-secondary ms-1">{{ ROLE_LABEL.get(session.role, session.role) }}</span></div>
+    <a href="/change-password" class="btn btn-sm btn-outline-light w-100 mb-1">
+      <i class="bi bi-key me-1"></i>비밀번호 변경
+    </a>
     <a href="/logout" class="btn btn-sm btn-outline-secondary w-100">
       <i class="bi bi-box-arrow-left me-1"></i>로그아웃
     </a>
