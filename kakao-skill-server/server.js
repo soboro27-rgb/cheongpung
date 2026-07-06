@@ -4,6 +4,7 @@ const { notifyInquiry } = require("./notify");
 
 const app = express();
 app.use(express.json());
+app.use(express.static("public"));
 
 function matchProject(utterance) {
   const text = (utterance || "").toLowerCase();
