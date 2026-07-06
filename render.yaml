@@ -16,7 +16,7 @@ services:
   - type: web
     name: dolbom-it
     env: node
-    rootDir: onpre/Dolbom-it/dolbom-it
+    rootDir: dolbom-it
     buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy && npm run build
     startCommand: npm start
     domains:
@@ -56,6 +56,22 @@ services:
         value: "1"
 
   - type: web
+    name: kakao-skill-server
+    env: node
+    rootDir: kakao-skill-server
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: SOLAPI_API_KEY
+        sync: false
+      - key: SOLAPI_API_SECRET
+        sync: false
+      - key: SOLAPI_SENDER
+        sync: false
+      - key: NOTIFY_PHONE
+        sync: false
+
+  - type: web
     name: nexon-inspection
     env: node
     rootDir: nexon
@@ -72,7 +88,7 @@ services:
   - type: web
     name: inspect01
     env: node
-    rootDir: onpre/inspect01
+    rootDir: inspect01
     buildCommand: npm install && npx prisma generate && npx prisma migrate deploy && npm run seed && npm run build
     startCommand: npm start
     envVars:

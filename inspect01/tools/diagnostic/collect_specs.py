@@ -47,40 +47,45 @@ def collect_cpu() -> str:
 
 
 def collect_ram() -> str:
+    """슬롯별 RAM 정보를 개별 표기. 동일 스펙이면 '× N' 그룹핑."""
     return ps(r"""
-$sticks = Get-CimInstance Win32_PhysicalMemory
-$totalGB = [math]::Round(($sticks | Measure-Object -Property Capacity -Sum).Sum / 1GB)
-$typeNum = if ($sticks) { $sticks[0].SMBIOSMemoryType } else { 0 }
-$typeName = switch ($typeNum) {
-    34 { 'DDR5' }
-    26 { 'DDR4' }
-    24 { 'DDR3' }
-    29 { 'LPDDR4' }
-    30 { 'LPDDR4X' }
-    35 { 'LPDDR5' }
-    default { 'DDR4' }
+$sticks = Get-CimInstance Win32_PhysicalMemory | Where-Object { $_.Capacity -gt 0 }
+if (-not $sticks) { '불명'; return }
+$stickInfos = foreach ($stick in $sticks) {
+    $sizeGB  = [math]::Round($stick.Capacity / 1GB)
+    $typeNum = $stick.SMBIOSMemoryType
+    $typeName = switch ($typeNum) {
+        34 { 'DDR5' } 26 { 'DDR4' } 24 { 'DDR3' }
+        29 { 'LPDDR4' } 30 { 'LPDDR4X' } 35 { 'LPDDR5' }
+        default { 'DDR4' }
+    }
+    $raw = $stick.Manufacturer
+    $mfr = switch -Regex ($raw) {
+        'Samsung'           { 'Samsung' }
+        'SK\s?Hynix|Hynix'  { 'SK Hynix' }
+        'Micron|MT'         { 'Micron' }
+        'Kingston'          { 'Kingston' }
+        'Crucial'           { 'Crucial' }
+        'G\.Skill|G-Skill'  { 'G.Skill' }
+        'Corsair'           { 'Corsair' }
+        default             { $raw.Trim() }
+    }
+    $clock = $stick.ConfiguredClockSpeed
+    if (-not $clock -or $clock -eq 0) { $clock = $stick.Speed }
+    $clockStr = if ($clock -gt 0) { " ${clock}MHz" } else { '' }
+    $mfrStr   = if ($mfr) { "$mfr " } else { '' }
+    $ff       = $stick.FormFactor
+    $slotType = if ($typeNum -in @(29,30,35)) { '온보드' }
+                elseif ($ff -eq 12 -or $ff -eq 8) { '탈착식' }
+                elseif ($ff -eq 0) { '온보드(추정)' }
+                else { '탈착식' }
+    "${mfrStr}${sizeGB}GB $typeName${clockStr} ($slotType)"
 }
-$raw = if ($sticks) { $sticks[0].Manufacturer } else { '' }
-$mfr = switch -Regex ($raw) {
-    'Samsung'           { 'Samsung' }
-    'SK\s?Hynix|Hynix'  { 'SK Hynix' }
-    'Micron|MT'         { 'Micron' }
-    'Kingston'          { 'Kingston' }
-    'Crucial'           { 'Crucial' }
-    'G\.Skill|G-Skill'  { 'G.Skill' }
-    'Corsair'           { 'Corsair' }
-    default             { $raw.Trim() }
+$groups  = $stickInfos | Group-Object
+$grouped = $groups | ForEach-Object {
+    if ($_.Count -gt 1) { "$($_.Name) × $($_.Count)" } else { $_.Name }
 }
-$clock = if ($sticks) { $sticks[0].ConfiguredClockSpeed } else { 0 }
-if (-not $clock -or $clock -eq 0) { $clock = if ($sticks) { $sticks[0].Speed } else { 0 } }
-$clockStr = if ($clock -gt 0) { " ${clock}MHz" } else { '' }
-$mfrStr = if ($mfr) { "$mfr " } else { '' }
-$ff = if ($sticks) { $sticks[0].FormFactor } else { 0 }
-$slotType = if ($typeNum -in @(29,30,35)) { '온보드' }
-            elseif ($ff -eq 12 -or $ff -eq 8) { '탈착식' }
-            elseif ($ff -eq 0) { '온보드(추정)' }
-            else { '탈착식' }
-"${mfrStr}${totalGB}GB $typeName${clockStr} ($slotType)"
+$grouped -join ' / '
 """)
 
 
@@ -135,6 +140,27 @@ try {
     }
     $results -join ' / '
 } catch { '불명' }
+""")
+
+
+def collect_os() -> str:
+    return ps(r"""
+$os = Get-CimInstance Win32_OperatingSystem
+$caption = $os.Caption -replace 'Microsoft ', ''
+$build   = $os.BuildNumber
+$arch    = if ($os.OSArchitecture -match '64') { '64bit' } else { '32bit' }
+"$caption ($arch) Build $build"
+""")
+
+
+def collect_motherboard() -> str:
+    return ps(r"""
+$mb  = Get-CimInstance Win32_BaseBoard
+$mfr = $mb.Manufacturer -replace 'To Be Filled By O\.E\.M\.|Default string', '' | ForEach-Object { $_.Trim() }
+$prd = $mb.Product      -replace 'To Be Filled By O\.E\.M\.|Default string', '' | ForEach-Object { $_.Trim() }
+$ver = $mb.Version      -replace 'To Be Filled By O\.E\.M\.|Default string', '' | ForEach-Object { $_.Trim() }
+$parts = @($mfr, $prd, $ver) | Where-Object { $_ -ne '' }
+$parts -join ' '
 """)
 
 
@@ -280,6 +306,8 @@ def main():
         storage      = collect_storage()
         vga          = collect_vga()
         resolution   = collect_resolution()
+        os_info      = collect_os()
+        motherboard  = collect_motherboard()
         battery_pct, cycle_count = collect_battery()
         disk_health, bad_sector  = collect_disk_health()
     except Exception as e:
@@ -291,19 +319,21 @@ def main():
     filename  = f"result_{now.strftime('%Y%m%d_%H%M%S')}.json"
 
     data = {
-        "timestamp":          timestamp,
-        "manufacturer":       manufacturer,
-        "model":              model,
-        "serial":             serial,
-        "cpu":                cpu,
-        "ram":                ram,
-        "storage":            storage,
-        "vga":                vga,
-        "resolution":         resolution,
-        "battery_health_pct": battery_pct,
+        "timestamp":           timestamp,
+        "manufacturer":        manufacturer,
+        "model":               model,
+        "serial":              serial,
+        "cpu":                 cpu,
+        "ram":                 ram,
+        "storage":             storage,
+        "vga":                 vga,
+        "resolution":          resolution,
+        "os":                  os_info,
+        "motherboard":         motherboard,
+        "battery_health_pct":  battery_pct,
         "battery_cycle_count": cycle_count,
-        "disk_health":        disk_health,
-        "disk_bad_sector":    bad_sector,
+        "disk_health":         disk_health,
+        "disk_bad_sector":     bad_sector,
     }
 
     # 저장 전 확인 모달
@@ -317,6 +347,8 @@ def main():
         f"제조사:    {manufacturer}\n"
         f"모델명:    {model}\n"
         f"시리얼:    {serial}\n"
+        f"메인보드:  {motherboard}\n"
+        f"OS:        {os_info}\n"
         f"CPU:       {cpu}\n"
         f"RAM:       {ram}\n"
         f"저장장치:  {storage}\n"
