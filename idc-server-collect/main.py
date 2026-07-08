@@ -10,7 +10,31 @@ import models
 
 models.Base.metadata.create_all(bind=engine)
 
-from routers import auth_router, wm_router, dealer_router, customer_router
+# 마이그레이션: 기존 테이블에 신규 컬럼(운영사 계층) 추가
+from sqlalchemy import text as _text, inspect as _sa_inspect
+try:
+    _inspector = _sa_inspect(engine)
+    with engine.connect() as _c:
+        _dealer_cols = [c["name"] for c in _inspector.get_columns("dealers")]
+        if "operator_id" not in _dealer_cols:
+            _c.execute(_text("ALTER TABLE dealers ADD COLUMN operator_id INTEGER"))
+
+        _user_cols = [c["name"] for c in _inspector.get_columns("users")]
+        if "operator_id" not in _user_cols:
+            _c.execute(_text("ALTER TABLE users ADD COLUMN operator_id INTEGER"))
+
+        _settlement_cols = [c["name"] for c in _inspector.get_columns("settlements")]
+        if "operator_fee_amount" not in _settlement_cols:
+            _c.execute(_text("ALTER TABLE settlements ADD COLUMN operator_fee_amount FLOAT DEFAULT 0.0"))
+        if "operator_paid" not in _settlement_cols:
+            _c.execute(_text("ALTER TABLE settlements ADD COLUMN operator_paid BOOLEAN DEFAULT FALSE"))
+        if "operator_paid_at" not in _settlement_cols:
+            _c.execute(_text("ALTER TABLE settlements ADD COLUMN operator_paid_at TIMESTAMP"))
+        _c.commit()
+except Exception as _e:
+    print(f"Migration warning: {_e}")
+
+from routers import auth_router, wm_router, dealer_router, customer_router, operator_router
 
 app = FastAPI(title="IDC 서버 수거 플랫폼")
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "idc-server-collect-2024-secret"))
@@ -24,6 +48,7 @@ templates = Jinja2Templates(directory=str(TMPL_DIR))
 
 app.include_router(auth_router.router)
 app.include_router(wm_router.router,       prefix="/wm")
+app.include_router(operator_router.router, prefix="/operator")
 app.include_router(dealer_router.router,   prefix="/dealer")
 app.include_router(customer_router.router, prefix="/customer")
 
@@ -55,6 +80,8 @@ def root(request: Request):
     role = request.session.get("role", "")
     if role in ("super_admin", "wm_collector", "wm_inspector"):
         return RedirectResponse("/wm/dashboard")
+    if role in ("operator_admin", "operator_staff"):
+        return RedirectResponse("/operator/dashboard")
     if role in ("dealer_admin", "dealer_staff"):
         return RedirectResponse("/dealer/dashboard")
     return RedirectResponse("/customer/dashboard")

@@ -101,6 +101,54 @@ def idc_delete(request: Request, center_id: int, db: Session = Depends(get_db)):
     return RedirectResponse("/wm/idc-centers", status_code=302)
 
 
+# ─── 운영사 관리 ────────────────────────────────────────
+
+@router.get("/operators", response_class=HTMLResponse)
+def operator_list(request: Request, db: Session = Depends(get_db)):
+    u, redir = _check(request)
+    if redir: return redir
+    operators = db.query(models.Operator).order_by(models.Operator.name).all()
+    return templates.TemplateResponse(request, "wm/operators.html", {"session": request.session,
+        "operators": operators})
+
+
+@router.post("/operators")
+async def operator_create(request: Request, db: Session = Depends(get_db)):
+    u, redir = _check_super(request)
+    if redir: return redir
+    form = await request.form()
+    try:
+        fee_value = float(form.get("fee_value", 0) or 0)
+    except ValueError:
+        fee_value = 0.0
+
+    db.add(models.Operator(
+        name=form.get("name", "").strip(),
+        business_no=form.get("business_no", "").strip(),
+        manager_name=form.get("manager_name", "").strip(),
+        manager_phone=form.get("manager_phone", "").strip(),
+        manager_email=form.get("manager_email", "").strip(),
+        operator_code=form.get("operator_code", "").strip().upper(),
+        fee_type=form.get("fee_type", "percent"),
+        fee_value=fee_value,
+    ))
+    db.commit()
+    return RedirectResponse("/wm/operators", status_code=302)
+
+
+@router.get("/operators/{operator_id}", response_class=HTMLResponse)
+def operator_detail(request: Request, operator_id: int, db: Session = Depends(get_db)):
+    u, redir = _check(request)
+    if redir: return redir
+    operator = db.query(models.Operator).filter(models.Operator.id == operator_id).first()
+    if not operator:
+        return RedirectResponse("/wm/operators", status_code=302)
+    dealers = db.query(models.Dealer).filter(models.Dealer.operator_id == operator_id).all()
+    users   = db.query(models.User).filter(models.User.operator_id == operator_id).all()
+    return templates.TemplateResponse(request, "wm/operator_detail.html", {"session": request.session,
+        "operator": operator, "dealers": dealers, "users": users})
+
+
 # ─── 딜러 관리 ────────────────────────────────────────
 
 @router.get("/dealers", response_class=HTMLResponse)
@@ -109,8 +157,9 @@ def dealer_list(request: Request, db: Session = Depends(get_db)):
     if redir: return redir
     dealers = db.query(models.Dealer).order_by(models.Dealer.name).all()
     centers = db.query(models.IdcCenter).filter(models.IdcCenter.is_active == True).all()
+    operators = db.query(models.Operator).filter(models.Operator.is_active == True).order_by(models.Operator.name).all()
     return templates.TemplateResponse(request, "wm/dealers.html", {"session": request.session,
-        "dealers": dealers, "centers": centers})
+        "dealers": dealers, "centers": centers, "operators": operators})
 
 
 @router.post("/dealers")
@@ -122,8 +171,13 @@ async def dealer_create(request: Request, db: Session = Depends(get_db)):
         fee_value = float(form.get("fee_value", 0) or 0)
     except ValueError:
         fee_value = 0.0
+    try:
+        operator_id = int(form.get("operator_id") or 0) or None
+    except (ValueError, TypeError):
+        operator_id = None
 
     dealer = models.Dealer(
+        operator_id=operator_id,
         name=form.get("name", "").strip(),
         business_no=form.get("business_no", "").strip(),
         manager_name=form.get("manager_name", "").strip(),
@@ -158,9 +212,28 @@ def dealer_detail(request: Request, dealer_id: int, db: Session = Depends(get_db
     centers   = db.query(models.IdcCenter).filter(models.IdcCenter.is_active == True).all()
     customers = db.query(models.Customer).filter(models.Customer.dealer_id == dealer_id).all()
     users     = db.query(models.User).filter(models.User.dealer_id == dealer_id).all()
+    operators = db.query(models.Operator).filter(models.Operator.is_active == True).order_by(models.Operator.name).all()
     return templates.TemplateResponse(request, "wm/dealer_detail.html", {"session": request.session,
         "dealer": dealer, "centers": centers,
-        "customers": customers, "users": users})
+        "customers": customers, "users": users, "operators": operators})
+
+
+@router.post("/dealers/{dealer_id}/operator")
+async def dealer_set_operator(request: Request, dealer_id: int, db: Session = Depends(get_db)):
+    """딜러의 소속 운영사 재지정 (없음 선택 시 3단 구조로 되돌림)"""
+    u, redir = _check_super(request)
+    if redir: return redir
+    dealer = db.query(models.Dealer).filter(models.Dealer.id == dealer_id).first()
+    if not dealer:
+        return RedirectResponse("/wm/dealers", status_code=302)
+    form = await request.form()
+    try:
+        operator_id = int(form.get("operator_id") or 0) or None
+    except (ValueError, TypeError):
+        operator_id = None
+    dealer.operator_id = operator_id
+    db.commit()
+    return RedirectResponse(f"/wm/dealers/{dealer_id}?success=operator_updated", status_code=302)
 
 
 # ─── 고객사 관리 (WM 전체 조회) ───────────────────────
@@ -211,10 +284,11 @@ def user_list(request: Request, db: Session = Depends(get_db)):
     u, redir = _check_super(request)
     if redir: return redir
     users     = db.query(models.User).order_by(models.User.created_at.desc()).all()
+    operators = db.query(models.Operator).filter(models.Operator.is_active == True).all()
     dealers   = db.query(models.Dealer).filter(models.Dealer.is_active == True).all()
     customers = db.query(models.Customer).filter(models.Customer.is_active == True).all()
     return templates.TemplateResponse(request, "wm/users.html", {"session": request.session,
-        "users": users, "dealers": dealers, "customers": customers})
+        "users": users, "operators": operators, "dealers": dealers, "customers": customers})
 
 
 @router.post("/users")
@@ -229,9 +303,13 @@ async def user_create(request: Request, db: Session = Depends(get_db)):
     except ValueError:
         return RedirectResponse("/wm/users?error=invalid_role", status_code=302)
 
+    operator_id = None
     dealer_id = None
     customer_id = None
-    if role in (UserRole.DEALER_ADMIN, UserRole.DEALER_STAFF):
+    if role in (UserRole.OPERATOR_ADMIN, UserRole.OPERATOR_STAFF):
+        try: operator_id = int(form.get("operator_id") or 0) or None
+        except: pass
+    elif role in (UserRole.DEALER_ADMIN, UserRole.DEALER_STAFF):
         try: dealer_id = int(form.get("dealer_id") or 0) or None
         except: pass
     elif role in (UserRole.CUSTOMER_ADMIN, UserRole.CUSTOMER_STAFF):
@@ -254,6 +332,7 @@ async def user_create(request: Request, db: Session = Depends(get_db)):
         email=form.get("email", "").strip(),
         phone=form.get("phone", "").strip(),
         role=role,
+        operator_id=operator_id,
         dealer_id=dealer_id,
         customer_id=customer_id,
     ))
@@ -302,9 +381,13 @@ async def user_edit(request: Request, user_id: int, db: Session = Depends(get_db
     except ValueError:
         return RedirectResponse("/wm/users?error=invalid_role", status_code=302)
 
+    operator_id = None
     dealer_id = None
     customer_id = None
-    if role in (UserRole.DEALER_ADMIN, UserRole.DEALER_STAFF):
+    if role in (UserRole.OPERATOR_ADMIN, UserRole.OPERATOR_STAFF):
+        try: operator_id = int(form.get("operator_id") or 0) or None
+        except: pass
+    elif role in (UserRole.DEALER_ADMIN, UserRole.DEALER_STAFF):
         try: dealer_id = int(form.get("dealer_id") or 0) or None
         except: pass
     elif role in (UserRole.CUSTOMER_ADMIN, UserRole.CUSTOMER_STAFF):
@@ -321,6 +404,7 @@ async def user_edit(request: Request, user_id: int, db: Session = Depends(get_db
     user.email = form.get("email", "").strip()
     user.phone = form.get("phone", "").strip()
     user.role = role
+    user.operator_id = operator_id
     user.dealer_id = dealer_id
     user.customer_id = customer_id
     db.commit()
@@ -623,13 +707,24 @@ async def settle_app(request: Request, app_id: int, db: Session = Depends(get_db
     # 금액 계산
     total = sum(a.unit_price_confirmed * a.quantity for a in app.assets)
     dealer = app.dealer
+    operator = dealer.operator if (dealer and dealer.operator_id) else None
+
+    if operator:
+        if operator.fee_type.value == "percent":
+            operator_fee = total * operator.fee_value / 100
+        else:
+            operator_fee = operator.fee_value
+    else:
+        operator_fee = 0.0
+    after_operator = total - operator_fee
+
     if dealer and dealer.fee_type.value == "percent":
-        fee = total * dealer.fee_value / 100
+        fee = after_operator * dealer.fee_value / 100
     elif dealer:
         fee = dealer.fee_value
     else:
         fee = 0.0
-    customer_amount = total - fee
+    customer_amount = after_operator - fee
 
     stype = dealer.settlement_type if dealer else models.SettlementType.DIRECT
 
@@ -643,6 +738,7 @@ async def settle_app(request: Request, app_id: int, db: Session = Depends(get_db
 
     s.settlement_type  = stype
     s.total_amount     = total
+    s.operator_fee_amount = operator_fee
     s.dealer_fee_amount = fee
     s.customer_amount  = customer_amount
     s.pricing_notes    = notes

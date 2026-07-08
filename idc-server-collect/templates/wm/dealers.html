@@ -29,6 +29,15 @@
           <option value="via_dealer">딜러 경유</option>
         </select>
       </div>
+      <div class="col-md-3">
+        <select name="operator_id" class="form-select form-select-sm">
+          <option value="">소속 운영사 없음 (3단: 매입사→딜러→고객)</option>
+          {% for op in operators %}
+          <option value="{{ op.id }}">{{ op.name }} (운영사)</option>
+          {% endfor %}
+        </select>
+        <small class="text-muted">선택 시 4단(매입사→운영사→딜러→고객)</small>
+      </div>
       <div class="col-md-2">
         <select name="fee_type" class="form-select form-select-sm">
           <option value="percent">수수료 (%)</option>
@@ -59,7 +68,7 @@
   <div class="table-responsive">
     <table class="table table-hover mb-0">
       <thead>
-        <tr><th>딜러명</th><th>코드</th><th>사업자번호</th><th>담당자</th><th>정산방식</th><th>수수료</th><th></th></tr>
+        <tr><th>딜러명</th><th>코드</th><th>사업자번호</th><th>담당자</th><th>소속 운영사</th><th>정산방식</th><th>수수료</th><th></th></tr>
       </thead>
       <tbody>
         {% for d in dealers %}
@@ -68,6 +77,13 @@
           <td><code>{{ d.dealer_code }}</code></td>
           <td>{{ d.business_no or '-' }}</td>
           <td>{{ d.manager_name or '-' }}<br><small class="text-muted">{{ d.manager_phone or '' }}</small></td>
+          <td>
+            {% if d.operator %}
+            <span class="badge bg-warning text-dark">{{ d.operator.name }} (4단)</span>
+            {% else %}
+            <span class="text-muted small">없음 (3단)</span>
+            {% endif %}
+          </td>
           <td>
             {% if d.settlement_type.value == 'direct' %}
             <span class="badge bg-success">직지급</span>
@@ -82,7 +98,7 @@
           <td><a href="/wm/dealers/{{ d.id }}" class="btn btn-sm btn-outline-primary py-0">상세</a></td>
         </tr>
         {% else %}
-        <tr><td colspan="7" class="text-center text-muted py-4">등록된 딜러가 없습니다.</td></tr>
+        <tr><td colspan="8" class="text-center text-muted py-4">등록된 딜러가 없습니다.</td></tr>
         {% endfor %}
       </tbody>
     </table>

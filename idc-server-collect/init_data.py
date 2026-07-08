@@ -47,7 +47,37 @@ def seed():
             print(f"✓ IDC 센터: {name}")
         centers[name] = c
 
-    # ── 샘플 딜러 ──────────────────────────────
+    # ── 샘플 운영사 (4단 정산 구조 데모용) ─────
+    operator = db.query(models.Operator).filter(models.Operator.operator_code == "WMOPS").first()
+    if not operator:
+        operator = models.Operator(
+            name="월드메모리 파트너스 (샘플)",
+            business_no="234-56-78901",
+            manager_name="김운영",
+            manager_phone="010-2345-6789",
+            manager_email="kim@wmops.com",
+            operator_code="WMOPS",
+            fee_type=FeeType.PERCENT,
+            fee_value=10.0,
+        )
+        db.add(operator)
+        db.flush()
+        print("✓ 운영사: 월드메모리 파트너스")
+    else:
+        print("- 운영사 월드메모리 파트너스 이미 존재")
+
+    # ── 운영사 관리자 계정 ──────────────────────
+    if not db.query(models.User).filter(models.User.login_id == "operator1").first():
+        db.add(models.User(
+            login_id="operator1",
+            password_hash=_hash("operator1234"),
+            name="운영사관리자",
+            role=UserRole.OPERATOR_ADMIN,
+            operator_id=operator.id,
+        ))
+        print("✓ operator1 계정 생성")
+
+    # ── 샘플 딜러 (기존, 운영사 미소속 → 3단: 매입사→딜러→고객, 회귀 테스트 기준) ─
     dealer = db.query(models.Dealer).filter(models.Dealer.dealer_code == "KTDS").first()
     if not dealer:
         dealer = models.Dealer(
@@ -65,9 +95,42 @@ def seed():
         db.flush()
         # IDC 센터 연결
         db.add(models.DealerIdcCenter(dealer_id=dealer.id, idc_center_id=centers["서울 가산 IDC"].id))
-        print("✓ 딜러: KT DS")
+        print("✓ 딜러: KT DS (3단 정산, 운영사 없음)")
     else:
         print("- 딜러 KT DS 이미 존재")
+
+    # ── 샘플 딜러2 (운영사 소속 → 4단: 매입사→운영사→딜러→고객) ─
+    dealer2 = db.query(models.Dealer).filter(models.Dealer.dealer_code == "SFSD2").first()
+    if not dealer2:
+        dealer2 = models.Dealer(
+            operator_id=operator.id,
+            name="SFS 딜러 (샘플, 운영사 소속)",
+            business_no="345-67-89012",
+            manager_name="박딜러",
+            manager_phone="010-3456-7890",
+            manager_email="park@sfsd2.com",
+            dealer_code="SFSD2",
+            settlement_type=SettlementType.DIRECT,
+            fee_type=FeeType.PERCENT,
+            fee_value=5.0,
+        )
+        db.add(dealer2)
+        db.flush()
+        db.add(models.DealerIdcCenter(dealer_id=dealer2.id, idc_center_id=centers["서울 가산 IDC"].id))
+        print("✓ 딜러2: SFS 딜러 (운영사 소속, 4단 정산)")
+    else:
+        print("- 딜러2 SFS 딜러 이미 존재")
+
+    # ── 딜러2 관리자 계정 ────────────────────
+    if not db.query(models.User).filter(models.User.login_id == "dealer2").first():
+        db.add(models.User(
+            login_id="dealer2",
+            password_hash=_hash("dealer1234"),
+            name="딜러2관리자",
+            role=UserRole.DEALER_ADMIN,
+            dealer_id=dealer2.id,
+        ))
+        print("✓ dealer2 계정 생성")
 
     # ── 딜러 관리자 계정 ──────────────────────
     if not db.query(models.User).filter(models.User.login_id == "dealer1").first():
@@ -160,7 +223,9 @@ def seed():
     print("\n계정 목록:")
     print("  admin      / admin1234     — 슈퍼관리자 (WM)")
     print("  collector1 / collect1234   — 수거기사   (WM)")
-    print("  dealer1    / dealer1234    — 딜러 관리자 (KT DS)")
+    print("  operator1  / operator1234  — 운영사 관리자 (월드메모리 파트너스)")
+    print("  dealer1    / dealer1234    — 딜러 관리자 (KT DS, 3단 정산)")
+    print("  dealer2    / dealer1234    — 딜러 관리자 (SFS 딜러, 운영사 소속 4단 정산)")
     print("  customer1  / customer1234  — 고객사 관리자 (카카오)")
 
 

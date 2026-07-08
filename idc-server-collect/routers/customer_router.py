@@ -173,22 +173,30 @@ def app_detail(request: Request, app_id: int, db: Session = Depends(get_db)):
         return RedirectResponse("/customer/applications", status_code=302)
     has_estimated = any(a.unit_price_estimated > 0 for a in app.assets)
 
-    # 딜러 수수료 적용 후 고객 지급 단가 계산
+    # 운영사 → 딜러 수수료 순차 적용 후 고객 지급 단가 계산
     dealer = app.dealer
+    operator = dealer.operator if (dealer and dealer.operator_id) else None
+    total_est_all  = sum(x.unit_price_estimated * x.quantity for x in app.assets) or 1
+    total_conf_all = sum(x.unit_price_confirmed  * x.quantity for x in app.assets) or 1
     asset_net_prices = {}
     for a in app.assets:
+        est, conf = a.unit_price_estimated, a.unit_price_confirmed
+
+        if operator and operator.fee_type.value == "percent":
+            op_ratio = 1 - operator.fee_value / 100
+            est, conf = est * op_ratio, conf * op_ratio
+        elif operator and operator.fee_type.value == "fixed":
+            est = est - operator.fee_value * (a.unit_price_estimated / total_est_all)
+            conf = conf - operator.fee_value * (a.unit_price_confirmed / total_conf_all)
+
         if dealer and dealer.fee_type.value == "percent":
             ratio = 1 - dealer.fee_value / 100
-            net_est  = a.unit_price_estimated * ratio
-            net_conf = a.unit_price_confirmed * ratio
+            net_est, net_conf = est * ratio, conf * ratio
         elif dealer and dealer.fee_type.value == "fixed":
-            total_est  = sum(x.unit_price_estimated * x.quantity for x in app.assets) or 1
-            total_conf = sum(x.unit_price_confirmed  * x.quantity for x in app.assets) or 1
-            net_est  = a.unit_price_estimated - dealer.fee_value * (a.unit_price_estimated / total_est)
-            net_conf = a.unit_price_confirmed  - dealer.fee_value * (a.unit_price_confirmed  / total_conf)
+            net_est  = est - dealer.fee_value * (a.unit_price_estimated / total_est_all)
+            net_conf = conf - dealer.fee_value * (a.unit_price_confirmed / total_conf_all)
         else:
-            net_est  = a.unit_price_estimated
-            net_conf = a.unit_price_confirmed
+            net_est, net_conf = est, conf
         asset_net_prices[a.id] = {"estimated": max(net_est, 0), "confirmed": max(net_conf, 0)}
 
     return templates.TemplateResponse(request, "customer/application_detail.html", {
@@ -218,9 +226,20 @@ def approve_quote(request: Request, app_id: int, db: Session = Depends(get_db)):
         # Settlement 사전 생성 (WM이 나중에 wm_paid 처리)
         if not app.settlement:
             dealer = app.dealer
+            operator = dealer.operator if (dealer and dealer.operator_id) else None
             total = sum(a.unit_price_confirmed * a.quantity for a in app.assets)
+
+            if operator:
+                if operator.fee_type.value == "percent":
+                    operator_fee = total * operator.fee_value / 100
+                else:
+                    operator_fee = operator.fee_value
+            else:
+                operator_fee = 0.0
+            after_operator = total - operator_fee
+
             if dealer and dealer.fee_type.value == "percent":
-                fee = total * dealer.fee_value / 100
+                fee = after_operator * dealer.fee_value / 100
             elif dealer:
                 fee = dealer.fee_value
             else:
@@ -230,8 +249,9 @@ def approve_quote(request: Request, app_id: int, db: Session = Depends(get_db)):
                 application_id=app.id,
                 settlement_type=stype,
                 total_amount=total,
+                operator_fee_amount=operator_fee,
                 dealer_fee_amount=fee,
-                customer_amount=total - fee,
+                customer_amount=after_operator - fee,
             ))
         db.commit()
     return RedirectResponse(f"/customer/applications/{app_id}", status_code=302)
@@ -253,6 +273,7 @@ def quotation(request: Request, app_id: int, db: Session = Depends(get_db)):
     use_confirmed = app.status in confirmed_statuses
 
     dealer = app.dealer
+    operator = dealer.operator if (dealer and dealer.operator_id) else None
     total_raw = sum(
         (a.unit_price_confirmed if use_confirmed else a.unit_price_estimated) * a.quantity
         for a in app.assets
@@ -262,15 +283,24 @@ def quotation(request: Request, app_id: int, db: Session = Depends(get_db)):
     grand_total = 0.0
     for a in app.assets:
         unit_raw = a.unit_price_confirmed if use_confirmed else a.unit_price_estimated
-        if dealer and dealer.fee_type.value == "percent":
-            net = unit_raw * (1 - dealer.fee_value / 100)
-        elif dealer and dealer.fee_type.value == "fixed":
-            item_raw = unit_raw * a.quantity
-            fee_share = dealer.fee_value * (item_raw / total_raw)
-            net = (item_raw - fee_share) / a.quantity if a.quantity else 0
+        item_raw = unit_raw * a.quantity
+
+        if operator and operator.fee_type.value == "percent":
+            item_after_op = item_raw * (1 - operator.fee_value / 100)
+        elif operator and operator.fee_type.value == "fixed":
+            op_share = operator.fee_value * (item_raw / total_raw)
+            item_after_op = item_raw - op_share
         else:
-            net = unit_raw
-        net = max(net, 0)
+            item_after_op = item_raw
+
+        if dealer and dealer.fee_type.value == "percent":
+            item_net = item_after_op * (1 - dealer.fee_value / 100)
+        elif dealer and dealer.fee_type.value == "fixed":
+            fee_share = dealer.fee_value * (item_raw / total_raw)
+            item_net = item_after_op - fee_share
+        else:
+            item_net = item_after_op
+        net = max(item_net / a.quantity, 0) if a.quantity else 0
         subtotal = net * a.quantity
         grand_total += subtotal
         asset_prices.append({"asset": a, "unit_net": net, "subtotal": subtotal})

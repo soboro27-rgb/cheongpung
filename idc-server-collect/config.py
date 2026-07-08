@@ -40,6 +40,8 @@ ROLE_LABEL = {
     "super_admin":    "슈퍼관리자",
     "wm_collector":   "수거기사",
     "wm_inspector":   "검수자",
+    "operator_admin": "운영사 관리자",
+    "operator_staff": "운영사 직원",
     "dealer_admin":   "딜러 관리자",
     "dealer_staff":   "딜러 직원",
     "customer_admin": "고객사 관리자",

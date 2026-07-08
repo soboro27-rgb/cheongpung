@@ -1,0 +1,71 @@
+{% extends "wm/base_wm.html" %}
+{% block title %}운영사 관리{% endblock %}
+{% block page_title %}<i class="bi bi-diagram-3 me-2"></i>운영사 관리{% endblock %}
+
+{% block content %}
+{% if session.role == 'super_admin' %}
+<div class="card mb-4">
+  <div class="card-header fw-semibold small">운영사 등록</div>
+  <div class="card-body">
+    <form method="post" action="/wm/operators" class="row g-2">
+      <div class="col-md-3">
+        <input type="text" name="name" class="form-control form-control-sm" placeholder="운영사명 *" required />
+      </div>
+      <div class="col-md-2">
+        <input type="text" name="operator_code" class="form-control form-control-sm" placeholder="운영사코드 * (영문대문자)" required />
+      </div>
+      <div class="col-md-2">
+        <input type="text" name="business_no" class="form-control form-control-sm" placeholder="사업자번호" />
+      </div>
+      <div class="col-md-2">
+        <input type="text" name="manager_name" class="form-control form-control-sm" placeholder="담당자명" />
+      </div>
+      <div class="col-md-2">
+        <input type="text" name="manager_phone" class="form-control form-control-sm" placeholder="담당자 연락처" />
+      </div>
+      <div class="col-md-3">
+        <select name="fee_type" class="form-select form-select-sm">
+          <option value="percent">수수료 (%)</option>
+          <option value="fixed">정액 (원)</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <input type="number" step="0.1" name="fee_value" class="form-control form-control-sm" placeholder="수수료 값" value="0" />
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-primary btn-sm w-100">등록</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header fw-semibold small">운영사 목록 ({{ operators|length }}개)</div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr><th>운영사명</th><th>코드</th><th>사업자번호</th><th>담당자</th><th>수수료</th><th>소속 딜러 수</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for op in operators %}
+        <tr>
+          <td class="fw-semibold">{{ op.name }}</td>
+          <td><code>{{ op.operator_code }}</code></td>
+          <td>{{ op.business_no or '-' }}</td>
+          <td>{{ op.manager_name or '-' }}<br><small class="text-muted">{{ op.manager_phone or '' }}</small></td>
+          <td>
+            {% if op.fee_type.value == 'percent' %}{{ op.fee_value }}%
+            {% else %}{{ '{:,}'.format(op.fee_value|int) }}원{% endif %}
+          </td>
+          <td>{{ op.dealers|length }}</td>
+          <td><a href="/wm/operators/{{ op.id }}" class="btn btn-sm btn-outline-primary py-0">상세</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-4">등록된 운영사가 없습니다.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

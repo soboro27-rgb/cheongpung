@@ -34,6 +34,28 @@
         {% endfor %}
       </div>
     </div>
+
+    <div class="card mt-3">
+      <div class="card-header fw-semibold small">소속 운영사 (정산 구조)</div>
+      <div class="card-body small">
+        {% if dealer.operator %}
+        <div class="mb-2"><span class="badge bg-warning text-dark">{{ dealer.operator.name }}</span> 소속 — 4단(매입사→운영사→딜러→고객)</div>
+        {% else %}
+        <div class="mb-2 text-muted">소속 없음 — 3단(매입사→딜러→고객)</div>
+        {% endif %}
+        {% if session.role == 'super_admin' %}
+        <form method="post" action="/wm/dealers/{{ dealer.id }}/operator" class="d-flex gap-2">
+          <select name="operator_id" class="form-select form-select-sm">
+            <option value="">소속 없음 (3단)</option>
+            {% for op in operators %}
+            <option value="{{ op.id }}" {% if dealer.operator_id == op.id %}selected{% endif %}>{{ op.name }}</option>
+            {% endfor %}
+          </select>
+          <button class="btn btn-sm btn-outline-primary">변경</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
   </div>
 
   <div class="col-md-8">

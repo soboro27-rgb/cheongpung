@@ -38,6 +38,10 @@
             <option value="wm_collector">수거기사</option>
             <option value="wm_inspector">검수자</option>
           </optgroup>
+          <optgroup label="운영사">
+            <option value="operator_admin">운영사 관리자</option>
+            <option value="operator_staff">운영사 직원</option>
+          </optgroup>
           <optgroup label="딜러">
             <option value="dealer_admin">딜러 관리자</option>
             <option value="dealer_staff">딜러 직원</option>
@@ -46,6 +50,12 @@
             <option value="customer_admin">고객사 관리자</option>
             <option value="customer_staff">고객사 직원</option>
           </optgroup>
+        </select>
+      </div>
+      <div class="col-md-2" id="operatorSel" style="display:none">
+        <select name="operator_id" class="form-select form-select-sm">
+          <option value="">운영사 선택</option>
+          {% for op in operators %}<option value="{{ op.id }}">{{ op.name }}</option>{% endfor %}
         </select>
       </div>
       <div class="col-md-2" id="dealerSel" style="display:none">
@@ -82,9 +92,10 @@
           <td>{{ usr.login_id }}</td>
           <td>{{ ROLE_LABEL.get(usr.role.value, usr.role.value) }}</td>
           <td>
+            {% if usr.operator %}{{ usr.operator.name }}{% endif %}
             {% if usr.dealer %}{{ usr.dealer.name }}{% endif %}
             {% if usr.customer %}{{ usr.customer.name }}{% endif %}
-            {% if not usr.dealer and not usr.customer %}-{% endif %}
+            {% if not usr.operator and not usr.dealer and not usr.customer %}-{% endif %}
           </td>
           <td>
             {% if usr.is_active %}<span class="badge bg-success">활성</span>
@@ -155,6 +166,10 @@
                     <option value="wm_collector" {% if usr.role.value == 'wm_collector' %}selected{% endif %}>수거기사</option>
                     <option value="wm_inspector" {% if usr.role.value == 'wm_inspector' %}selected{% endif %}>검수자</option>
                   </optgroup>
+                  <optgroup label="운영사">
+                    <option value="operator_admin" {% if usr.role.value == 'operator_admin' %}selected{% endif %}>운영사 관리자</option>
+                    <option value="operator_staff" {% if usr.role.value == 'operator_staff' %}selected{% endif %}>운영사 직원</option>
+                  </optgroup>
                   <optgroup label="딜러">
                     <option value="dealer_admin" {% if usr.role.value == 'dealer_admin' %}selected{% endif %}>딜러 관리자</option>
                     <option value="dealer_staff" {% if usr.role.value == 'dealer_staff' %}selected{% endif %}>딜러 직원</option>
@@ -163,6 +178,16 @@
                     <option value="customer_admin" {% if usr.role.value == 'customer_admin' %}selected{% endif %}>고객사 관리자</option>
                     <option value="customer_staff" {% if usr.role.value == 'customer_staff' %}selected{% endif %}>고객사 직원</option>
                   </optgroup>
+                </select>
+              </div>
+              <div class="col-auto" id="editOperatorSel{{ usr.id }}"
+                style="display:{% if usr.role.value in ('operator_admin', 'operator_staff') %}block{% else %}none{% endif %}">
+                <label class="form-label form-label-sm text-muted mb-0">운영사</label>
+                <select name="operator_id" class="form-select form-select-sm" style="width:140px">
+                  <option value="">운영사 선택</option>
+                  {% for op in operators %}
+                  <option value="{{ op.id }}" {% if usr.operator_id == op.id %}selected{% endif %}>{{ op.name }}</option>
+                  {% endfor %}
                 </select>
               </div>
               <div class="col-auto" id="editDealerSel{{ usr.id }}"
@@ -205,12 +230,16 @@
 <script>
 function onRoleChange() {
   const role = document.getElementById('roleSelect').value;
+  document.getElementById('operatorSel').style.display =
+    (role === 'operator_admin' || role === 'operator_staff') ? 'block' : 'none';
   document.getElementById('dealerSel').style.display =
     (role === 'dealer_admin' || role === 'dealer_staff') ? 'block' : 'none';
   document.getElementById('customerSel').style.display =
     (role === 'customer_admin' || role === 'customer_staff') ? 'block' : 'none';
 }
 function onEditRoleChange(userId, role) {
+  document.getElementById('editOperatorSel' + userId).style.display =
+    (role === 'operator_admin' || role === 'operator_staff') ? 'block' : 'none';
   document.getElementById('editDealerSel' + userId).style.display =
     (role === 'dealer_admin' || role === 'dealer_staff') ? 'block' : 'none';
   document.getElementById('editCustomerSel' + userId).style.display =

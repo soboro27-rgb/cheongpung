@@ -1,0 +1,38 @@
+{% extends "operator/base_operator.html" %}
+{% block title %}소속 딜러{% endblock %}
+{% block page_title %}<i class="bi bi-briefcase me-2"></i>소속 딜러{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header fw-semibold small">소속 딜러 ({{ dealers|length }}개)</div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr><th>딜러명</th><th>코드</th><th>담당자</th><th>정산방식</th><th>딜러 수수료</th></tr>
+      </thead>
+      <tbody>
+        {% for d in dealers %}
+        <tr>
+          <td class="fw-semibold">{{ d.name }}</td>
+          <td><code>{{ d.dealer_code }}</code></td>
+          <td>{{ d.manager_name or '-' }}<br><small class="text-muted">{{ d.manager_phone or '' }}</small></td>
+          <td>
+            {% if d.settlement_type.value == 'direct' %}
+            <span class="badge bg-success">직지급</span>
+            {% else %}
+            <span class="badge bg-info">딜러경유</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if d.fee_type.value == 'percent' %}{{ d.fee_value }}%
+            {% else %}{{ '{:,}'.format(d.fee_value|int) }}원{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">소속 딜러가 없습니다.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

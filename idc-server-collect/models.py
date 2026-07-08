@@ -15,6 +15,8 @@ class UserRole(str, enum.Enum):
     SUPER_ADMIN    = "super_admin"    # 월드와이드메모리 슈퍼관리자
     WM_COLLECTOR   = "wm_collector"   # 수거기사
     WM_INSPECTOR   = "wm_inspector"   # 검수자
+    OPERATOR_ADMIN = "operator_admin" # 운영사 관리자
+    OPERATOR_STAFF = "operator_staff" # 운영사 직원
     DEALER_ADMIN   = "dealer_admin"   # 딜러(호스팅업체) 관리자
     DEALER_STAFF   = "dealer_staff"   # 딜러 직원
     CUSTOMER_ADMIN = "customer_admin" # 고객사 관리자
@@ -71,11 +73,32 @@ class IdcCenter(Base):
     dealer_links = relationship("DealerIdcCenter", back_populates="idc_center")
 
 
+class Operator(Base):
+    """운영사(딜러 영업 조직) 마스터 — 딜러를 모아오는 상위 조직, 선택 사항"""
+    __tablename__ = "operators"
+
+    id              = Column(Integer, primary_key=True)
+    name            = Column(String(100), nullable=False)
+    business_no     = Column(String(20), default="")
+    manager_name    = Column(String(50), default="")
+    manager_phone   = Column(String(20), default="")
+    manager_email   = Column(String(100), default="")
+    operator_code   = Column(String(20), unique=True, nullable=False)
+    fee_type        = Column(SAEnum(FeeType), default=FeeType.PERCENT)
+    fee_value       = Column(Float, default=0.0)   # 정액(원) 또는 비율(%)
+    is_active       = Column(Boolean, default=True)
+    created_at      = Column(DateTime, default=datetime.now)
+
+    users   = relationship("User", back_populates="operator")
+    dealers = relationship("Dealer", back_populates="operator")
+
+
 class Dealer(Base):
     """딜러(호스팅업체) 마스터"""
     __tablename__ = "dealers"
 
     id              = Column(Integer, primary_key=True)
+    operator_id     = Column(Integer, ForeignKey("operators.id"), nullable=True)  # 소속 운영사 (없으면 3단 구조)
     name            = Column(String(100), nullable=False)
     business_no     = Column(String(20), default="")
     manager_name    = Column(String(50), default="")
@@ -88,6 +111,7 @@ class Dealer(Base):
     is_active       = Column(Boolean, default=True)
     created_at      = Column(DateTime, default=datetime.now)
 
+    operator     = relationship("Operator", back_populates="dealers")
     users        = relationship("User", back_populates="dealer")
     customers    = relationship("Customer", back_populates="dealer")
     applications = relationship("Application", back_populates="dealer")
@@ -144,6 +168,7 @@ class User(Base):
     role          = Column(SAEnum(UserRole), nullable=False)
 
     # 소속 (역할에 따라 하나만 채움)
+    operator_id = Column(Integer, ForeignKey("operators.id"), nullable=True)
     dealer_id   = Column(Integer, ForeignKey("dealers.id"),   nullable=True)
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=True)
 
@@ -151,6 +176,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.now)
     last_login = Column(DateTime, nullable=True)
 
+    operator = relationship("Operator", back_populates="users")
     dealer   = relationship("Dealer",   back_populates="users")
     customer = relationship("Customer", back_populates="users")
 
@@ -317,12 +343,15 @@ class Settlement(Base):
 
     # 금액 레이어
     total_amount        = Column(Float, default=0.0)  # 매입 합계 (확정단가 × 수량)
+    operator_fee_amount = Column(Float, default=0.0)  # 운영사 수수료 (운영사 소속 딜러 건만 > 0)
     dealer_fee_amount   = Column(Float, default=0.0)  # 딜러 수수료
     customer_amount     = Column(Float, default=0.0)  # 고객 수령 금액
 
     # 정산 상태
     wm_paid          = Column(Boolean, default=False)   # WM→고객(직지급) or WM→딜러(경유)
     wm_paid_at       = Column(DateTime, nullable=True)
+    operator_paid    = Column(Boolean, default=False)   # WM→운영사 (운영사 소속 건만 사용)
+    operator_paid_at = Column(DateTime, nullable=True)
     dealer_paid      = Column(Boolean, default=False)   # 딜러→고객 (경유 방식)
     dealer_paid_at   = Column(DateTime, nullable=True)
 

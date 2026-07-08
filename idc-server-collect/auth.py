@@ -3,6 +3,7 @@ from models import UserRole
 
 # 월드와이드메모리 내부 역할 집합
 WM_ROLES = {UserRole.SUPER_ADMIN, UserRole.WM_COLLECTOR, UserRole.WM_INSPECTOR}
+OPERATOR_ROLES = {UserRole.OPERATOR_ADMIN, UserRole.OPERATOR_STAFF}
 DEALER_ROLES = {UserRole.DEALER_ADMIN, UserRole.DEALER_STAFF}
 CUSTOMER_ROLES = {UserRole.CUSTOMER_ADMIN, UserRole.CUSTOMER_STAFF}
 
@@ -16,6 +17,8 @@ def get_session_user(request: Request) -> dict | None:
         "login_id":    request.session.get("login_id", ""),
         "name":        request.session.get("name", ""),
         "role":        request.session.get("role", ""),
+        "operator_id":   request.session.get("operator_id"),
+        "operator_name": request.session.get("operator_name", ""),
         "dealer_id":   request.session.get("dealer_id"),
         "dealer_name": request.session.get("dealer_name", ""),
         "customer_id": request.session.get("customer_id"),
@@ -39,6 +42,16 @@ def require_super_admin(request: Request) -> dict | None:
     if not u:
         return None
     if u["role"] != UserRole.SUPER_ADMIN.value:
+        return None
+    return u
+
+
+def require_operator(request: Request) -> dict | None:
+    """운영사(operator_admin / operator_staff)"""
+    u = get_session_user(request)
+    if not u:
+        return None
+    if u["role"] not in {r.value for r in OPERATOR_ROLES}:
         return None
     return u
 

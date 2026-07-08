@@ -1,0 +1,81 @@
+{% extends "wm/base_wm.html" %}
+{% block title %}{{ operator.name }} — 운영사 상세{% endblock %}
+{% block page_title %}<i class="bi bi-diagram-3 me-2"></i>{{ operator.name }}{% endblock %}
+{% block breadcrumb %}<a href="/wm/operators">운영사 목록</a> / {{ operator.name }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-header fw-semibold small">운영사 정보</div>
+      <div class="card-body small">
+        <dl class="row mb-0">
+          <dt class="col-5 text-muted">운영사명</dt><dd class="col-7">{{ operator.name }}</dd>
+          <dt class="col-5 text-muted">운영사코드</dt><dd class="col-7"><code>{{ operator.operator_code }}</code></dd>
+          <dt class="col-5 text-muted">사업자번호</dt><dd class="col-7">{{ operator.business_no or '-' }}</dd>
+          <dt class="col-5 text-muted">담당자</dt><dd class="col-7">{{ operator.manager_name or '-' }}</dd>
+          <dt class="col-5 text-muted">연락처</dt><dd class="col-7">{{ operator.manager_phone or '-' }}</dd>
+          <dt class="col-5 text-muted">이메일</dt><dd class="col-7">{{ operator.manager_email or '-' }}</dd>
+          <dt class="col-5 text-muted">수수료</dt>
+          <dd class="col-7">
+            {% if operator.fee_type.value == 'percent' %}{{ operator.fee_value }}%{% else %}{{ '{:,}'.format(operator.fee_value|int) }}원{% endif %}
+          </dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="card mb-3">
+      <div class="card-header fw-semibold small d-flex justify-content-between align-items-center">
+        소속 딜러 ({{ dealers|length }}개)
+        <a href="/wm/dealers" class="btn btn-sm btn-outline-primary py-0">딜러 관리</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>딜러명</th><th>코드</th><th>담당자</th><th>수수료</th></tr></thead>
+          <tbody>
+            {% for d in dealers %}
+            <tr>
+              <td><a href="/wm/dealers/{{ d.id }}">{{ d.name }}</a></td>
+              <td><code>{{ d.dealer_code }}</code></td>
+              <td>{{ d.manager_name or '-' }}</td>
+              <td>{% if d.fee_type.value == 'percent' %}{{ d.fee_value }}%{% else %}{{ '{:,}'.format(d.fee_value|int) }}원{% endif %}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-center text-muted py-3">소속 딜러 없음</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header fw-semibold small d-flex justify-content-between align-items-center">
+        계정 ({{ users|length }}개)
+        <a href="/wm/users" class="btn btn-sm btn-outline-primary py-0">전체 계정 관리</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>이름</th><th>아이디</th><th>역할</th><th>상태</th></tr></thead>
+          <tbody>
+            {% for usr in users %}
+            <tr>
+              <td>{{ usr.name }}</td>
+              <td>{{ usr.login_id }}</td>
+              <td>{{ ROLE_LABEL.get(usr.role.value, usr.role.value) }}</td>
+              <td>
+                {% if usr.is_active %}<span class="badge bg-success">활성</span>
+                {% else %}<span class="badge bg-secondary">비활성</span>{% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-center text-muted py-3">계정 없음</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
