@@ -10,28 +10,11 @@ import models
 
 models.Base.metadata.create_all(bind=engine)
 
-# 마이그레이션: 기존 테이블에 신규 컬럼(운영사 계층) 추가
-# 컬럼 하나씩 독립된 트랜잭션으로 처리 — 하나 실패해도 나머지는 계속 시도하고, 실패 사유를 명확히 남긴다.
-from sqlalchemy import text as _text, inspect as _sa_inspect
-
-
-def _add_column_if_missing(table: str, column: str, ddl_type: str):
-    try:
-        cols = [c["name"] for c in _sa_inspect(engine).get_columns(table)]
-        if column in cols:
-            return
-        with engine.begin() as _c:
-            _c.execute(_text(f"ALTER TABLE {table} ADD COLUMN {column} {ddl_type}"))
-        print(f"[migrate] {table}.{column} 컬럼 추가 완료", flush=True)
-    except Exception as _e:
-        print(f"[migrate] {table}.{column} 추가 실패: {type(_e).__name__}: {_e}", flush=True)
-
-
-_add_column_if_missing("dealers", "operator_id", "INTEGER")
-_add_column_if_missing("users", "operator_id", "INTEGER")
-_add_column_if_missing("settlements", "operator_fee_amount", "FLOAT DEFAULT 0.0")
-_add_column_if_missing("settlements", "operator_paid", "BOOLEAN DEFAULT FALSE")
-_add_column_if_missing("settlements", "operator_paid_at", "TIMESTAMP")
+# 마이그레이션: 기존 테이블에 신규 컬럼(운영사 계층) 추가.
+# start.sh에서도 init_data.py보다 먼저 별도 호출하지만, uvicorn만 단독 실행하는
+# 경로(로컬 개발 등)를 위해 여기서도 한 번 더 호출한다 (idempotent).
+from migrate_columns import run_migrations
+run_migrations()
 
 from routers import auth_router, wm_router, dealer_router, customer_router, operator_router
 
