@@ -11,28 +11,27 @@ import models
 models.Base.metadata.create_all(bind=engine)
 
 # 마이그레이션: 기존 테이블에 신규 컬럼(운영사 계층) 추가
+# 컬럼 하나씩 독립된 트랜잭션으로 처리 — 하나 실패해도 나머지는 계속 시도하고, 실패 사유를 명확히 남긴다.
 from sqlalchemy import text as _text, inspect as _sa_inspect
-try:
-    _inspector = _sa_inspect(engine)
-    with engine.connect() as _c:
-        _dealer_cols = [c["name"] for c in _inspector.get_columns("dealers")]
-        if "operator_id" not in _dealer_cols:
-            _c.execute(_text("ALTER TABLE dealers ADD COLUMN operator_id INTEGER"))
 
-        _user_cols = [c["name"] for c in _inspector.get_columns("users")]
-        if "operator_id" not in _user_cols:
-            _c.execute(_text("ALTER TABLE users ADD COLUMN operator_id INTEGER"))
 
-        _settlement_cols = [c["name"] for c in _inspector.get_columns("settlements")]
-        if "operator_fee_amount" not in _settlement_cols:
-            _c.execute(_text("ALTER TABLE settlements ADD COLUMN operator_fee_amount FLOAT DEFAULT 0.0"))
-        if "operator_paid" not in _settlement_cols:
-            _c.execute(_text("ALTER TABLE settlements ADD COLUMN operator_paid BOOLEAN DEFAULT FALSE"))
-        if "operator_paid_at" not in _settlement_cols:
-            _c.execute(_text("ALTER TABLE settlements ADD COLUMN operator_paid_at TIMESTAMP"))
-        _c.commit()
-except Exception as _e:
-    print(f"Migration warning: {_e}")
+def _add_column_if_missing(table: str, column: str, ddl_type: str):
+    try:
+        cols = [c["name"] for c in _sa_inspect(engine).get_columns(table)]
+        if column in cols:
+            return
+        with engine.begin() as _c:
+            _c.execute(_text(f"ALTER TABLE {table} ADD COLUMN {column} {ddl_type}"))
+        print(f"[migrate] {table}.{column} 컬럼 추가 완료", flush=True)
+    except Exception as _e:
+        print(f"[migrate] {table}.{column} 추가 실패: {type(_e).__name__}: {_e}", flush=True)
+
+
+_add_column_if_missing("dealers", "operator_id", "INTEGER")
+_add_column_if_missing("users", "operator_id", "INTEGER")
+_add_column_if_missing("settlements", "operator_fee_amount", "FLOAT DEFAULT 0.0")
+_add_column_if_missing("settlements", "operator_paid", "BOOLEAN DEFAULT FALSE")
+_add_column_if_missing("settlements", "operator_paid_at", "TIMESTAMP")
 
 from routers import auth_router, wm_router, dealer_router, customer_router, operator_router
 
