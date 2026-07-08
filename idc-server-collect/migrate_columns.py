@@ -20,12 +20,33 @@ def _add_column_if_missing(table: str, column: str, ddl_type: str):
         print(f"[migrate] {table}.{column} 추가 실패: {type(e).__name__}: {e}", flush=True)
 
 
+def _add_enum_value_if_missing(enum_type: str, value: str):
+    """Postgres 네이티브 enum 타입에 새 값 추가 (SQLite는 enum을 VARCHAR로 다뤄서 해당 없음).
+    ALTER TYPE ... ADD VALUE는 옛 Postgres 버전에서 트랜잭션 블록 안에서 실행 불가하므로
+    autocommit으로 실행한다."""
+    if engine.dialect.name != "postgresql":
+        return
+    try:
+        conn = engine.connect().execution_options(isolation_level="AUTOCOMMIT")
+        try:
+            conn.execute(text(f"ALTER TYPE {enum_type} ADD VALUE IF NOT EXISTS '{value}'"))
+        finally:
+            conn.close()
+        print(f"[migrate] enum {enum_type}에 '{value}' 추가 완료(또는 이미 존재)", flush=True)
+    except Exception as e:
+        print(f"[migrate] enum {enum_type}에 '{value}' 추가 실패: {type(e).__name__}: {e}", flush=True)
+
+
 def run_migrations():
     _add_column_if_missing("dealers", "operator_id", "INTEGER")
     _add_column_if_missing("users", "operator_id", "INTEGER")
     _add_column_if_missing("settlements", "operator_fee_amount", "FLOAT DEFAULT 0.0")
     _add_column_if_missing("settlements", "operator_paid", "BOOLEAN DEFAULT FALSE")
     _add_column_if_missing("settlements", "operator_paid_at", "TIMESTAMP")
+
+    # UserRole enum(Postgres 네이티브 타입)에 신규 역할값 추가
+    _add_enum_value_if_missing("userrole", "OPERATOR_ADMIN")
+    _add_enum_value_if_missing("userrole", "OPERATOR_STAFF")
 
 
 if __name__ == "__main__":
