@@ -417,6 +417,11 @@ def user_delete(request: Request, user_id: int, db: Session = Depends(get_db)):
     if redir: return redir
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if user and user.id != u["user_id"]:
+        # 이 계정을 참조하는 이력 레코드는 삭제하지 않고 참조만 해제
+        # (로그인 이력·수정 이력 자체는 감사 목적으로 보존)
+        db.query(models.LoginLog).filter(models.LoginLog.user_id == user_id).update({"user_id": None})
+        db.query(models.AssetEditLog).filter(models.AssetEditLog.user_id == user_id).update({"user_id": None})
+        db.query(models.ServerAsset).filter(models.ServerAsset.locked_by == user_id).update({"locked_by": None})
         db.delete(user)
         db.commit()
     return RedirectResponse("/wm/users?deleted=ok", status_code=302)
