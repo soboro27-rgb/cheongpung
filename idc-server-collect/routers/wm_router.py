@@ -277,6 +277,24 @@ async def customer_create(request: Request, db: Session = Depends(get_db)):
     return RedirectResponse("/wm/customers", status_code=302)
 
 
+@router.post("/customers/{customer_id}/force-delete")
+def customer_force_delete(request: Request, customer_id: int, db: Session = Depends(get_db)):
+    """고객사 마스터 + 소속 신청 건 전체를 완전 삭제 (테스트 데이터 정리용, 슈퍼관리자 전용)"""
+    u, redir = _check_super(request)
+    if redir: return redir
+    customer = db.query(models.Customer).filter(models.Customer.id == customer_id).first()
+    if not customer:
+        return RedirectResponse("/wm/customers", status_code=302)
+
+    apps = db.query(models.Application).filter(models.Application.customer_id == customer_id).all()
+    for app in apps:
+        db.delete(app)  # assets/schedule/settlement은 모델 cascade로 함께 삭제됨
+    db.query(models.User).filter(models.User.customer_id == customer_id).update({"customer_id": None})
+    db.delete(customer)
+    db.commit()
+    return RedirectResponse("/wm/customers?deleted=ok", status_code=302)
+
+
 # ─── 사용자(계정) 관리 ────────────────────────────────
 
 @router.get("/users", response_class=HTMLResponse)
