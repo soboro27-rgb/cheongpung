@@ -47,11 +47,11 @@ def seed():
             print(f"✓ IDC 센터: {name}")
         centers[name] = c
 
-    # ── 샘플 운영사 (4단 정산 구조 데모용) ─────
+    # ── 운영사: 포스라 (4단 정산 구조) ─────
     operator = db.query(models.Operator).filter(models.Operator.operator_code == "WMOPS").first()
     if not operator:
         operator = models.Operator(
-            name="월드메모리 파트너스 (샘플)",
+            name="포스라",
             business_no="234-56-78901",
             manager_name="김운영",
             manager_phone="010-2345-6789",
@@ -62,9 +62,12 @@ def seed():
         )
         db.add(operator)
         db.flush()
-        print("✓ 운영사: 월드메모리 파트너스")
+        print("✓ 운영사: 포스라")
+    elif operator.name != "포스라":
+        operator.name = "포스라"
+        print("✓ 운영사 이름 보정: 포스라")
     else:
-        print("- 운영사 월드메모리 파트너스 이미 존재")
+        print("- 운영사 포스라 이미 존재")
 
     # ── 운영사 관리자 계정 ──────────────────────
     if not db.query(models.User).filter(models.User.login_id == "operator1").first():
