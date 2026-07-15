@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>점검 결과 보고서</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif; font-size: 9pt; color: #1a1a1a; background: #fff; }
+
+    .print-btn {
+      position: fixed; top: 16px; right: 16px; z-index: 999;
+      background: #111; color: #fff; border: none; padding: 10px 22px;
+      font-size: 13px; border-radius: 6px; cursor: pointer;
+    }
+    .print-btn:hover { background: #333; }
+
+    /* ── Page wrapper ── */
+    .report-page { max-width: 210mm; margin: 0 auto; padding: 12mm 14mm; }
+
+    /* ── TOP HEADER ── */
+    .top-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .company-name { font-size: 8.5pt; color: #666; }
+    .completed-locations-box { text-align: right; max-width: 65%; }
+    .completed-locations-box .label { font-size: 7.5pt; font-weight: 700; color: #333; margin-bottom: 2px; }
+    .completed-locations-box .locs { font-size: 7.5pt; color: #444; line-height: 1.6; }
+
+    /* ── TITLE ── */
+    .report-title { font-size: 21pt; font-weight: 700; color: #111; margin: 8px 0 4px; }
+    .report-meta { font-size: 8.5pt; color: #555; margin-bottom: 10px; }
+    .divider { border: none; border-top: 1.5px solid #111; margin: 8px 0 14px; }
+
+    /* ── SECTION ── */
+    .section-title { font-size: 10pt; font-weight: 700; margin-bottom: 8px; }
+
+    /* ── SUMMARY STATS ── */
+    .stats-row { display: flex; gap: 8px; margin-bottom: 18px; }
+    .stat-box {
+      flex: 1; border: 1px solid #ddd; border-radius: 4px; padding: 8px 10px;
+      text-align: center;
+    }
+    .stat-box .num { font-size: 16pt; font-weight: 700; color: #111; }
+    .stat-box .num.green { color: #16a34a; }
+    .stat-box .num.red { color: #dc2626; }
+    .stat-box .unit { font-size: 12pt; font-weight: 700; }
+    .stat-box .lbl { font-size: 7pt; color: #888; margin-top: 2px; }
+
+    /* ── ISSUE LIST ── */
+    .issue-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; font-size: 8pt; }
+    .issue-table th { background: #f5f5f5; border: 1px solid #ddd; padding: 5px 8px; text-align: left; font-weight: 700; }
+    .issue-table td { border: 1px solid #ddd; padding: 5px 8px; vertical-align: top; }
+    .issue-table .code-cell { white-space: nowrap; font-weight: 700; }
+    .badge { display: inline-block; padding: 1px 7px; border-radius: 99px; font-size: 7pt; font-weight: 700; border: 1px solid #ccc; }
+    .badge-done { background: #dcfce7; color: #15803d; border-color: #86efac; }
+    .badge-issue { background: #fff3cd; color: #92400e; border-color: #fcd34d; }
+
+    /* ── TYPE/LOCATION BREAKDOWN ── */
+    .breakdown-row { display: flex; gap: 16px; margin-bottom: 18px; }
+    .breakdown-table { border-collapse: collapse; font-size: 8pt; width: 100%; }
+    .breakdown-table th { background: #f5f5f5; border: 1px solid #ddd; padding: 4px 8px; font-weight: 700; text-align: center; }
+    .breakdown-table td { border: 1px solid #ddd; padding: 3px 8px; text-align: center; }
+    .breakdown-table td:first-child { text-align: left; }
+    .breakdown-table .total-row td { font-weight: 700; background: #f9f9f9; }
+
+    /* ── PAGE BREAK ── */
+    .page-break { page-break-before: always; }
+
+    /* ── DETAIL SECTION ── */
+    .detail-header {
+      border-bottom: 1.5px solid #111; padding-bottom: 6px; margin-bottom: 12px;
+      display: flex; justify-content: space-between; align-items: flex-end;
+    }
+    .detail-header .left { font-size: 8.5pt; color: #666; }
+    .detail-header .right { font-size: 9pt; font-weight: 700; }
+
+    .detail-table { width: 100%; border-collapse: collapse; font-size: 7.5pt; }
+    .detail-table th {
+      background: #f0f0f0; border: 1px solid #ccc; padding: 4px 6px;
+      font-weight: 700; text-align: center; white-space: nowrap;
+    }
+    .detail-table td { border: 1px solid #ddd; padding: 3px 6px; vertical-align: top; }
+    .detail-table td.code { white-space: nowrap; font-size: 7pt; color: #555; }
+    .detail-table td.loc { font-size: 7pt; }
+    .detail-table tr.issue-row td { background: #fff8f8; }
+    .badge-normal { background:#e8f5e9; color:#2e7d32; border-color:#a5d6a7; }
+    .badge-abnormal { background:#ffebee; color:#c62828; border-color:#ef9a9a; }
+    .badge-completed { background:#e8f5e9; color:#1b5e20; border-color:#81c784; }
+
+    /* ── LOADING ── */
+    #loading { text-align: center; padding: 60px; font-size: 14px; color: #666; }
+
+    @media print {
+      @page { margin: 12mm; size: A4; }
+      .print-btn { display: none !important; }
+      .report-page { padding: 0; max-width: 100%; }
+      body { font-size: 9pt; }
+      .stat-box .num { font-size: 14pt; }
+    }
+  </style>
+</head>
+<body>
+
+<button class="print-btn" onclick="window.print()">🖨 인쇄 / PDF 저장</button>
+
+<div id="loading">보고서 데이터 로딩 중...</div>
+<div id="report" style="display:none"></div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const YEAR  = parseInt(params.get('year'))  || new Date().getFullYear();
+const MONTH = parseInt(params.get('month')) || new Date().getMonth() + 1;
+
+const TYPE_KR = {
+  TV:'TV', DID:'DID', SETTOP:'셋탑박스', PC:'노하드PC', MIC:'마이크',
+  SPEAKER:'스피커', CAMERA:'카메라', PROJECTOR:'빔프로젝터',
+  DONGLE:'동글', LED_WALL:'LED전광판', AUDIO:'오디오', VIDEO_CONF:'화상회의',
+};
+const ACTION_KR = { normal:'해당없음', issue:'확인중', as_request:'AS접수', completed:'조치완료' };
+
+async function load() {
+  const [repRes, dashRes] = await Promise.all([
+    fetch(`/api/report?year=${YEAR}&month=${MONTH}`),
+    fetch(`/api/dashboard?year=${YEAR}&month=${MONTH}`),
+  ]);
+
+  if (repRes.status === 401 || dashRes.status === 401) {
+    document.getElementById('loading').textContent = '로그인이 필요합니다. 관리자 화면에서 먼저 로그인해 주세요.';
+    return;
+  }
+
+  const { results } = await repRes.json();
+  const dash = await dashRes.json();
+  const { stats, locationStatus } = dash;
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('report').style.display = '';
+  document.getElementById('report').innerHTML = buildReport(results || [], stats, locationStatus || []);
+}
+
+function buildReport(results, stats, locationStatus) {
+  // 완료 장소 목록
+  const completedLocs = locationStatus
+    .filter(l => l.session_status === 'completed')
+    .sort((a,b) => {
+      if (a.building !== b.building) return a.building.localeCompare(b.building);
+      return (a.sort_order||0) - (b.sort_order||0);
+    });
+
+  // 점검일 / 점검자
+  const date = results.length
+    ? (results.find(r => r.completed_at)?.completed_at || '').slice(0,10) || `${YEAR}-${String(MONTH).padStart(2,'0')}-29`
+    : `${YEAR}-${String(MONTH).padStart(2,'0')}-01`;
+
+  const inspectors = [...new Set(
+    locationStatus.filter(l => l.inspector_name).map(l => l.inspector_name)
+  )].join(' · ');
+
+  // 이상 항목
+  const issues = results.filter(r => !r.no_issues);
+
+  // 장비 구분별 집계
+  const typeMap = {};
+  results.forEach(r => {
+    if (!typeMap[r.type]) typeMap[r.type] = { total:0, normal:0, issue:0 };
+    typeMap[r.type].total++;
+    r.no_issues ? typeMap[r.type].normal++ : typeMap[r.type].issue++;
+  });
+  const typeSorted = Object.entries(typeMap).sort((a,b) => b[1].total - a[1].total);
+
+  // 장소별 집계
+  const locMap = {};
+  results.forEach(r => {
+    const key = `${r.building} ${r.location_name}`;
+    if (!locMap[key]) locMap[key] = { total:0, normal:0, issue:0 };
+    locMap[key].total++;
+    r.no_issues ? locMap[key].normal++ : locMap[key].issue++;
+  });
+  const locSorted = Object.entries(locMap).sort((a,b) => b[1].total - a[1].total);
+
+  const totalInspected = results.length;
+  const totalNormal = results.filter(r => r.no_issues).length;
+
+  // 완료 장소 텍스트 (줄바꿈 포맷)
+  const locText = completedLocs.map(l => `${l.building} ${l.name}`).join(', ');
+
+  return `
+<div class="report-page">
+
+  <!-- Page 1 -->
+  <div class="top-header">
+    <div class="company-name">넥슨코리아 공용부</div>
+    <div class="completed-locations-box">
+      <div class="label">점검 완료 장소</div>
+      <div class="locs">${locText || '—'}</div>
+    </div>
+  </div>
+
+  <div class="report-title">공용 시설 장비 점검 결과 보고서</div>
+  <div class="report-meta">${YEAR}년 ${MONTH}월 점검 | ${date} | 담당: ${inspectors || '—'}</div>
+  <hr class="divider">
+
+  <div class="section-title">점검 요약</div>
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="num green">${stats.completionRate}<span class="unit" style="font-size:13pt">%</span></div>
+      <div class="lbl">전체 점검 완료율</div>
+    </div>
+    <div class="stat-box">
+      <div class="num">${stats.completedSessions} <span class="unit" style="font-size:10pt;color:#555">/ ${stats.totalLocations}개소</span></div>
+      <div class="lbl">점검 완료 장소</div>
+    </div>
+    <div class="stat-box">
+      <div class="num">${totalInspected}<span class="unit" style="font-size:11pt">건</span></div>
+      <div class="lbl">점검 장비 수</div>
+    </div>
+    <div class="stat-box">
+      <div class="num green">${totalNormal}<span class="unit" style="font-size:11pt">건</span></div>
+      <div class="lbl">정상</div>
+    </div>
+    <div class="stat-box">
+      <div class="num ${stats.issueCount>0?'red':''}">${stats.issueCount}<span class="unit" style="font-size:11pt">건</span></div>
+      <div class="lbl">이상 발생</div>
+    </div>
+    <div class="stat-box">
+      <div class="num">${stats.asCount}<span class="unit" style="font-size:11pt">건</span></div>
+      <div class="lbl">AS 접수</div>
+    </div>
+  </div>
+
+  ${issues.length ? `
+  <div class="section-title">이상 발생 항목</div>
+  <table class="issue-table">
+    <thead><tr>
+      <th>장비ID</th><th>장비명</th><th>위치</th><th>이상 내용</th><th>조치상태</th>
+    </tr></thead>
+    <tbody>
+      ${issues.map(r => `
+      <tr>
+        <td class="code-cell">${r.equipment_code}</td>
+        <td><strong>${r.equipment_name}</strong></td>
+        <td>${r.building} ${r.location_name}</td>
+        <td style="font-size:7.5pt">${r.issue_description || '—'}</td>
+        <td><span class="badge ${r.action_status==='completed'?'badge-done':'badge-issue'}">${ACTION_KR[r.action_status]||'—'}</span></td>
+      </tr>`).join('')}
+    </tbody>
+  </table>` : ''}
+
+  <div class="section-title">장비 구분별 · 장소별 현황</div>
+  <div class="breakdown-row">
+    <div style="flex:0 0 180px">
+      <table class="breakdown-table">
+        <thead><tr><th>구분</th><th>점검수</th><th>정상</th><th>이상</th></tr></thead>
+        <tbody>
+          ${typeSorted.map(([type, v]) => `
+          <tr>
+            <td>${type}</td>
+            <td>${v.total}</td>
+            <td>${v.normal}</td>
+            <td>${v.issue > 0 ? `<strong style="color:#dc2626">${v.issue}</strong>` : '0'}</td>
+          </tr>`).join('')}
+          <tr class="total-row">
+            <td>합계</td>
+            <td>${totalInspected}</td>
+            <td>${totalNormal}</td>
+            <td>${stats.issueCount>0?`<strong style="color:#dc2626">${stats.issueCount}</strong>`:'0'}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="flex:1">
+      <table class="breakdown-table">
+        <thead><tr><th style="text-align:left">위치</th><th>점검수</th><th>정상</th><th>이상</th></tr></thead>
+        <tbody>
+          ${locSorted.map(([loc, v]) => `
+          <tr>
+            <td>${loc}</td>
+            <td>${v.total}</td>
+            <td>${v.normal}</td>
+            <td>${v.issue > 0 ? `<strong style="color:#dc2626">${v.issue}</strong>` : '0'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Page 2+: 전체 세부 내역 -->
+<div class="report-page page-break">
+  <div class="detail-header">
+    <div class="left">넥슨코리아 공용부 점검 결과 보고서 — 전체 세부 내역 (${date})</div>
+  </div>
+
+  <div class="section-title">전체 점검 세부 내역</div>
+  <table class="detail-table">
+    <thead>
+      <tr>
+        <th>장비ID</th><th>장비명</th><th>구분</th><th>위치</th>
+        <th>점검자</th><th>점검결과</th><th>조치상태</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${results.map(r => `
+      <tr class="${!r.no_issues?'issue-row':''}">
+        <td class="code">${r.equipment_code}</td>
+        <td>${r.equipment_name}</td>
+        <td>${r.type}</td>
+        <td class="loc">${r.building} ${r.location_name}</td>
+        <td>${r.inspector_name||'—'}</td>
+        <td><span class="badge ${r.no_issues?'badge-normal':'badge-abnormal'}">${r.no_issues?'정상':'이상'}</span></td>
+        <td><span class="badge ${r.action_status==='completed'?'badge-completed':r.action_status==='issue'?'badge-issue':''}">${ACTION_KR[r.action_status]||'—'}</span></td>
+      </tr>`).join('')}
+    </tbody>
+  </table>
+  <div style="margin-top:14px; font-size:7pt; color:#888; border-top:1px solid #ddd; padding-top:6px;">
+    ※ 이상 항목은 조치 완료 시 조치상태가 업데이트됩니다. / 본 보고서는 코어테일 IT운영팀이 작성하였습니다.
+  </div>
+</div>
+`;
+}
+
+load();
+</script>
+</body>
+</html>

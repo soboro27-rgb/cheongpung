@@ -659,8 +659,10 @@ app.listen(PORT, async () => {
   await migrateNkRoom2Equipment();
   await migrateRenameNkRoom2();
   await migrateNkRoom6And8();
+  await migrateFixG18FName();
   await migrateCreateNkB1Class();
   await migrateNekbangAddEquipment();
+  await migrateSeedMay2026Results();
 });
 
 // ── Migration: 넥방 오디오·TV 장비 추가 ──────────────────
@@ -715,13 +717,147 @@ async function migrateCreateNkB1Class() {
   console.log('NK B1교실 생성 완료 (장비 5개)');
 }
 
-// ── Migration: NK 회의실 6호→G1 6F, 8호→G 18F + 장비 재구성 ──
+// ── Migration: 2026년 5월 점검 결과 데이터 삽입 ─────────────
+async function migrateSeedMay2026Results() {
+  const { count } = await supabase.from('insp_sessions')
+    .select('*', { count: 'exact', head: true }).eq('year', 2026).eq('month', 5);
+  if (count > 0) return;
+
+  console.log('2026년 5월 점검 데이터 삽입 중...');
+
+  // 점검자 계정 생성 (없으면)
+  const inspList = [
+    { username: 'ikwangju',   name: '이광주' },
+    { username: 'bakjungho',  name: '박정호' },
+    { username: 'gyeyounggn', name: '계영근' },
+  ];
+  const inspIds = {};
+  for (const ins of inspList) {
+    const { data: ex } = await supabase.from('insp_users').select('id').eq('username', ins.username).limit(1);
+    if (ex?.length) {
+      inspIds[ins.name] = ex[0].id;
+    } else {
+      const { data } = await supabase.from('insp_users')
+        .insert({ username: ins.username, password_hash: bcrypt.hashSync('inspect1234', 10), name: ins.name, role: 'inspector' })
+        .select().single();
+      inspIds[ins.name] = data?.id;
+    }
+  }
+
+  const { data: locs } = await supabase.from('insp_locations').select('id, building, name');
+  const { data: allEq } = await supabase.from('insp_equipment').select('id, equipment_code').eq('is_active', true);
+  const locId = (b, n) => locs?.find(l => l.building === b && l.name === n)?.id;
+  const eqId  = (code) => allEq?.find(e => e.equipment_code === code)?.id;
+
+  const STARTED   = '2026-05-29T09:00:00+09:00';
+  const COMPLETED = '2026-05-29T18:00:00+09:00';
+
+  async function createSess(building, locName, inspName, items, done = true) {
+    const lid = locId(building, locName);
+    const iid = inspIds[inspName];
+    if (!lid || !iid) { console.warn(`Not found: ${building} ${locName} / ${inspName}`); return; }
+    const { data: sess, error: se } = await supabase.from('insp_sessions').insert({
+      location_id: lid, inspector_id: iid, year: 2026, month: 5,
+      status: done ? 'completed' : 'in_progress',
+      started_at: STARTED, completed_at: done ? COMPLETED : null,
+    }).select().single();
+    if (se) { console.error(`세션 오류 ${building} ${locName}:`, se.message); return; }
+    const rows = items.map(it => ({
+      session_id: sess.id, equipment_id: eqId(it.code),
+      power_ok: true, screen_ok: !!it.ok, network_ok: true, cable_ok: true, content_ok: !!it.ok,
+      no_issues: !!it.ok,
+      issue_description: it.desc || null,
+      action_status: it.status || (it.ok ? 'normal' : 'issue'),
+    })).filter(r => r.equipment_id);
+    if (rows.length) {
+      const { error: re } = await supabase.from('insp_results').insert(rows);
+      if (re) console.error(`결과 오류 ${building} ${locName}:`, re.message);
+    }
+    console.log(`  ${building} ${locName}: ${rows.length}건 (${done ? '완료' : '진행중'})`);
+  }
+
+  // ── 12개 완료 장소 ──────────────────────────────────────
+  await createSess('GB1', '1층 넥다플러스', '이광주', [
+    { code:'GB1-STP-001', ok:false, desc:'셋탑 자체 음성 및 채널 변경가능 셋탑 외부에서 입력되는 음성이 출력안됨 - 전체적인 배선 점검이 필요함', status:'completed' },
+  ]);
+
+  const nekbang = [];
+  nekbang.push({ code:'GB1-NEK-AUD1', ok:false, desc:'마이크 전향성으로 스피커와 거리에 따라 하울링이 있을수 있음 - 헤드셋 마이크변경(개선가능) - 마이크를 키높이 이하로 유지', status:'issue' });
+  for (let i=2;i<=6;i++) nekbang.push({ code:`GB1-NEK-AUD${i}`, ok:true });
+  for (let i=1;i<=14;i++) nekbang.push({ code:`GB1-NEK-CTV${String(i).padStart(2,'0')}`, ok:true });
+  nekbang.push({ code:'GB1-NEK-MTV', ok:true });
+  nekbang.push({ code:'GB1-NEK-STV', ok:true });
+  for (let i=1;i<=50;i++) nekbang.push({ code:`GB1-PC-11-${String(i).padStart(3,'0')}`, ok:true });
+  await createSess('GB1', '11층 넥방', '이광주', nekbang);
+
+  await createSess('GB1', '회의실 1호', '이광주', [
+    { code:'GB1-MIC-001', ok:true }, { code:'GB1-SPK-001', ok:true }, { code:'GB1-TV-001', ok:true },
+  ]);
+
+  await createSess('NK', '회의실 1호', '이광주', [
+    { code:'NK-MIC-001', ok:true }, { code:'NK-SPK-001', ok:true }, { code:'NK-TV-001', ok:true },
+  ]);
+
+  await createSess('NK', '메인 회의실', '이광주', [
+    { code:'NK-R02-CAM',ok:true },{ code:'NK-R02-DGL',ok:true },{ code:'NK-R02-LEDW',ok:true },
+    { code:'NK-R02-MIC',ok:true },{ code:'NK-R02-SPK',ok:true },{ code:'NK-R02-TV1',ok:true },
+    { code:'NK-R02-TV2',ok:true },{ code:'NK-R02-TV3',ok:true },{ code:'NK-R02-VCONF',ok:true },
+  ]);
+
+  await createSess('NK', 'G1 6F', '이광주', [
+    { code:'NK-G16F-CAM',ok:true },{ code:'NK-G16F-DGL',ok:true },{ code:'NK-G16F-MIC',ok:true },
+    { code:'NK-G16F-PROJ',ok:true },{ code:'NK-G16F-SPK',ok:true },{ code:'NK-G16F-TV',ok:true },
+  ]);
+
+  await createSess('NK', 'G1 8F', '이광주', [
+    { code:'NK-G18F-CAM',ok:true },{ code:'NK-G18F-DGL',ok:true },{ code:'NK-G18F-MIC',ok:true },
+    { code:'NK-G18F-PROJ',ok:true },{ code:'NK-G18F-SPK',ok:true },{ code:'NK-G18F-TV',ok:true },
+  ]);
+
+  await createSess('NK', 'B1교실', '이광주', [
+    { code:'NK-B1CL-MIC',ok:true },{ code:'NK-B1CL-PROJ1',ok:true },{ code:'NK-B1CL-PROJ2',ok:true },
+    { code:'NK-B1CL-PROJ3',ok:true },{ code:'NK-B1CL-SPK',ok:true },
+  ]);
+
+  await createSess('NK', 'A존 6층 DID', '계영근', [
+    { code:'NK-DID-A6F-A',ok:true },{ code:'NK-DID-A6F-E',ok:true },
+    { code:'NK-DID-A6F-G',ok:true },{ code:'NK-DID-A6F-M',ok:true },
+  ]);
+
+  await createSess('NK', 'A존 7층 DID', '계영근', [
+    { code:'NK-DID-A7F-A',ok:true },{ code:'NK-DID-A7F-E',ok:true },
+    { code:'NK-DID-A7F-G',ok:true },{ code:'NK-DID-A7F-M',ok:true },
+  ]);
+
+  await createSess('NK', 'A존 8층 DID', '계영근', [
+    { code:'NK-DID-A8F-A',ok:true },{ code:'NK-DID-A8F-E',ok:true },
+    { code:'NK-DID-A8F-G',ok:true },{ code:'NK-DID-A8F-M',ok:true },
+  ]);
+
+  await createSess('NK', 'A존 9층 DID', '계영근', [
+    { code:'NK-DID-A9F-A',ok:true },{ code:'NK-DID-A9F-E',ok:true },
+    { code:'NK-DID-A9F-G',ok:true },{ code:'NK-DID-A9F-M',ok:true },
+  ]);
+
+  // ── 미완료 장소 (in_progress) ──────────────────────────
+  await createSess('NK', '회의실 3호', '박정호', [
+    { code:'NK-TV-003', ok:true },
+  ], false);
+
+  await createSess('NK', 'A존 10층 DID', '계영근', [
+    { code:'NK-DID-A10F-G', ok:true },
+  ], false);
+
+  console.log('2026년 5월 점검 데이터 삽입 완료');
+}
+
+// ── Migration: NK 회의실 6호→G1 6F, 8호→G1 8F + 장비 재구성 ──
 async function migrateNkRoom6And8() {
   const { data: locations } = await supabase.from('insp_locations').select('id, building, name');
 
   const targets = [
     { oldName: '회의실 6호', newName: 'G1 6F',  prefix: 'NK-G16F'  },
-    { oldName: '회의실 8호', newName: 'G 18F',  prefix: 'NK-G18F'  },
+    { oldName: '회의실 8호', newName: 'G1 8F',  prefix: 'NK-G18F'  },
   ];
 
   for (const t of targets) {
@@ -751,6 +887,15 @@ async function migrateNkRoom6And8() {
     if (error) { console.error(`${t.newName} 장비 insert 오류:`, error.message); continue; }
     console.log(`${t.newName} 재구성 완료 (총 6개)`);
   }
+}
+
+// ── Migration: NK G 18F → G1 8F 이름 오타 수정 ──────────────
+async function migrateFixG18FName() {
+  const { data: loc } = await supabase.from('insp_locations')
+    .select('id').eq('building', 'NK').eq('name', 'G 18F').limit(1);
+  if (!loc?.length) return;
+  await supabase.from('insp_locations').update({ name: 'G1 8F' }).eq('id', loc[0].id);
+  console.log('NK G 18F → G1 8F 이름 수정 완료');
 }
 
 // ── Migration: NK 회의실 2호 → 메인 회의실 ────────────────
