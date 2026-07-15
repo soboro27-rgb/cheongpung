@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// CampaignStatus: DRAFT | ACTIVE | CLOSED | EXPIRED
+// ReturnTargetType: WEBHOOK | GOOGLE_SHEET
+// RecipientStatus: PENDING | SENT | VIEWED | CONFIRMED | MODIFIED | FAILED | EXPIRED
+
+model AdminUser {
+  id           Int        @id @default(autoincrement())
+  email        String     @unique
+  passwordHash String
+  role         String     @default("admin")
+  createdAt    DateTime   @default(now())
+  campaigns    Campaign[]
+}
+
+model Campaign {
+  id                 Int              @id @default(autoincrement())
+  name               String
+  messageText        String
+  status             String           @default("DRAFT")
+  expiresAt          DateTime
+  returnTargetType   String           // WEBHOOK | GOOGLE_SHEET
+  returnTargetRef    String
+  returnTargetSecret String?
+  createdBy          Int
+  createdAt          DateTime         @default(now())
+  admin              AdminUser        @relation(fields: [createdBy], references: [id])
+  recipients         RecipientToken[]
+}
+
+model RecipientToken {
+  id          Int       @id @default(autoincrement())
+  campaignId  Int
+  token       String    @unique
+  status      String    @default("PENDING")
+  phoneHash   String
+  consentAt   DateTime?
+  sentAt      DateTime?
+  viewedAt    DateTime?
+  respondedAt DateTime?
+  createdAt   DateTime  @default(now())
+  campaign    Campaign  @relation(fields: [campaignId], references: [id])
+  sendLogs    SendLog[]
+}
+
+model SendLog {
+  id               Int            @id @default(autoincrement())
+  recipientTokenId Int
+  provider         String
+  providerMsgId    String?
+  status           String
+  errorCode        String?
+  phoneMasked      String
+  createdAt        DateTime       @default(now())
+  recipient        RecipientToken @relation(fields: [recipientTokenId], references: [id])
+}
