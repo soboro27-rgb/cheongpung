@@ -23,5 +23,6 @@ venv/
 *.db
 cookies.json
 browser_profile/
+.token_cache.json
 catfisheffect-site.zip
 onpre/daum-cafe/debug/

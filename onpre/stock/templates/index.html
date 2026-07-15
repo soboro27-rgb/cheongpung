@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KOSDAQ 통합전략 모의매매</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+  header { background: #1a1d2e; padding: 16px 24px; border-bottom: 1px solid #2d3748; display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 18px; font-weight: 700; }
+  header span { font-size: 12px; color: #718096; }
+  .container { max-width: 1280px; margin: 0 auto; padding: 24px; }
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .card { background: #1a1d2e; border-radius: 10px; padding: 20px; border: 1px solid #2d3748; }
+  .card .label { font-size: 12px; color: #718096; margin-bottom: 8px; }
+  .card .value { font-size: 28px; font-weight: 700; }
+  .card .value.green { color: #48bb78; }
+  .card .value.red   { color: #fc8181; }
+  .card .value.blue  { color: #63b3ed; }
+  .section-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: #a0aec0; letter-spacing: 0.5px; }
+  .strategy-legend { font-size: 11px; color: #4a5568; margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; background: #1a1d2e; border-radius: 10px; overflow: hidden; }
+  th { background: #2d3748; padding: 11px 12px; text-align: left; font-size: 11px; color: #a0aec0; font-weight: 600; }
+  td { padding: 11px 12px; font-size: 12px; border-top: 1px solid #2d3748; }
+  tr:hover td { background: #232740; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge.WIN      { background: #1a3a2a; color: #48bb78; }
+  .badge.LOSS     { background: #3a1a1a; color: #fc8181; }
+  .badge.OPEN     { background: #1a2a3a; color: #63b3ed; }
+  .badge.EXPIRED  { background: #2d2d2d; color: #718096; }
+  .score-bar { display: inline-flex; gap: 2px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #2d3748; }
+  .dot.on { background: #f6c90e; }
+  .pnl.pos { color: #48bb78; }
+  .pnl.neg { color: #fc8181; }
+  .refresh-btn { margin-left: auto; background: #2d3748; border: none; color: #a0aec0; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .refresh-btn:hover { background: #3d4a5c; }
+  .empty { text-align: center; padding: 40px; color: #4a5568; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📊 KOSDAQ 통합전략 모의매매</h1>
+  <span>Farrell · Weinstein · Wyckoff · 외국인수급</span>
+  <button class="refresh-btn" onclick="location.reload()">새로고침</button>
+</header>
+<div class="container">
+
+  <div class="cards">
+    <div class="card">
+      <div class="label">총 매매 횟수</div>
+      <div class="value blue">{{ summary.total or 0 }}</div>
+    </div>
+    <div class="card">
+      <div class="label">승률</div>
+      {% set wins  = summary.wins  or 0 %}
+      {% set total = summary.total or 1 %}
+      <div class="value {% if wins/total >= 0.5 %}green{% else %}red{% endif %}">
+        {{ ((wins / total) * 100) | round(1) }}%
+      </div>
+    </div>
+    <div class="card">
+      <div class="label">누적 손익</div>
+      {% set pnl = summary.total_pnl or 0 %}
+      <div class="value {% if pnl >= 0 %}green{% else %}red{% endif %}">
+        {{ '{:+,}'.format(pnl) }}원
+      </div>
+    </div>
+    <div class="card">
+      <div class="label">진행 중</div>
+      <div class="value blue">{{ summary.open_cnt or 0 }}건</div>
+    </div>
+  </div>
+
+  <div class="section-title">매매 내역</div>
+  <div class="strategy-legend">점수: ●= 충족  ○= 미충족 (5점 만점 중 4점 이상 진입)</div>
+
+  {% if trades %}
+  <table>
+    <thead>
+      <tr>
+        <th>날짜</th>
+        <th>종목</th>
+        <th>점수</th>
+        <th>진입가</th>
+        <th>손절가</th>
+        <th>목표가</th>
+        <th>수량</th>
+        <th>청산가</th>
+        <th>손익</th>
+        <th>상태</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for t in trades %}
+      <tr>
+        <td>{{ t.date }}</td>
+        <td>
+          {{ t.stock_name }}<br>
+          <small style="color:#4a5568">{{ t.stock_code }}</small>
+        </td>
+        <td>
+          <div class="score-bar">
+            {% set score = t.score or 0 %}
+            {% for i in range(5) %}
+              <div class="dot {% if i < score %}on{% endif %}"></div>
+            {% endfor %}
+          </div>
+          <small style="color:#718096"> {{ score }}/5</small>
+        </td>
+        <td>{{ '{:,}'.format(t.entry_price) }}</td>
+        <td style="color:#fc8181">{{ '{:,}'.format(t.stop_loss) }}</td>
+        <td style="color:#48bb78">{{ '{:,}'.format(t.target_price) }}</td>
+        <td>{{ t.quantity }}주</td>
+        <td>{{ '{:,}'.format(t.exit_price) if t.exit_price else '-' }}</td>
+        <td class="pnl {% if t.pnl and t.pnl >= 0 %}pos{% else %}neg{% endif %}">
+          {{ '{:+,}'.format(t.pnl) + '원' if t.pnl is not none else '-' }}
+        </td>
+        <td><span class="badge {{ t.status }}">{{ t.status }}</span></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty">
+    아직 매매 내역이 없습니다.<br>
+    장전(08:50) 스크리닝 후 자동으로 신호를 탐색합니다.
+  </div>
+  {% endif %}
+</div>
+</body>
+</html>
