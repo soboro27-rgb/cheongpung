@@ -15,13 +15,13 @@
 | **ITAD 견적 시스템** | `cheongpung/itad-quotation-system` | it-asset-platform.onrender.com | 견적 계산엔진·API·페이지 완료. CPU 세대 자동매칭 미구현 | 견적, IT자산 매각, 코레테일 |
 | **A브릿지 (MGIT)** | `mgit-platform` | mgit-platform.onrender.com | 새마을금고 복지회 초기세팅 진행 중. 파일 영속성(Render ephemeral) 개선 필요 | 새마을금고, 복지회, MGIT, A브릿지 |
 | **IT Asset Platform (범용)** | `it-asset-platform` | it-asset-platform.onrender.com | A브릿지와 같은 코드베이스의 범용 버전. 별도 클론(`it-asset-platform-clone`)에서 배포 push | IT자산관리, 범용자산 |
-| **돌봄잇** | `dolbom-it` | dolbom.coretail.co.kr | 스와이프 매칭·채팅 기본 구조 완료. 로그인 실동작 확인, 실시간 채팅·알림 미구현 | 돌봄, 케어메이트, 매칭, 코레테일 돌봄 |
-| **inspect01** | `inspect01` | Render 배포 (블루프린트 서비스명 `inspect01`) | 2차 검수(스탬핑) 페이지 이동식으로 동작. 인라인 스탬핑 UI로 전환 예정 | 검수, 매입, 스탬핑, 판정 |
+| **돌봄잇** | `dolbom-it` | dolbom.coretail.co.kr | ⚠️ 현재 사용 안 함 (2026-07-07 확인) — Render 배포 상태 점검 불필요 | 돌봄, 케어메이트, 매칭, 코레테일 돌봄 |
+| **inspect01** | `inspect01` | Render 배포 (블루프린트 서비스명 `inspect01`) | ⚠️ 현재 사용 안 함 (2026-07-07 확인) — Render 배포 상태 점검 불필요 | 검수, 매입, 스탬핑, 판정 |
 | **idc-server-collect (IDC브릿지)** | `idc-server-collect` | Render (서비스명 `cheongpung-1`→변경 권장) | 전 Phase(RBAC~정산~파기인증서) 구현 완료 | IDC, 서버수거, 파기, 정산 |
 | **whcheck** | `onpre/whcheck` | 미배포 (로컬만) | 알림톡 배송주소 검증 완료, 실제 Solapi 연동·배포 전 | 배송주소, 주소확인, 알림톡 |
 | **estimate** | `onpre/estimate` | - (로컬 CLI) | 입찰단가 산출 리뉴얼 기획 중. 기초단가 DB 구축이 선행과제 | 입찰, 단가산출, 낙찰 |
 | **nexon-inspection** | `nexon` | Render 배포 (블루프린트 서비스명 `nexon-inspection`) | Express+Supabase 검수 관련 서비스 — 실사용 범위 재확인 필요 | 넥슨, 검수 (확인 필요) |
-| **kakao-skill-server** | `kakao-skill-server` | Render 배포 예정 (블루프린트 등록 완료, 아직 미배포) | 카카오 i 오픈빌더 스킬서버. 문의 키워드 매칭 응답 + Solapi로 팔렌시아님 휴대폰 SMS 알림. 코레테일 채널·오픈빌더 봇 연동 전 | (라우팅 로직 자체가 키워드 매칭 엔진) |
+| **kakao-skill-server** | `kakao-skill-server` | kakao-skill-server-0ec6.onrender.com | ✅ 완성. 코레테일 카톡채널 "반초" 챗봇(폴백 블록 → 스킬데이터) 연결 완료, 실제 문의→자동응답+SMS알림 동작 확인 (2026-07-07) | (라우팅 로직 자체가 키워드 매칭 엔진, routing.json 수정으로 확장) |
 
 **경로 규칙**: 웹에 배포되는 프로젝트는 repo 루트에 직접 위치 (`dolbom-it`, `inspect01`, `idc-server-collect`, `it-asset-platform`, `mgit-platform`, `nexon`). `onpre/` 폴더는 노트북에서 로컬 실행만 하는 것들 전용 — 2026-07-07에 dolbom-it, inspect01을 onpre에서 루트로 이동하고 `render.yaml`의 `rootDir`도 함께 수정함.
 

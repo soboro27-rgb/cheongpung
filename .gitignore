@@ -1,3 +1,27 @@
 # sfs는 별도 GitHub 레포(soboro27-rgb/sfs-platform)로 관리
 sfs/
 mgit-platform
+it-asset-platform
+
+# 공통 - 빌드 산출물/의존성
+node_modules/
+.next/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 공통 - 시크릿/로컬 설정
+.env
+.env.local
+!.env.example
+.claude/settings.local.json
+
+# 공통 - 로그/캐시/DB/브라우저 프로필
+*.log
+*.err
+*.db
+cookies.json
+browser_profile/
+catfisheffect-site.zip
+onpre/daum-cafe/debug/
