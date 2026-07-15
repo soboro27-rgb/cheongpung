@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s *)",
+      "Bash(until curl *)",
+      "Bash(sleep * && curl *)",
+      "Bash(Get-ChildItem *)",
+      "Bash(dir *)",
+      "Bash(npx tsc --noEmit *)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(wc -l *)",
+      "Bash(ps aux*)",
+      "Bash(date)",
+      "Bash(date *)",
+      "Bash(timeout /t * /nobreak*)",
+      "Bash(npx pm2 list*)",
+      "Bash(npx pm2 logs *)"
+    ],
+    "deny": []
+  }
+}
