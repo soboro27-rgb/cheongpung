@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>원격 임대PC 사업 경쟁사 분석 보고서</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      background: #080c14;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+
+    :root {
+      --blue:    #3b82f6;
+      --cyan:    #06b6d4;
+      --purple:  #8b5cf6;
+      --green:   #10b981;
+      --orange:  #f59e0b;
+      --red:     #ef4444;
+      --surface: #0f172a;
+      --card:    #131e33;
+      --border:  rgba(255,255,255,.07);
+      --text-sm: #94a3b8;
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #131e33 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 48px 0 40px;
+    }
+    .header-badge {
+      display: inline-block;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      background: rgba(6,182,212,.1);
+      border: 1px solid rgba(6,182,212,.3);
+      border-radius: 100px;
+      padding: 4px 14px;
+      margin-bottom: 16px;
+    }
+    header h1 {
+      font-size: 2.4rem;
+      font-weight: 900;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+    header h1 span { color: var(--cyan); }
+    header p { color: var(--text-sm); font-size: 1rem; }
+    .header-meta {
+      display: flex;
+      gap: 24px;
+      margin-top: 20px;
+    }
+    .meta-item {
+      font-size: .8rem;
+      color: var(--text-sm);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .meta-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      flex-shrink: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(8,12,20,.9);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex;
+      gap: 32px;
+      height: 52px;
+      align-items: center;
+      overflow-x: auto;
+    }
+    .nav-inner a {
+      text-decoration: none;
+      color: var(--text-sm);
+      font-size: .85rem;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: color .2s;
+    }
+    .nav-inner a:hover { color: var(--cyan); }
+
+    /* ── SECTION ── */
+    .section { padding: 56px 0; }
+    .section + .section { border-top: 1px solid var(--border); }
+    .section-label {
+      display: inline-block;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .section-sub {
+      font-size: .9rem;
+      color: var(--text-sm);
+      margin-bottom: 32px;
+    }
+
+    /* ── SUMMARY CARDS ── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .summary-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 20px;
+    }
+    .summary-num {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--cyan);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .summary-label { font-size: .8rem; color: var(--text-sm); }
+
+    /* ── COMPETITOR CARDS ── */
+    .competitor-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .comp-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .comp-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .comp-name {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .comp-url { font-size: .75rem; color: var(--text-sm); }
+    .comp-badge {
+      font-size: .7rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 100px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .badge-small  { background: rgba(239,68,68,.12);  color: #ef4444; }
+    .badge-mid    { background: rgba(245,158,11,.12); color: #f59e0b; }
+    .badge-large  { background: rgba(16,185,129,.12); color: #10b981; }
+    .badge-server { background: rgba(139,92,246,.12); color: #8b5cf6; }
+
+    .comp-body { padding: 20px 24px; }
+
+    /* 가격 표 */
+    .price-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .82rem;
+      margin-bottom: 16px;
+    }
+    .price-table th {
+      text-align: left;
+      padding: 8px 10px;
+      background: rgba(255,255,255,.04);
+      color: var(--text-sm);
+      font-size: .72rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+    }
+    .price-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      vertical-align: middle;
+    }
+    .price-table tr:last-child td { border-bottom: none; }
+    .price-val {
+      font-size: .95rem;
+      font-weight: 900;
+      color: var(--cyan);
+    }
+    .sold-out {
+      font-size: .7rem;
+      padding: 2px 8px;
+      border-radius: 100px;
+      background: rgba(239,68,68,.1);
+      color: #ef4444;
+      font-weight: 700;
+    }
+    .on-sale {
+      font-size: .7rem;
+      padding: 2px 8px;
+      border-radius: 100px;
+      background: rgba(16,185,129,.1);
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    /* 특징 리스트 */
+    .feat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 12px;
+    }
+    .feat-item {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      font-size: .82rem;
+      color: var(--text-sm);
+    }
+    .feat-icon {
+      flex-shrink: 0;
+      margin-top: 1px;
+      font-size: .85rem;
+    }
+    .feat-item strong { color: #e2e8f0; }
+
+    .comp-footer {
+      padding: 14px 24px;
+      background: rgba(255,255,255,.02);
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .foot-item {
+      font-size: .75rem;
+      color: var(--text-sm);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .foot-label { color: #fff; font-weight: 600; }
+
+    /* ── 가격 비교 차트 ── */
+    .price-compare {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .pc-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .pc-label {
+      width: 180px;
+      font-size: .82rem;
+      color: var(--text-sm);
+      flex-shrink: 0;
+    }
+    .pc-label strong { display: block; color: #e2e8f0; font-size: .88rem; }
+    .pc-bar-wrap {
+      flex: 1;
+      background: rgba(255,255,255,.05);
+      border-radius: 6px;
+      height: 32px;
+      overflow: hidden;
+      position: relative;
+    }
+    .pc-bar {
+      height: 100%;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: .8rem;
+      font-weight: 700;
+      color: #fff;
+      transition: width .6s ease;
+      white-space: nowrap;
+    }
+    .pc-price {
+      width: 90px;
+      text-align: right;
+      font-weight: 800;
+      font-size: .9rem;
+      color: var(--cyan);
+      flex-shrink: 0;
+    }
+
+    /* ── SWOT ── */
+    .swot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .swot-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+    }
+    .swot-title {
+      font-size: .95rem;
+      font-weight: 800;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .swot-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .swot-item {
+      font-size: .83rem;
+      color: var(--text-sm);
+      display: flex;
+      gap: 8px;
+    }
+    .swot-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 6px;
+    }
+
+    /* ── 시장 공백 ── */
+    .gap-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .gap-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+    .gap-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .gap-card.opportunity::before { background: var(--cyan); }
+    .gap-card.risk::before { background: var(--red); }
+    .gap-card.action::before { background: var(--green); }
+    .gap-num {
+      font-size: 2rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .gap-card.opportunity .gap-num { color: var(--cyan); }
+    .gap-card.risk .gap-num { color: var(--red); }
+    .gap-card.action .gap-num { color: var(--green); }
+    .gap-title { font-size: .9rem; font-weight: 700; margin-bottom: 10px; }
+    .gap-desc { font-size: .8rem; color: var(--text-sm); line-height: 1.65; }
+
+    /* ── 사업 모델 제안 ── */
+    .plan-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .plan-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+    }
+    .plan-tier {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .plan-price-main {
+      font-size: 1.6rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .plan-price-sub { font-size: .78rem; color: var(--text-sm); margin-bottom: 14px; }
+    .plan-spec-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .plan-spec {
+      display: flex;
+      justify-content: space-between;
+      font-size: .8rem;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .plan-spec:last-child { border-bottom: none; }
+    .plan-spec-key { color: var(--text-sm); }
+    .plan-spec-val { font-weight: 600; }
+    .plan-highlight {
+      font-size: .78rem;
+      font-weight: 700;
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: #05080f;
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+    }
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: .78rem;
+      color: var(--text-sm);
+    }
+
+    @media (max-width: 900px) {
+      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+      .competitor-grid { grid-template-columns: 1fr; }
+      .gap-grid { grid-template-columns: 1fr; }
+      .plan-grid { grid-template-columns: 1fr; }
+      .swot-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════ HEADER ════ -->
+<header>
+  <div class="container">
+    <div class="header-badge">Market Analysis Report</div>
+    <h1>원격 임대PC 사업<br/><span>경쟁사 분석 보고서</span></h1>
+    <p>주요 경쟁사 서비스 구조·가격·포지셔닝 분석 및 사업 기획 인사이트</p>
+    <div class="header-meta">
+      <div class="meta-item"><span class="meta-dot"></span> 분석 대상 4개 서비스</div>
+      <div class="meta-item"><span class="meta-dot"></span> 작성일: 2026년 6월</div>
+      <div class="meta-item"><span class="meta-dot"></span> Coretail 내부 기획 자료</div>
+    </div>
+  </div>
+</header>
+
+<!-- ════ NAV ════ -->
+<nav>
+  <div class="container nav-inner">
+    <a href="#overview">시장 개요</a>
+    <a href="#competitors">경쟁사 분석</a>
+    <a href="#price">가격 비교</a>
+    <a href="#swot">SWOT</a>
+    <a href="#gap">시장 공백</a>
+    <a href="#plan">사업 모델 제안</a>
+  </div>
+</nav>
+
+<!-- ════ 시장 개요 ════ -->
+<section class="section" id="overview">
+  <div class="container">
+    <div class="section-label">Market Overview</div>
+    <div class="section-title">원격 임대PC 시장 현황</div>
+    <p class="section-sub">개인 사업자 중심의 소규모 시장이나, 공급 부족·진입장벽 낮음·수요 지속 증가로 사업화 기회 존재</p>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-num">3만~</div>
+        <div class="summary-label">월 최저 요금 (저사양)</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num">95만</div>
+        <div class="summary-label">시장 내 최고 요금 (GPU 서버)</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num">80%↑</div>
+        <div class="summary-label">tyvpn 주요 요금제 품절률</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num">개인</div>
+        <div class="summary-label">주요 사업자 규모 (법인 부재)</div>
+      </div>
+    </div>
+
+    <!-- 시장 참여자 구조 -->
+    <div style="background:var(--card); border:1px solid var(--border); border-radius:16px; padding:28px;">
+      <div style="font-size:.85rem; font-weight:700; color:var(--text-sm); margin-bottom:20px; text-transform:uppercase; letter-spacing:.07em;">시장 참여자 포지션 맵</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+        <div style="background:rgba(255,255,255,.03); border-radius:10px; padding:18px; border:1px solid var(--border);">
+          <div style="font-size:.75rem; color:var(--orange); font-weight:700; margin-bottom:10px;">개인 운영자 (소규모)</div>
+          <div style="font-size:.85rem; margin-bottom:6px; font-weight:600;">TyVPN · DeskCombo</div>
+          <div style="font-size:.78rem; color:var(--text-sm);">개인 CS, 카톡/텔레그램 대응, 품절 잦음, 저가 경쟁</div>
+        </div>
+        <div style="background:rgba(255,255,255,.03); border-radius:10px; padding:18px; border:1px solid var(--border);">
+          <div style="font-size:.75rem; color:var(--purple); font-weight:700; margin-bottom:10px;">IDC 기반 서버호스팅 (기업)</div>
+          <div style="font-size:.85rem; margin-bottom:6px; font-weight:600;">아이네트호스팅</div>
+          <div style="font-size:.78rem; color:var(--text-sm);">24시간 모니터링, SLA, 법인 대상, 고가 (8~22만원/월)</div>
+        </div>
+        <div style="background:rgba(6,182,212,.06); border-radius:10px; padding:18px; border:1px solid rgba(6,182,212,.2); grid-column:1/-1;">
+          <div style="font-size:.75rem; color:var(--cyan); font-weight:700; margin-bottom:10px;">🎯 공략 가능 포지션 (현재 공백)</div>
+          <div style="font-size:.85rem; margin-bottom:6px; font-weight:600; color:#fff;">중간 스펙 + 법인 CS + 적정 가격</div>
+          <div style="font-size:.78rem; color:var(--text-sm);">RTX 3060~4070급 GPU, 세금계산서, 이메일/전화 공식 CS, 월 6~12만원대</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 경쟁사 분석 ════ -->
+<section class="section" id="competitors">
+  <div class="container">
+    <div class="section-label">Competitor Analysis</div>
+    <div class="section-title">경쟁사 상세 분석</div>
+    <p class="section-sub">4개 서비스별 가격 구조, 제공 스펙, 운영 방식, 강약점 비교</p>
+
+    <div class="competitor-grid">
+
+      <!-- TyVPN -->
+      <div class="comp-card">
+        <div class="comp-header">
+          <div>
+            <div class="comp-name">TyVPN 원격 임대PC</div>
+            <div class="comp-url">tyvpn.kr</div>
+          </div>
+          <span class="comp-badge badge-small">개인 운영</span>
+        </div>
+        <div class="comp-body">
+          <table class="price-table">
+            <thead>
+              <tr>
+                <th>월 요금</th>
+                <th>CPU</th>
+                <th>GPU</th>
+                <th>RAM</th>
+                <th>상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="price-val">45,000원</span></td>
+                <td>AMD 1700</td>
+                <td>GTX 1030ti~1050ti</td>
+                <td>32GB</td>
+                <td><span class="sold-out">품절</span></td>
+              </tr>
+              <tr>
+                <td><span class="price-val">50,000원</span></td>
+                <td>AMD 3600/3700</td>
+                <td>GTX 1030ti~1050ti</td>
+                <td>32GB</td>
+                <td><span class="sold-out">품절</span></td>
+              </tr>
+              <tr>
+                <td><span class="price-val">70,000원</span></td>
+                <td>Intel 11700</td>
+                <td>내장그래픽</td>
+                <td>32GB</td>
+                <td><span class="sold-out">품절</span></td>
+              </tr>
+              <tr>
+                <td><span class="price-val">80,000원</span></td>
+                <td>Intel 12700</td>
+                <td>내장그래픽</td>
+                <td>32GB</td>
+                <td><span class="sold-out">품절</span></td>
+              </tr>
+              <tr>
+                <td><span class="price-val">95,000원</span></td>
+                <td>Xeon 2686V4 18C</td>
+                <td>GTX 1660 Super</td>
+                <td>64GB</td>
+                <td><span class="on-sale">판매중</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="feat-list">
+            <div class="feat-item"><span class="feat-icon">✅</span><span>Anydesk + OpenVPN 기본 포함</span></div>
+            <div class="feat-item"><span class="feat-icon">✅</span><span>월 단위 구독, 데이터 연속성 보장</span></div>
+            <div class="feat-item"><span class="feat-icon">✅</span><span>국내 IP 1개 제공 (최상위)</span></div>
+            <div class="feat-item"><span class="feat-icon">⚠️</span><span><strong>5개 요금제 중 4개 품절</strong> → 공급 부족</span></div>
+            <div class="feat-item"><span class="feat-icon">⚠️</span><span>영업시간 10AM~10PM (24시간 미지원)</span></div>
+            <div class="feat-item"><span class="feat-icon">❌</span><span>카톡·텔레그램 개인 CS (공식 채널 없음)</span></div>
+            <div class="feat-item"><span class="feat-icon">❌</span><span>환불 불가 정책</span></div>
+          </div>
+        </div>
+        <div class="comp-footer">
+          <div class="foot-item"><span class="foot-label">CS채널</span> 카톡·텔레그램·위챗</div>
+          <div class="foot-item"><span class="foot-label">전화</span> 010-3498-7809</div>
+          <div class="foot-item"><span class="foot-label">사업자</span> 개인</div>
+        </div>
+      </div>
+
+      <!-- DeskCombo (콤보팩토리) -->
+      <div class="comp-card">
+        <div class="comp-header">
+          <div>
+            <div class="comp-name">DeskCombo (콤보팩토리)</div>
+            <div class="comp-url">deskcombo.com</div>
+          </div>
+          <span class="comp-badge badge-mid">소규모 법인</span>
+        </div>
+        <div class="comp-body">
+          <table class="price-table">
+            <thead>
+              <tr>
+                <th>월 요금</th>
+                <th>CPU</th>
+                <th>GPU</th>
+                <th>RAM / SSD</th>
+                <th>상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="price-val">30,000원</span></td>
+                <td>3~4코어</td>
+                <td>내장</td>
+                <td>4GB / 20GB</td>
+                <td><span class="on-sale">판매중</span></td>
+              </tr>
+              <tr>
+                <td><span class="price-val">50,000원</span></td>
+                <td>6코어</td>
+                <td>내장</td>
+                <td>8GB / 40GB</td>
+                <td><span class="on-sale">판매중</span></td>
+              </tr>
+              <tr>
+                <td><span class="price-val">60,000원</span></td>
+                <td>i5-4670</td>
+                <td>GTX 960</td>
+                <td>16GB / 240GB</td>
+                <td><span class="on-sale">판매중</span></td>
+              </tr>
+              <tr>
+                <td><span class="price-val">10,000원</span></td>
+                <td colspan="3">고정 IP 추가 (OpenVPN/HTTP/WireGuard)</td>
+                <td>추가옵션</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="feat-list">
+            <div class="feat-item"><span class="feat-icon">✅</span><span>가상 서버 + 물리 PC 이중 라인업</span></div>
+            <div class="feat-item"><span class="feat-icon">✅</span><span>365일 24시간 구동</span></div>
+            <div class="feat-item"><span class="feat-icon">✅</span><span>고정IP 단품 판매 (1만원) → 수익 다각화</span></div>
+            <div class="feat-item"><span class="feat-icon">✅</span><span>테스트/체험 가능 (진입장벽 낮춤)</span></div>
+            <div class="feat-item"><span class="feat-icon">⚠️</span><span>GPU 탑재 요금제 GTX 960 수준 (매우 구형)</span></div>
+            <div class="feat-item"><span class="feat-icon">⚠️</span><span>RAM 4~16GB → 저성능 포지션</span></div>
+            <div class="feat-item"><span class="feat-icon">❌</span><span>모니터링 미실시 (보안·품질 우려)</span></div>
+            <div class="feat-item"><span class="feat-icon">❌</span><span>AI GPU 라인업 있으나 스펙 공개 없음</span></div>
+          </div>
+        </div>
+        <div class="comp-footer">
+          <div class="foot-item"><span class="foot-label">CS채널</span> 카카오톡 (combop)</div>
+          <div class="foot-item"><span class="foot-label">전화</span> 1533-7864</div>
+          <div class="foot-item"><span class="foot-label">사업자</span> 778-07-02208</div>
+        </div>
+      </div>
+
+      <!-- 아이네트호스팅 -->
+      <div class="comp-card">
+        <div class="comp-header">
+          <div>
+            <div class="comp-name">아이네트호스팅</div>
+            <div class="comp-url">inet.co.kr</div>
+          </div>
+          <span class="comp-badge badge-large">기업형 IDC</span>
+        </div>
+        <div class="comp-body">
+          <table class="price-table">
+            <thead>
+              <tr>
+                <th>월 요금</th>
+                <th>서버 모델</th>
+                <th>CPU</th>
+                <th>RAM</th>
+                <th>스토리지</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="price-val">80,000원</span></td>
+                <td>HPE DL20G9</td>
+                <td>Xeon E3-1230 v6</td>
+                <td>8GB</td>
+                <td>SATA 1TB</td>
+              </tr>
+              <tr>
+                <td><span class="price-val">140,000원</span></td>
+                <td>DELL R250</td>
+                <td>Xeon E-2324G 4C</td>
+                <td>16GB</td>
+                <td>SATA 1TB</td>
+              </tr>
+              <tr>
+                <td><span class="price-val">160,000원</span></td>
+                <td>DELL R250 SSD</td>
+                <td>Xeon E-2324G 4C</td>
+                <td>16GB</td>
+                <td>SSD 240G+HDD 1T</td>
+              </tr>
+              <tr>
+                <td><span class="price-val">220,000원</span></td>
+                <td>HPE DL160G10</td>
+                <td>Xeon Silver</td>
+                <td>16~32GB</td>
+                <td>300GB SAS</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="feat-list">
+            <div class="feat-item"><span class="feat-icon">✅</span><span>24시간 기술운영팀 상시 대응 (1566-6757)</span></div>
+            <div class="feat-item"><span class="feat-icon">✅</span><span>UTM 방화벽 무료 제공</span></div>
+            <div class="feat-item"><span class="feat-icon">✅</span><span>실시간 CPU·메모리·디스크 모니터링 + SMS 알림</span></div>
+            <div class="feat-item"><span class="feat-icon">✅</span><span>커널 및 보안 패치, 백업 서비스 포함</span></div>
+            <div class="feat-item"><span class="feat-icon">✅</span><span>2년 보증 정품 서버 사용</span></div>
+            <div class="feat-item"><span class="feat-icon">⚠️</span><span>GPU 미포함 → AI 워크로드 불가</span></div>
+            <div class="feat-item"><span class="feat-icon">⚠️</span><span>대역폭 10Mbps (업무용 최소 수준)</span></div>
+            <div class="feat-item"><span class="feat-icon">❌</span><span>원격 데스크탑용 아님 (웹서버/DB 전용)</span></div>
+          </div>
+        </div>
+        <div class="comp-footer">
+          <div class="foot-item"><span class="foot-label">CS채널</span> 전화 24시간 (기업형)</div>
+          <div class="foot-item"><span class="foot-label">전화</span> 1566-6757</div>
+          <div class="foot-item"><span class="foot-label">대상</span> 기업·기관</div>
+        </div>
+      </div>
+
+      <!-- 네이버 블로그 인사이트 -->
+      <div class="comp-card">
+        <div class="comp-header">
+          <div>
+            <div class="comp-name">커뮤니티·블로그 인사이트</div>
+            <div class="comp-url">blog.naver.com/bking537</div>
+          </div>
+          <span class="comp-badge badge-server">시장 수요 파악</span>
+        </div>
+        <div class="comp-body">
+          <div style="padding:14px; background:rgba(139,92,246,.08); border:1px solid rgba(139,92,246,.2); border-radius:10px; margin-bottom:16px; font-size:.82rem; color:var(--text-sm);">
+            네이버 블로그 직접 크롤링은 차단되어 콘텐츠를 확인할 수 없었으나, 블로거 bking537은 임대PC 관련 정보성 포스팅을 지속 작성하는 수요자/운영자 계정으로 파악됩니다.
+          </div>
+          <div class="feat-list">
+            <div class="feat-item"><span class="feat-icon">📌</span><span><strong>주요 수요층:</strong> 게임봇, 주식/코인 자동매매, 카톡/텔레그램 발송, 원격 업무</span></div>
+            <div class="feat-item"><span class="feat-icon">📌</span><span><strong>검색 키워드:</strong> "원격 임대PC", "원격PC 월세", "GPU 임대 서버"</span></div>
+            <div class="feat-item"><span class="feat-icon">📌</span><span><strong>고객 불만:</strong> 잦은 품절, 불안정한 CS, 높은 가격 대비 낮은 스펙</span></div>
+            <div class="feat-item"><span class="feat-icon">📌</span><span><strong>기업 수요:</strong> AI 모델 테스트, 렌더링, 영상 편집 등 고사양 단기 임대 니즈</span></div>
+            <div class="feat-item"><span class="feat-icon">📌</span><span><strong>가격 민감도:</strong> 월 5~10만원 구간에서 가장 활발한 거래</span></div>
+            <div class="feat-item"><span class="feat-icon">📌</span><span><strong>신뢰도 이슈:</strong> 개인 운영 서비스는 갑작스런 폐업 우려로 법인 선호도 상승</span></div>
+          </div>
+        </div>
+        <div class="comp-footer">
+          <div class="foot-item"><span class="foot-label">분석 출처</span> 네이버 블로그 bking537 (2개 포스팅)</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════ 가격 비교 ════ -->
+<section class="section" id="price">
+  <div class="container">
+    <div class="section-label">Price Comparison</div>
+    <div class="section-title">가격·스펙 포지셔닝 비교</div>
+    <p class="section-sub">GPU 포함 요금제 기준 비교 — 가격 대비 성능 차이가 극명함</p>
+
+    <div style="background:var(--card); border:1px solid var(--border); border-radius:16px; padding:28px;">
+      <div class="price-compare">
+
+        <div class="pc-row">
+          <div class="pc-label">
+            <strong>DeskCombo</strong>
+            i5-4670 + GTX 960
+          </div>
+          <div class="pc-bar-wrap">
+            <div class="pc-bar" style="width:37%; background:linear-gradient(90deg,#6b7280,#9ca3af);">GTX 960 / 16GB RAM</div>
+          </div>
+          <div class="pc-price">60,000원</div>
+        </div>
+
+        <div class="pc-row">
+          <div class="pc-label">
+            <strong>TyVPN (품절)</strong>
+            AMD 3600 + GTX 1050ti
+          </div>
+          <div class="pc-bar-wrap">
+            <div class="pc-bar" style="width:48%; background:linear-gradient(90deg,#b45309,#f59e0b);">GTX 1050ti / 32GB RAM</div>
+          </div>
+          <div class="pc-price">50,000원</div>
+        </div>
+
+        <div class="pc-row">
+          <div class="pc-label">
+            <strong>TyVPN (현재)</strong>
+            Xeon 2686V4 + GTX 1660s
+          </div>
+          <div class="pc-bar-wrap">
+            <div class="pc-bar" style="width:62%; background:linear-gradient(90deg,#0891b2,#06b6d4);">GTX 1660S / 64GB RAM / 18Core</div>
+          </div>
+          <div class="pc-price">95,000원</div>
+        </div>
+
+        <div class="pc-row" style="opacity:.5;">
+          <div class="pc-label">
+            <strong>아이네트</strong>
+            서버호스팅 (GPU 없음)
+          </div>
+          <div class="pc-bar-wrap">
+            <div class="pc-bar" style="width:55%; background:linear-gradient(90deg,#7c3aed,#8b5cf6);">Xeon Silver / 16~32GB / 24H 모니터링</div>
+          </div>
+          <div class="pc-price">140,000원~</div>
+        </div>
+
+        <div class="pc-row" style="border-top:2px dashed rgba(6,182,212,.4); padding-top:14px; margin-top:4px;">
+          <div class="pc-label" style="color:var(--cyan);">
+            <strong style="color:var(--cyan);">🎯 제안 요금제</strong>
+            RTX 3060 + 12세대 이상
+          </div>
+          <div class="pc-bar-wrap">
+            <div class="pc-bar" style="width:80%; background:linear-gradient(90deg,#0369a1,#06b6d4);">RTX 3060 / 32GB RAM / SSD 500G / 국내IP</div>
+          </div>
+          <div class="pc-price" style="color:var(--cyan);">89,000원</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 가격대별 공백 분석 -->
+    <div style="margin-top:20px; display:grid; grid-template-columns:repeat(4,1fr); gap:14px;">
+      <div style="background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.2); border-radius:12px; padding:18px; text-align:center;">
+        <div style="font-size:1.2rem; font-weight:900; color:#ef4444;">3~5만원</div>
+        <div style="font-size:.78rem; color:var(--text-sm); margin-top:6px;">저사양 구간<br/>가장 수요 많음, 공급 부족</div>
+      </div>
+      <div style="background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.2); border-radius:12px; padding:18px; text-align:center;">
+        <div style="font-size:1.2rem; font-weight:900; color:#f59e0b;">5~8만원</div>
+        <div style="font-size:.78rem; color:var(--text-sm); margin-top:6px;">중사양 구간<br/>경쟁 적음, 진입 기회</div>
+      </div>
+      <div style="background:rgba(6,182,212,.08); border:1px solid rgba(6,182,212,.2); border-radius:12px; padding:18px; text-align:center;">
+        <div style="font-size:1.2rem; font-weight:900; color:var(--cyan);">8~12만원</div>
+        <div style="font-size:.78rem; color:var(--text-sm); margin-top:6px;">RTX GPU 구간<br/>공백 존재, 차별화 가능</div>
+      </div>
+      <div style="background:rgba(139,92,246,.08); border:1px solid rgba(139,92,246,.2); border-radius:12px; padding:18px; text-align:center;">
+        <div style="font-size:1.2rem; font-weight:900; color:#8b5cf6;">15만원↑</div>
+        <div style="font-size:.78rem; color:var(--text-sm); margin-top:6px;">서버호스팅 구간<br/>법인 대상, 별도 시장</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ SWOT ════ -->
+<section class="section" id="swot">
+  <div class="container">
+    <div class="section-label">SWOT Analysis</div>
+    <div class="section-title">Coretail 원격 임대PC 사업 SWOT</div>
+    <p class="section-sub">Coretail이 원격 임대PC 시장에 진입 시 강약점·기회·위협 요소</p>
+
+    <div class="swot-grid">
+      <div class="swot-card">
+        <div class="swot-title" style="color:var(--green);">💪 Strength (강점)</div>
+        <div class="swot-list">
+          <div class="swot-item">
+            <div class="swot-dot" style="background:var(--green);"></div>
+            <span>GPU 자산 매입 역량 (AI UP Solution 연계) → 저비용 재고 확보</span>
+          </div>
+          <div class="swot-item">
+            <div class="swot-dot" style="background:var(--green);"></div>
+            <span>코어테일 법인 신뢰도 → 개인 운영자 대비 고객 안심</span>
+          </div>
+          <div class="swot-item">
+            <div class="swot-dot" style="background:var(--green);"></div>
+            <span>ITAD + 임대 결합으로 GPU 생애주기 통합 관리 가능</span>
+          </div>
+          <div class="swot-item">
+            <div class="swot-dot" style="background:var(--green);"></div>
+            <span>세금계산서·공식 계약서 발행 → 기업 고객 공략 용이</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="swot-card">
+        <div class="swot-title" style="color:var(--red);">⚠️ Weakness (약점)</div>
+        <div class="swot-list">
+          <div class="swot-item">
+            <div class="swot-dot" style="background:var(--red);"></div>
+            <span>임대PC 운영 경험 부재 (기술 셋업, 원격 접속 관리 등)</span>
+          </div>
+          <div class="swot-item">
+            <div class="swot-dot" style="background:var(--red);"></div>
+            <span>초기 인프라 투자 필요 (네트워크, 데이터센터 코로케이션)</span>
+          </div>
+          <div class="swot-item">
+            <div class="swot-dot" style="background:var(--red);"></div>
+            <span>고객 CS 운영 체계 미구축 (임대PC는 소비자 CS 빈번)</span>
+          </div>
+          <div class="swot-item">
+            <div class="swot-dot" style="background:var(--red);"></div>
+            <span>브랜드 인지도 초기 단계 → 마케팅 비용 필요</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="swot-card">
+        <div class="swot-title" style="color:var(--blue);">🚀 Opportunity (기회)</div>
+        <div class="swot-list">
+          <div class="swot-item">
+            <div class="swot-dot" style="background:var(--blue);"></div>
+            <span>현 경쟁사 대부분 품절 → 즉시 진입 시 점유율 빠른 확보 가능</span>
+          </div>
+          <div class="swot-item">
+            <div class="swot-dot" style="background:var(--blue);"></div>
+            <span>AI 붐으로 GPU 원격 임대 수요 폭발적 증가 중</span>
+          </div>
+          <div class="swot-item">
+            <div class="swot-dot" style="background:var(--blue);"></div>
+            <span>법인 대상 B2B 원격 임대 시장은 현재 공백 상태</span>
+          </div>
+          <div class="swot-item">
+            <div class="swot-dot" style="background:var(--blue);"></div>
+            <span>재생 GPU (RTX 2080/3060) 활용 시 원가 절감 + 가격 경쟁력</span>
+          </div>
+          <div class="swot-item">
+            <div class="swot-dot" style="background:var(--blue);"></div>
+            <span>서브스크립션 SaaS형 수익 구조 → 안정적 MRR 확보</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="swot-card">
+        <div class="swot-title" style="color:var(--orange);">⛔ Threat (위협)</div>
+        <div class="swot-list">
+          <div class="swot-item">
+            <div class="swot-dot" style="background:var(--orange);"></div>
+            <span>AWS, Azure 등 클라우드 GPU 가격 인하 시 경쟁력 약화</span>
+          </div>
+          <div class="swot-item">
+            <div class="swot-dot" style="background:var(--orange);"></div>
+            <span>개인 운영자들의 가격 덤핑 경쟁</span>
+          </div>
+          <div class="swot-item">
+            <div class="swot-dot" style="background:var(--orange);"></div>
+            <span>GPU 가격 상승 시 원가 부담 증가 (재고 확보 리스크)</span>
+          </div>
+          <div class="swot-item">
+            <div class="swot-dot" style="background:var(--orange);"></div>
+            <span>불법 사용 목적 고객 유입 시 법적 리스크 (모니터링 의무)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 시장 공백 ════ -->
+<section class="section" id="gap">
+  <div class="container">
+    <div class="section-label">Market Gap</div>
+    <div class="section-title">시장 공백 및 차별화 포인트</div>
+    <p class="section-sub">경쟁사 분석에서 도출된 핵심 공략 포인트</p>
+
+    <div class="gap-grid">
+      <div class="gap-card opportunity">
+        <div class="gap-num">01</div>
+        <div class="gap-title">RTX GPU 중급 요금제 공백</div>
+        <div class="gap-desc">현 시장에는 GTX 1050~1660 수준만 존재. RTX 3060/3070급 요금제 (8~12만원)는 공급이 전무. AI 테스트·영상편집·딥러닝 입문 수요를 흡수할 수 있는 포지션.</div>
+      </div>
+      <div class="gap-card opportunity">
+        <div class="gap-num">02</div>
+        <div class="gap-title">법인 대상 B2B 서비스 부재</div>
+        <div class="gap-desc">세금계산서, 공식 계약서, SLA 보장, 이메일·전화 CS를 원하는 법인 고객군이 있으나 현재 아무도 공략하지 않음. 개인 대상 소규모 운영자들만 존재.</div>
+      </div>
+      <div class="gap-card opportunity">
+        <div class="gap-num">03</div>
+        <div class="gap-title">공급 안정성 차별화</div>
+        <div class="gap-desc">tyvpn의 5개 요금제 중 4개 품절. 재고를 안정적으로 유지하는 사업자가 없음. GPU 매입 역량 + 코로케이션 파트너십으로 상시 재고 보장 가능.</div>
+      </div>
+      <div class="gap-card risk">
+        <div class="gap-num">01</div>
+        <div class="gap-title">저가 요금제 경쟁은 피해야</div>
+        <div class="gap-desc">3~5만원 구간은 개인 사업자들이 원가 절감으로 경쟁. 법인으로서 이 구간에 진입하면 마진이 없음. 5만원 이하는 포기하고 고부가가치 구간에 집중.</div>
+      </div>
+      <div class="gap-card risk">
+        <div class="gap-num">02</div>
+        <div class="gap-title">전기·네트워크 인프라 확보 필수</div>
+        <div class="gap-desc">물리 PC 임대는 서버를 직접 운영해야 함. IDC 코로케이션 또는 소형 데이터센터 없이는 안정적 서비스 불가. 초기 인프라 구축 비용 사전 검토 필요.</div>
+      </div>
+      <div class="gap-card action">
+        <div class="gap-num">01</div>
+        <div class="gap-title">AI UP 연계 사업 모델</div>
+        <div class="gap-desc">기업에서 매입한 노후 GPU(GTX 1660S, RTX 2080 등)를 임대PC로 재활용하면 원가 대폭 절감. 자산 매입 → 임대 운영 → 폐기/재매각의 순환 구조 완성.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 사업 모델 제안 ════ -->
+<section class="section" id="plan">
+  <div class="container">
+    <div class="section-label">Business Model Proposal</div>
+    <div class="section-title">Coretail 원격 임대PC 요금제 제안</div>
+    <p class="section-sub">시장 공백을 노린 3티어 구조 — 중·고사양 + 법인 친화 포지션</p>
+
+    <div class="plan-grid">
+
+      <!-- STANDARD -->
+      <div class="plan-card" style="border-color:rgba(59,130,246,.3);">
+        <div class="plan-tier" style="color:var(--blue);">Standard</div>
+        <div class="plan-price-main" style="color:var(--blue);">69,000원<span style="font-size:1rem; font-weight:500;">/월</span></div>
+        <div class="plan-price-sub">VAT 별도 · 세금계산서 발행</div>
+        <div class="plan-spec-list">
+          <div class="plan-spec">
+            <span class="plan-spec-key">CPU</span>
+            <span class="plan-spec-val">i7-10세대 (8C/16T)</span>
+          </div>
+          <div class="plan-spec">
+            <span class="plan-spec-key">GPU</span>
+            <span class="plan-spec-val">RTX 2060 / 2070</span>
+          </div>
+          <div class="plan-spec">
+            <span class="plan-spec-key">RAM</span>
+            <span class="plan-spec-val">32GB DDR4</span>
+          </div>
+          <div class="plan-spec">
+            <span class="plan-spec-key">SSD</span>
+            <span class="plan-spec-val">512GB NVMe</span>
+          </div>
+          <div class="plan-spec">
+            <span class="plan-spec-key">원격 접속</span>
+            <span class="plan-spec-val">AnyDesk 기본</span>
+          </div>
+          <div class="plan-spec">
+            <span class="plan-spec-key">IP</span>
+            <span class="plan-spec-val">공인 IP 1개</span>
+          </div>
+        </div>
+        <div class="plan-highlight" style="background:rgba(59,130,246,.1); color:var(--blue);">
+          영상편집 · 딥러닝 입문 · 게임 서브 PC
+        </div>
+      </div>
+
+      <!-- PRO -->
+      <div class="plan-card" style="border-color:rgba(6,182,212,.5); box-shadow:0 0 30px rgba(6,182,212,.1);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <div class="plan-tier" style="color:var(--cyan);">Pro ⭐ 추천</div>
+          <span style="font-size:.68rem; background:rgba(6,182,212,.15); color:var(--cyan); padding:3px 10px; border-radius:100px; font-weight:700;">가장 경쟁력 있음</span>
+        </div>
+        <div class="plan-price-main" style="color:var(--cyan);">99,000원<span style="font-size:1rem; font-weight:500;">/월</span></div>
+        <div class="plan-price-sub">VAT 별도 · 세금계산서 발행</div>
+        <div class="plan-spec-list">
+          <div class="plan-spec">
+            <span class="plan-spec-key">CPU</span>
+            <span class="plan-spec-val">i9-12세대 / Ryzen 9</span>
+          </div>
+          <div class="plan-spec">
+            <span class="plan-spec-key">GPU</span>
+            <span class="plan-spec-val">RTX 3070 / 3080</span>
+          </div>
+          <div class="plan-spec">
+            <span class="plan-spec-key">RAM</span>
+            <span class="plan-spec-val">64GB DDR4</span>
+          </div>
+          <div class="plan-spec">
+            <span class="plan-spec-key">SSD</span>
+            <span class="plan-spec-val">1TB NVMe</span>
+          </div>
+          <div class="plan-spec">
+            <span class="plan-spec-key">원격 접속</span>
+            <span class="plan-spec-val">AnyDesk Pro + VPN</span>
+          </div>
+          <div class="plan-spec">
+                        <span class="plan-spec-key">IP</span>
+            <span class="plan-spec-val">국내 고정 IP 1개</span>
+          </div>
+        </div>
+        <div class="plan-highlight" style="background:rgba(6,182,212,.1); color:var(--cyan);">
+          AI 모델 학습 · 렌더링 · 기업 업무용
+        </div>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="plan-card" style="border-color:rgba(139,92,246,.3);">
+        <div class="plan-tier" style="color:var(--purple);">Enterprise</div>
+        <div class="plan-price-main" style="color:var(--purple);">협의<span style="font-size:1rem; font-weight:500;">/월</span></div>
+        <div class="plan-price-sub">법인 계약 · SLA 협약 · 전담 매니저</div>
+        <div class="plan-spec-list">
+          <div class="plan-spec">
+            <span class="plan-spec-key">CPU</span>
+            <span class="plan-spec-val">Xeon / EPYC 멀티코어</span>
+          </div>
+          <div class="plan-spec">
+            <span class="plan-spec-key">GPU</span>
+            <span class="plan-spec-val">RTX A4000 / RTX 4090</span>
+          </div>
+          <div class="plan-spec">
+            <span class="plan-spec-key">RAM</span>
+            <span class="plan-spec-val">128GB+</span>
+          </div>
+          <div class="plan-spec">
+            <span class="plan-spec-key">SSD</span>
+            <span class="plan-spec-val">2TB NVMe RAID</span>
+          </div>
+          <div class="plan-spec">
+            <span class="plan-spec-key">원격 접속</span>
+            <span class="plan-spec-val">전용 VPN 터널</span>
+          </div>
+          <div class="plan-spec">
+            <span class="plan-spec-key">SLA</span>
+            <span class="plan-spec-val">99.9% 업타임 보장</span>
+          </div>
+        </div>
+        <div class="plan-highlight" style="background:rgba(139,92,246,.1); color:var(--purple);">
+          대규모 AI 연구 · 기업 전용 인프라
+        </div>
+      </div>
+    </div>
+
+    <!-- 공통 차별화 요소 -->
+    <div style="margin-top:24px; background:var(--card); border:1px solid rgba(6,182,212,.2); border-radius:16px; padding:28px;">
+      <div style="font-size:.85rem; font-weight:700; color:var(--cyan); margin-bottom:16px; text-transform:uppercase; letter-spacing:.07em;">Coretail 공통 차별화 항목</div>
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px;">
+        <div style="text-align:center; padding:16px; background:rgba(255,255,255,.03); border-radius:10px; border:1px solid var(--border);">
+          <div style="font-size:1.5rem; margin-bottom:8px;">🧾</div>
+          <div style="font-size:.82rem; font-weight:700; margin-bottom:4px;">세금계산서 발행</div>
+          <div style="font-size:.75rem; color:var(--text-sm);">법인 경비 처리 가능</div>
+        </div>
+        <div style="text-align:center; padding:16px; background:rgba(255,255,255,.03); border-radius:10px; border:1px solid var(--border);">
+          <div style="font-size:1.5rem; margin-bottom:8px;">📞</div>
+          <div style="font-size:.82rem; font-weight:700; margin-bottom:4px;">공식 CS 채널</div>
+          <div style="font-size:.75rem; color:var(--text-sm);">이메일·전화 대응 (개인 카톡 NO)</div>
+        </div>
+        <div style="text-align:center; padding:16px; background:rgba(255,255,255,.03); border-radius:10px; border:1px solid var(--border);">
+          <div style="font-size:1.5rem; margin-bottom:8px;">🔄</div>
+          <div style="font-size:.82rem; font-weight:700; margin-bottom:4px;">AI UP 연계</div>
+          <div style="font-size:.75rem; color:var(--text-sm);">보유 GPU 임대 → 수익화</div>
+        </div>
+        <div style="text-align:center; padding:16px; background:rgba(255,255,255,.03); border-radius:10px; border:1px solid var(--border);">
+          <div style="font-size:1.5rem; margin-bottom:8px;">📦</div>
+          <div style="font-size:.82rem; font-weight:700; margin-bottom:4px;">상시 재고 보장</div>
+          <div style="font-size:.75rem; color:var(--text-sm);">품절 없는 안정 공급</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ FOOTER ════ -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <span>© 2026 Coretail — 원격 임대PC 사업 기획 내부 자료</span>
+      <span>분석 대상: tyvpn.kr · deskcombo.com · inet.co.kr · blog.naver.com/bking537</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

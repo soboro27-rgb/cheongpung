@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WWM AI 플랫폼</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#0F6E56;--teal-d:#0D5F48;--teal-l:#E6F4F0;
+  --blue:#378ADD;--blue-l:#EBF4FF;
+  --amber:#EF9F27;--amber-l:#FEF6E4;
+  --red:#D85A30;--red-l:#FEF0EB;
+  --green:#38A169;
+  --bg:#F7F8FA;--card:#fff;--border:#E4E8EE;
+  --text:#1C2230;--muted:#6B7280;--subtle:#9CA3AF
+}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+
+/* ── Header ── */
+.hdr{background:var(--teal);color:#fff;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;gap:16px}
+.hdr-brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.hdr-mark{width:30px;height:30px;background:#fff;border-radius:7px;display:grid;place-items:center}
+.hdr-mark svg{width:18px;height:18px}
+.hdr-title{font-size:14px;font-weight:700;letter-spacing:-.3px}
+.hdr-sub{font-size:11px;opacity:.65;margin-top:1px}
+.hdr-key{display:flex;align-items:center;gap:7px}
+.hdr-key svg{opacity:.5;flex-shrink:0}
+.key-inp{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:6px 10px;color:#fff;font-size:12px;width:230px;font-family:monospace;letter-spacing:.5px}
+.key-inp::placeholder{color:rgba(255,255,255,.4)}
+.key-inp:focus{outline:none;background:rgba(255,255,255,.2)}
+
+/* ── Tabs ── */
+.tabs{background:#fff;border-bottom:1px solid var(--border);display:flex;padding:0 20px}
+.tab{padding:13px 18px;font-size:13px;font-weight:500;border-bottom:2px solid transparent;cursor:pointer;color:var(--muted);transition:color .15s;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.on{color:var(--teal);border-bottom-color:var(--teal);font-weight:600}
+
+/* ── Layout ── */
+.wrap{max-width:1100px;margin:0 auto;padding:20px}
+.panel{display:none}.panel.on{display:block}
+#pb.on{display:flex;flex-direction:column}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s}
+.btn-teal{background:var(--teal);color:#fff}.btn-teal:hover{background:var(--teal-d)}.btn-teal:disabled{background:var(--subtle);cursor:not-allowed}
+.spinner{width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.loading .spinner{display:inline-block}.loading .run-icon{display:none}
+
+/* ── Module A ── */
+.idea-box{background:#fff;border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:16px}
+.idea-box textarea{width:100%;border:1px solid var(--border);border-radius:7px;padding:11px 13px;font-size:13px;font-family:inherit;resize:vertical;min-height:90px;line-height:1.65;color:var(--text)}
+.idea-box textarea:focus{outline:none;border-color:var(--teal)}
+.idea-box textarea::placeholder{color:var(--subtle)}
+.btn-row{display:flex;justify-content:flex-end;margin-top:10px;gap:10px;align-items:center}
+.char-count{font-size:11px;color:var(--subtle)}
+
+.prog{display:none;background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:14px}
+.prog.on{display:block}
+.prog-label{font-size:12px;color:var(--muted);margin-bottom:8px}
+.prog-dots{display:flex;gap:5px}
+.dot{flex:1;height:3px;border-radius:2px;background:var(--border);transition:background .3s}
+.dot.act{background:var(--amber);animation:pulse 1s infinite}
+.dot.ok{background:var(--green)}
+
+.grid5{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.acard{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.ahead{padding:11px 14px;display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--border)}
+.aemoji{font-size:15px}
+.aname{font-size:13px;font-weight:700}
+.arole{font-size:11px;color:var(--muted);margin-left:auto}
+.astatus{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-left:6px;background:var(--border)}
+.act .astatus{background:var(--amber);animation:pulse 1s infinite}
+.ok .astatus{background:var(--green)}
+.abody{padding:13px 14px;font-size:12.5px;line-height:1.7;overflow-y:auto;min-height:70px;max-height:280px;flex:1}
+.abody p{margin-bottom:6px}.abody p:last-child{margin-bottom:0}
+.abody ul,.abody ol{padding-left:18px;margin:4px 0}.abody li{margin-bottom:3px}
+.abody strong{font-weight:600}
+.abody table{width:100%;border-collapse:collapse;margin:6px 0;font-size:12px}
+.abody th,.abody td{border:1px solid var(--border);padding:5px 8px;text-align:left}
+.abody th{background:var(--bg);font-weight:600}
+
+.acard-sally .ahead{border-left:3px solid var(--blue)}
+.acard-magaritta .ahead{border-left:3px solid var(--amber)}
+.acard-prod .ahead{border-left:3px solid var(--teal)}
+.acard-mony .ahead{border-left:3px solid var(--green)}
+.acard-cathy .ahead{border-left:3px solid var(--red)}
+
+.bcard{background:#fff;border:2px solid var(--teal);border-radius:10px;overflow:hidden}
+.bcard .ahead{background:var(--teal);color:#fff;padding:14px 18px}
+.bcard .aname{font-size:14px}
+.bcard .arole{color:rgba(255,255,255,.7)}
+.bcard .astatus{background:rgba(255,255,255,.35)}
+.bcard.act .astatus{background:var(--amber);animation:pulse 1s infinite}
+.bcard.ok .astatus{background:#7affc5}
+.bcard .abody{padding:18px;font-size:13px;max-height:none;min-height:100px}
+
+/* ── Module B ── */
+.mb-wrap{display:flex;gap:14px;height:calc(100vh - 148px);min-height:500px}
+.mb-side{width:195px;flex-shrink:0;background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:3px}
+.fn-label{padding:6px 10px;font-size:10px;font-weight:700;color:var(--subtle);text-transform:uppercase;letter-spacing:.5px}
+.fnbtn{padding:9px 10px;border-radius:7px;border:none;font-size:13px;font-family:inherit;cursor:pointer;text-align:left;font-weight:500;display:flex;align-items:center;gap:7px;transition:all .15s;background:transparent;color:var(--muted)}
+.fnbtn:hover{background:var(--bg);color:var(--text)}
+.fnbtn.on{background:var(--teal-l);color:var(--teal);font-weight:600}
+.fn-sep{height:1px;background:var(--border);margin:3px 0}
+.mb-main{flex:1;display:flex;flex-direction:column;background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.chat-area{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+.chat-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--muted);gap:8px;text-align:center}
+.chat-empty-icon{font-size:36px}
+.chat-empty-text{font-size:13px;line-height:1.5}
+.msg{display:flex;gap:10px}
+.msg.user{flex-direction:row-reverse}
+.bubble{max-width:82%;padding:11px 14px;border-radius:10px;font-size:13px;line-height:1.7}
+.msg.user .bubble{background:var(--teal);color:#fff;border-radius:10px 10px 2px 10px}
+.msg.ai .bubble{background:var(--bg);border:1px solid var(--border);border-radius:2px 10px 10px 10px}
+.bubble p{margin-bottom:6px}.bubble p:last-child{margin-bottom:0}
+.bubble h1,.bubble h2,.bubble h3{font-size:13px;font-weight:700;margin:10px 0 5px}
+.bubble ul,.bubble ol{padding-left:18px;margin:5px 0}.bubble li{margin-bottom:3px}
+.bubble table{width:100%;border-collapse:collapse;margin:7px 0;font-size:12px}
+.bubble th,.bubble td{border:1px solid var(--border);padding:5px 8px;text-align:left}
+.bubble th{background:var(--bg);font-weight:600}
+.bubble code{background:rgba(0,0,0,.07);padding:1px 4px;border-radius:3px;font-size:11.5px}
+.bubble pre{background:#1a1a2e;color:#e0e0ff;padding:11px;border-radius:6px;overflow-x:auto;margin:7px 0}
+.bubble pre code{background:none;color:inherit}
+.chat-inp-wrap{padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end}
+.chat-inp{flex:1;border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;font-family:inherit;resize:none;min-height:40px;max-height:110px;line-height:1.5;color:var(--text)}
+.chat-inp:focus{outline:none;border-color:var(--teal)}
+.send-btn{padding:9px 14px;background:var(--teal);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;white-space:nowrap;transition:background .15s}
+.send-btn:hover{background:var(--teal-d)}.send-btn:disabled{background:var(--subtle);cursor:not-allowed}
+
+/* ── Typing indicator ── */
+.typing{display:inline-flex;gap:3px;align-items:center;padding:2px 0}
+.typing span{width:4px;height:4px;border-radius:50%;background:var(--subtle);animation:blink 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+
+/* ── Animations ── */
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--subtle)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    </div>
+    <div>
+      <div class="hdr-title">월드와이드메모리(주) AI 플랫폼</div>
+      <div class="hdr-sub">사업검토 멀티에이전트 · 리퍼 GPU 영업지원</div>
+    </div>
+  </div>
+  <div class="hdr-key">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></svg>
+    <input class="key-inp" id="apiKey" type="password" placeholder="Claude API 키 (sk-ant-...)" autocomplete="off">
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab on" onclick="switchTab('a')">Module A &nbsp;—&nbsp; 멀티에이전트 사업검토</div>
+  <div class="tab" onclick="switchTab('b')">Module B &nbsp;—&nbsp; 리퍼 GPU 영업지원</div>
+</div>
+
+<div class="wrap">
+
+  <!-- Module A -->
+  <div class="panel on" id="pa">
+    <div class="idea-box">
+      <textarea id="idea" placeholder="검토할 사업 아이디어를 입력하세요.
+예) 중소기업 대상 AI GPU 구독 렌탈 서비스 — 월정액 기반 A100 리퍼 서버 운용 대행" oninput="updateCount()"></textarea>
+      <div class="btn-row">
+        <span class="char-count" id="cnt">0자</span>
+        <button class="btn btn-teal" id="runBtn" onclick="runA()">
+          <svg class="run-icon" width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <div class="spinner"></div>
+          검토 시작
+        </button>
+      </div>
+    </div>
+
+    <div class="prog" id="prog">
+      <div class="prog-label" id="progLabel">에이전트 실행 중...</div>
+      <div class="prog-dots">
+        <div class="dot" id="d-Sally"></div>
+        <div class="dot" id="d-Magaritta"></div>
+        <div class="dot" id="d-Prod"></div>
+        <div class="dot" id="d-Mony"></div>
+        <div class="dot" id="d-Cathy"></div>
+        <div class="dot" id="d-Boro"></div>
+      </div>
+    </div>
+
+    <div class="grid5">
+      <div class="acard acard-sally" id="c-Sally">
+        <div class="ahead"><span class="aemoji">💼</span><span class="aname">Sally</span><span class="arole">영업</span><div class="astatus"></div></div>
+        <div class="abody" id="b-Sally"><span style="color:var(--subtle)">대기 중...</span></div>
+      </div>
+      <div class="acard acard-magaritta" id="c-Magaritta">
+        <div class="ahead"><span class="aemoji">📣</span><span class="aname">Magaritta</span><span class="arole">마케팅</span><div class="astatus"></div></div>
+        <div class="abody" id="b-Magaritta"><span style="color:var(--subtle)">대기 중...</span></div>
+      </div>
+      <div class="acard acard-prod" id="c-Prod">
+        <div class="ahead"><span class="aemoji">🛠️</span><span class="aname">Prod</span><span class="arole">제품기획</span><div class="astatus"></div></div>
+        <div class="abody" id="b-Prod"><span style="color:var(--subtle)">대기 중...</span></div>
+      </div>
+      <div class="acard acard-mony" id="c-Mony">
+        <div class="ahead"><span class="aemoji">💰</span><span class="aname">Mony</span><span class="arole">재무</span><div class="astatus"></div></div>
+        <div class="abody" id="b-Mony"><span style="color:var(--subtle)">대기 중...</span></div>
+      </div>
+      <div class="acard acard-cathy" id="c-Cathy">
+        <div class="ahead"><span class="aemoji">🎧</span><span class="aname">Cathy</span><span class="arole">C/S</span><div class="astatus"></div></div>
+        <div class="abody" id="b-Cathy"><span style="color:var(--subtle)">대기 중...</span></div>
+      </div>
+      <div></div>
+    </div>
+
+    <div class="bcard" id="c-Boro">
+      <div class="ahead">
+        <span class="aemoji">📋</span>
+        <span class="aname">Boro</span>
+        <span class="arole">중간관리자 — 최종 보고서</span>
+        <div class="astatus" style="margin-left:auto"></div>
+      </div>
+      <div class="abody" id="b-Boro"><span style="color:var(--muted);font-size:13px">5개 파트 검토 완료 후 Boro의 최종 보고서가 생성됩니다.</span></div>
+    </div>
+  </div>
+
+  <!-- Module B -->
+  <div class="panel" id="pb">
+    <div class="mb-wrap">
+      <div class="mb-side">
+        <div class="fn-label">기능</div>
+        <button class="fnbtn on" data-fn="market" onclick="selFn(this)">📊 시장 동향 브리핑</button>
+        <button class="fnbtn" data-fn="diagnosis" onclick="selFn(this)">🔍 고객 워크로드 진단</button>
+        <button class="fnbtn" data-fn="bom" onclick="selFn(this)">📄 BOM 분석</button>
+        <button class="fnbtn" data-fn="proposal" onclick="selFn(this)">📑 제안서 생성</button>
+        <div class="fn-sep"></div>
+        <button class="fnbtn" data-fn="chat" onclick="selFn(this)">💬 일반 질의</button>
+        <div style="flex:1"></div>
+        <button class="fnbtn" onclick="clearChat()" style="color:var(--red)">🗑️ 대화 초기화</button>
+      </div>
+      <div class="mb-main">
+        <div class="chat-area" id="chatArea">
+          <div class="chat-empty" id="chatEmpty">
+            <div class="chat-empty-icon">🖥️</div>
+            <div class="chat-empty-text">좌측 기능을 선택하고<br>질문을 입력하세요</div>
+          </div>
+        </div>
+        <div class="chat-inp-wrap">
+          <textarea class="chat-inp" id="chatInp" placeholder="메시지 입력... (Shift+Enter 줄바꿈)" rows="1"
+            onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="send()">전송</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────
+let curFn = 'market';
+let history = [];
+let busy = false;
+const rawMap = {};
+
+// ── API Key ───────────────────────────────────────────────────
+const keyEl = document.getElementById('apiKey');
+keyEl.value = localStorage.getItem('wwm_key') || '';
+keyEl.oninput = () => localStorage.setItem('wwm_key', keyEl.value);
+const getKey = () => keyEl.value.trim();
+
+// ── Tab ───────────────────────────────────────────────────────
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach((el, i) =>
+    el.classList.toggle('on', (t === 'a' && i === 0) || (t === 'b' && i === 1)));
+  document.getElementById('pa').classList.toggle('on', t === 'a');
+  document.getElementById('pb').classList.toggle('on', t === 'b');
+}
+
+// ── Char count ────────────────────────────────────────────────
+function updateCount() {
+  document.getElementById('cnt').textContent = document.getElementById('idea').value.length + '자';
+}
+
+// ── SSE Stream Parser ─────────────────────────────────────────
+async function streamPost(url, body, onEvent) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.error || res.statusText);
+  }
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let p;
+    while ((p = buf.indexOf('\n\n')) !== -1) {
+      const block = buf.slice(0, p);
+      buf = buf.slice(p + 2);
+      let ev = null, da = null;
+      for (const line of block.split('\n')) {
+        if (line.startsWith('event: ')) ev = line.slice(7);
+        else if (line.startsWith('data: ')) { try { da = JSON.parse(line.slice(6)); } catch {} }
+      }
+      if (ev && da !== null) onEvent(ev, da);
+    }
+  }
+}
+
+// ── Module A ─────────────────────────────────────────────────
+function resetA() {
+  ['Sally','Magaritta','Prod','Mony','Cathy'].forEach(a => {
+    const c = document.getElementById('c-' + a);
+    c.classList.remove('act', 'ok');
+    document.getElementById('b-' + a).innerHTML = '<span style="color:var(--subtle)">대기 중...</span>';
+    document.getElementById('d-' + a).className = 'dot';
+    rawMap[a] = '';
+  });
+  const bc = document.getElementById('c-Boro');
+  bc.classList.remove('act', 'ok');
+  document.getElementById('b-Boro').innerHTML = '<span style="color:var(--muted);font-size:13px">5개 파트 검토 완료 후 Boro의 최종 보고서가 생성됩니다.</span>';
+  document.getElementById('d-Boro').className = 'dot';
+  rawMap['Boro'] = '';
+}
+
+async function runA() {
+  const key = getKey();
+  if (!key) { alert('Claude API 키를 입력해주세요.'); return; }
+  const idea = document.getElementById('idea').value.trim();
+  if (!idea) { alert('사업 아이디어를 입력해주세요.'); return; }
+
+  resetA();
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  document.getElementById('prog').classList.add('on');
+
+  try {
+    await streamPost('/api/module-a', { businessIdea: idea, apiKey: key }, (ev, da) => {
+      if (ev === 'agent_start') {
+        const a = da.agent;
+        const c = document.getElementById('c-' + a);
+        c.classList.remove('ok');
+        c.classList.add('act');
+        if (a !== 'Boro') document.getElementById('b-' + a).innerHTML = '';
+        document.getElementById('d-' + a).className = 'dot act';
+        document.getElementById('progLabel').textContent = `${a} (${da.role}) 검토 중...`;
+      } else if (ev === 'token') {
+        rawMap[da.agent] = (rawMap[da.agent] || '') + da.text;
+        const b = document.getElementById('b-' + da.agent);
+        b.innerHTML = marked.parse(rawMap[da.agent]);
+        b.scrollTop = b.scrollHeight;
+      } else if (ev === 'agent_done') {
+        const c = document.getElementById('c-' + da.agent);
+        c.classList.remove('act');
+        c.classList.add('ok');
+        document.getElementById('d-' + da.agent).className = 'dot ok';
+      } else if (ev === 'done') {
+        document.getElementById('progLabel').textContent = '검토 완료 ✓';
+      } else if (ev === 'error') {
+        alert('오류: ' + da.message);
+      }
+    });
+  } catch (e) {
+    alert('오류: ' + e.message);
+  }
+
+  btn.disabled = false;
+  btn.classList.remove('loading');
+}
+
+// ── Module B ─────────────────────────────────────────────────
+function selFn(el) {
+  document.querySelectorAll('.fnbtn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  curFn = el.dataset.fn;
+}
+
+function clearChat() {
+  history = [];
+  document.getElementById('chatArea').innerHTML =
+    '<div class="chat-empty" id="chatEmpty"><div class="chat-empty-icon">🖥️</div><div class="chat-empty-text">좌측 기능을 선택하고<br>질문을 입력하세요</div></div>';
+}
+
+function hideEmpty() {
+  const e = document.getElementById('chatEmpty');
+  if (e) e.remove();
+}
+
+function addMsg(role, html) {
+  hideEmpty();
+  const area = document.getElementById('chatArea');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.innerHTML = `<div class="bubble">${html}</div>`;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+  return div.querySelector('.bubble');
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 110) + 'px';
+}
+
+async function send() {
+  if (busy) return;
+  const key = getKey();
+  if (!key) { alert('Claude API 키를 입력해주세요.'); return; }
+  const inp = document.getElementById('chatInp');
+  const msg = inp.value.trim();
+  if (!msg) return;
+
+  busy = true;
+  inp.value = '';
+  inp.style.height = 'auto';
+  document.getElementById('sendBtn').disabled = true;
+
+  addMsg('user', esc(msg).replace(/\n/g, '<br>'));
+  const bubble = addMsg('ai', '<div class="typing"><span></span><span></span><span></span></div>');
+
+  let raw = '';
+  const snap = [...history];
+
+  try {
+    await streamPost('/api/module-b', { message: msg, function: curFn, history: snap, apiKey: key }, (ev, da) => {
+      if (ev === 'token') {
+        raw += da.text;
+        bubble.innerHTML = marked.parse(raw);
+        document.getElementById('chatArea').scrollTop = 9999;
+      } else if (ev === 'error') {
+        bubble.innerHTML = `<span style="color:var(--red)">오류: ${esc(da.message)}</span>`;
+      }
+    });
+    history.push({ role: 'user', content: msg });
+    history.push({ role: 'assistant', content: raw });
+    if (history.length > 20) history = history.slice(-20);
+  } catch (e) {
+    bubble.innerHTML = `<span style="color:var(--red)">오류: ${esc(e.message)}</span>`;
+  }
+
+  busy = false;
+  document.getElementById('sendBtn').disabled = false;
+}
+
+// Configure marked
+if (typeof marked !== 'undefined') {
+  marked.setOptions({ breaks: true, gfm: true });
+}
+</script>
+</body>
+</html>
