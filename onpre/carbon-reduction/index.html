@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>코어테일 탄소절감 산정 엔진 · prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --paper:#F2EEE4; --ink:#15201A; --forest:#1F4031; --forest2:#2E5A45;
+    --moss:#6B8E5A; --ochre:#B07D33; --pos:#2F7D52; --neg:#9C4A2E;
+    --line:rgba(21,32,26,.14); --line2:rgba(21,32,26,.07); --card:#FBF9F3;
+    --mono:'JetBrains Mono',monospace; --disp:'Fraunces',serif;
+    --body:'Pretendard','Pretendard Variable',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--body); background:var(--paper); color:var(--ink);
+    line-height:1.55; font-size:15px; letter-spacing:-.01em;
+    background-image:radial-gradient(circle at 1px 1px,rgba(21,32,26,.04) 1px,transparent 0);
+    background-size:22px 22px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+
+  /* ---- header ---- */
+  header{border-bottom:2px solid var(--ink);background:var(--paper);position:relative;overflow:hidden}
+  .hbar{height:6px;background:linear-gradient(90deg,var(--forest) 0 60%,var(--ochre) 60% 80%,var(--moss) 80% 100%)}
+  .htop{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:18px;padding:34px 0 26px}
+  .brand{display:flex;flex-direction:column;gap:6px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ochre);font-weight:700}
+  h1{font-family:var(--disp);font-weight:600;font-size:38px;line-height:1.02;letter-spacing:-.02em}
+  h1 em{font-style:italic;color:var(--forest2)}
+  .sub{font-size:13.5px;color:var(--forest2);max-width:520px}
+  .badges{display:flex;gap:8px;flex-wrap:wrap}
+  .badge{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;border:1px solid var(--line);
+    padding:6px 9px;border-radius:2px;background:var(--card);color:var(--forest);white-space:nowrap}
+  .badge b{color:var(--ink)}
+
+  /* ---- notice ---- */
+  .notice{background:#FFF8E6;border:1px solid var(--ochre);border-left-width:4px;border-radius:3px;
+    padding:13px 16px;margin:22px 0;font-size:13px;display:flex;gap:11px;align-items:flex-start}
+  .notice .dot{font-family:var(--mono);font-weight:700;color:var(--ochre);flex:none}
+  .notice b{color:var(--ink)}
+
+  section{margin:34px 0}
+  .sechead{display:flex;align-items:baseline;gap:12px;margin-bottom:14px;border-bottom:1px solid var(--ink);padding-bottom:8px}
+  .snum{font-family:var(--mono);font-size:12px;color:var(--ochre);font-weight:700}
+  .stitle{font-family:var(--disp);font-size:22px;font-weight:600;letter-spacing:-.01em}
+  .shint{font-size:12px;color:var(--forest2);margin-left:auto;font-family:var(--mono)}
+
+  /* ---- param grid ---- */
+  .params{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .pcard{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:14px}
+  .pcard label{display:block;font-size:12px;font-weight:600;color:var(--forest);margin-bottom:3px}
+  .pcard .desc{font-size:10.5px;color:var(--forest2);line-height:1.4;margin-bottom:9px;min-height:28px}
+  .pin{display:flex;align-items:baseline;gap:6px}
+  .pin input{width:100%;font-family:var(--mono);font-size:18px;font-weight:700;color:var(--ink);
+    border:none;border-bottom:2px solid var(--line);background:transparent;padding:3px 0}
+  .pin input:focus{outline:none;border-bottom-color:var(--forest)}
+  .pin .unit{font-family:var(--mono);font-size:11px;color:var(--forest2);flex:none}
+
+  /* ---- tables ---- */
+  .tablewrap{border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--card)}
+  table{width:100%;border-collapse:collapse}
+  th{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;
+    text-align:left;padding:11px 12px;background:var(--forest);color:#EFEDE2;font-weight:500;white-space:nowrap}
+  th.r,td.r{text-align:right}
+  td{padding:9px 12px;border-bottom:1px solid var(--line2);font-size:13.5px;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:rgba(107,142,90,.07)}
+  .num{font-family:var(--mono);font-weight:500}
+  td input,td select{font-family:var(--body);font-size:13.5px;border:1px solid transparent;
+    background:transparent;border-radius:3px;padding:4px 6px;width:100%;color:var(--ink)}
+  td input.num{font-family:var(--mono);text-align:right}
+  td input:hover,td select:hover{border-color:var(--line)}
+  td input:focus,td select:focus{outline:none;border-color:var(--forest);background:#fff}
+  td input[type=number]{-moz-appearance:textfield}
+  .src{font-size:10.5px;color:var(--forest2);font-style:italic}
+  .src input{font-style:italic;font-size:11px;color:var(--forest2)}
+
+  .pill{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.03em;
+    padding:3px 7px;border-radius:99px;text-transform:uppercase}
+  .pill.reuse{background:rgba(47,125,82,.14);color:var(--pos)}
+  .pill.recycle{background:rgba(176,125,51,.16);color:var(--ochre)}
+
+  .btn{font-family:var(--body);font-weight:600;font-size:13px;border:1px solid var(--forest);
+    background:var(--forest);color:#F2EEE4;padding:9px 16px;border-radius:3px;cursor:pointer;transition:.15s}
+  .btn:hover{background:var(--forest2)}
+  .btn.ghost{background:transparent;color:var(--forest);}
+  .btn.ghost:hover{background:rgba(31,64,49,.08)}
+  .btn.sm{padding:5px 10px;font-size:12px}
+  .toolbar{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .del{cursor:pointer;color:var(--neg);font-family:var(--mono);font-weight:700;border:none;background:none;font-size:15px;padding:2px 6px;border-radius:3px}
+  .del:hover{background:rgba(156,74,46,.12)}
+
+  /* ---- results ---- */
+  .results{display:grid;grid-template-columns:1.3fr 1fr;gap:18px}
+  .hero{background:var(--forest);color:#F2EEE4;border-radius:6px;padding:26px 28px;position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;
+    border-radius:50%;background:radial-gradient(circle,rgba(107,142,90,.35),transparent 70%)}
+  .hero .lab{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.8}
+  .hero .big{font-family:var(--mono);font-weight:700;font-size:58px;line-height:1;margin:8px 0 2px}
+  .hero .big span{font-size:24px;opacity:.7}
+  .hero .eqv{font-size:12.5px;opacity:.85;margin-top:14px;border-top:1px solid rgba(242,238,228,.2);padding-top:12px;line-height:1.7}
+  .hero .eqv b{font-family:var(--mono)}
+  .split{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:20px;display:flex;flex-direction:column;justify-content:center;gap:14px}
+  .srow{display:flex;justify-content:space-between;align-items:baseline;font-size:13px}
+  .srow .k{color:var(--forest2)}
+  .srow .v{font-family:var(--mono);font-weight:700;font-size:16px}
+  .srow.minus .v{color:var(--neg)}
+  .srow.plus .v{color:var(--pos)}
+  .bar{height:8px;border-radius:99px;background:var(--line2);overflow:hidden;display:flex}
+  .bar i{height:100%;display:block}
+
+  /* ---- certificate ---- */
+  .cert{background:#fff;border:1px solid var(--line);border-top:5px solid var(--forest);border-radius:4px;
+    padding:30px 34px;position:relative;box-shadow:0 1px 0 var(--line)}
+  .cert::before{content:"";position:absolute;inset:8px;border:1px solid var(--line2);border-radius:2px;pointer-events:none}
+  .certhd{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:16px}
+  .certhd .ttl{font-family:var(--disp);font-size:22px;font-weight:600}
+  .certhd .ttl small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--ochre);text-transform:uppercase;margin-bottom:4px}
+  .certno{font-family:var(--mono);font-size:11px;color:var(--forest2);text-align:right;line-height:1.7}
+  .certgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:6px 0 18px}
+  .cg .k{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--forest2)}
+  .cg .v{font-family:var(--mono);font-weight:700;font-size:20px;margin-top:3px}
+  .certfoot{display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid var(--line);padding-top:14px;font-size:11px;color:var(--forest2);gap:16px}
+  .stamp{width:78px;height:78px;border:2px solid var(--ochre);border-radius:50%;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;color:var(--ochre);transform:rotate(-9deg);flex:none;text-align:center}
+  .stamp b{font-family:var(--disp);font-size:13px;line-height:1}
+  .stamp small{font-family:var(--mono);font-size:7px;letter-spacing:.1em;margin-top:3px}
+
+  .formula{background:var(--ink);color:#D8E3D8;border-radius:5px;padding:20px 22px;font-family:var(--mono);font-size:12.5px;line-height:2}
+  .formula .c{color:var(--moss)}
+  .formula .o{color:var(--ochre)}
+  .mlist{display:grid;grid-template-columns:1fr 1fr;gap:10px 26px;margin-top:14px;font-size:12.5px}
+  .mlist div{padding-left:16px;position:relative;color:var(--forest2)}
+  .mlist div::before{content:"›";position:absolute;left:0;color:var(--ochre);font-weight:700}
+  .mlist b{color:var(--ink)}
+
+  footer{border-top:2px solid var(--ink);margin-top:50px;padding:24px 0 40px;font-size:12px;color:var(--forest2)}
+  footer .fl{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:center}
+
+  @media(max-width:860px){
+    .params{grid-template-columns:repeat(2,1fr)}
+    .results{grid-template-columns:1fr}
+    .certgrid{grid-template-columns:1fr 1fr}
+    h1{font-size:30px}
+    .htop{padding:24px 0 20px}
+    .scrollx{overflow-x:auto}
+  }
+  @media print{
+    body{background:#fff} .notice,.toolbar,header .badges{display:none}
+    .btn,.del{display:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="hbar"></div>
+  <div class="wrap">
+    <div class="htop">
+      <div class="brand">
+        <span class="eyebrow">Coretail · ITAD Carbon Methodology</span>
+        <h1>탄소절감 산정 엔진 <em>prototype</em></h1>
+        <p class="sub">불용 ICT 장비의 재사용·재활용에 따른 회피배출량을 <b>baseline / project</b> 분리 방식으로 산정합니다. 모든 계수는 편집 가능하며 출처가 함께 기록됩니다.</p>
+      </div>
+      <div class="badges">
+        <span class="badge"><b>ISO 14064-2</b> 프로젝트 정량화</span>
+        <span class="badge"><b>ISO 14040/44</b> LCA</span>
+        <span class="badge"><b>GHG Protocol</b> Project</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="notice">
+    <span class="dot">!</span>
+    <div><b>검증 준비 메모.</b> 아래 배출계수는 제조사 PCF·문헌 기반의 <b>플레이스홀더(예시값)</b>입니다. 실제 사업화 및 제3자 검증 시 환경부 <b>국가 LCI DB</b>, 제조사 공개 PCF 데이터시트, Ecoinvent 등 공인 출처값으로 교체하고 각 셀에 출처를 명시해야 합니다. 보수적 가정(대체율·리퍼 배출)은 그대로 두는 것이 검증 통과에 유리합니다.</div>
+  </div>
+
+  <!-- 1. PARAMETERS -->
+  <section>
+    <div class="sechead">
+      <span class="snum">01</span><span class="stitle">전역 파라미터</span>
+      <span class="shint">conservative defaults</span>
+    </div>
+    <div class="params">
+      <div class="pcard">
+        <label>대체율 (displacement)</label>
+        <div class="desc">재사용 1대가 신규 구매 1대를 대체하는 비율. 보수적으로 1 미만.</div>
+        <div class="pin"><input type="number" id="p_disp" value="0.8" step="0.05" min="0" max="1"><span class="unit">×</span></div>
+      </div>
+      <div class="pcard">
+        <label>리퍼 배출 비율</label>
+        <div class="desc">재제조 과정(세척·부품·검수) 배출. 내재탄소 대비 %.</div>
+        <div class="pin"><input type="number" id="p_refurb" value="5" step="1" min="0"><span class="unit">%</span></div>
+      </div>
+      <div class="pcard">
+        <label>운송 배출계수</label>
+        <div class="desc">수거 트럭 화물 운송 원단위.</div>
+        <div class="pin"><input type="number" id="p_trans" value="120" step="10" min="0"><span class="unit">g/t·km</span></div>
+      </div>
+      <div class="pcard">
+        <label>기본 운송거리</label>
+        <div class="desc">행 입력이 없을 때 적용되는 수거 거리.</div>
+        <div class="pin"><input type="number" id="p_dist" value="50" step="10" min="0"><span class="unit">km</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. FACTOR TABLE -->
+  <section>
+    <div class="sechead">
+      <span class="snum">02</span><span class="stitle">기기군별 배출계수</span>
+      <span class="shint">editable · cite source</span>
+    </div>
+    <div class="tablewrap scrollx">
+      <table>
+        <thead>
+          <tr>
+            <th>기기군</th>
+            <th class="r">내재탄소<br>kgCO₂e/대</th>
+            <th class="r">재활용 절감<br>kgCO₂e/대</th>
+            <th class="r">중량<br>kg/대</th>
+            <th>출처 / 근거</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="factorBody"></tbody>
+      </table>
+    </div>
+    <div class="toolbar"><button class="btn ghost sm" onclick="addFactor()">+ 기기군 추가</button></div>
+  </section>
+
+  <!-- 3. LINE ITEMS -->
+  <section>
+    <div class="sechead">
+      <span class="snum">03</span><span class="stitle">처분 실적 입력</span>
+      <span class="shint">reuse vs recycle</span>
+    </div>
+    <div class="tablewrap scrollx">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:22%">기기군</th>
+            <th class="r">수량</th>
+            <th>처리경로</th>
+            <th class="r">운송거리<br>km</th>
+            <th class="r">baseline<br>회피배출</th>
+            <th class="r">project<br>리퍼+운송</th>
+            <th class="r">순절감<br>kgCO₂e</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="lineBody"></tbody>
+      </table>
+    </div>
+    <div class="toolbar">
+      <button class="btn" onclick="addLine()">+ 행 추가</button>
+      <button class="btn ghost sm" onclick="loadSample()">샘플 데이터</button>
+    </div>
+  </section>
+
+  <!-- 4. RESULTS -->
+  <section>
+    <div class="sechead">
+      <span class="snum">04</span><span class="stitle">산정 결과</span>
+    </div>
+    <div class="results">
+      <div class="hero">
+        <div class="lab">총 순 탄소절감량</div>
+        <div class="big"><span id="totT">0.00</span></div>
+        <div class="lab" style="opacity:.9">tCO₂e</div>
+        <div class="eqv" id="equiv"></div>
+      </div>
+      <div class="split">
+        <div class="srow plus"><span class="k">A. Baseline 회피배출 (신규제조·자원)</span><span class="v" id="rBase">0</span></div>
+        <div class="bar"><i id="barBase" style="background:var(--pos)"></i></div>
+        <div class="srow minus"><span class="k">B. Project 배출 (리퍼)</span><span class="v" id="rProj">0</span></div>
+        <div class="srow minus"><span class="k">C. 운송 배출</span><span class="v" id="rTrans">0</span></div>
+        <div class="srow" style="border-top:1px solid var(--line);padding-top:11px"><span class="k"><b>순절감 = A − B − C</b></span><span class="v" style="color:var(--forest)" id="rNet">0</span> </div>
+        <div class="srow"><span class="k" style="font-size:11px">재사용 건 / 재활용 건</span><span class="v" style="font-size:13px" id="rCount">0 / 0</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. CERTIFICATE -->
+  <section>
+    <div class="sechead">
+      <span class="snum">05</span><span class="stitle">인증서 미리보기</span>
+      <span class="shint">Tier 1 자체발급 양식</span>
+    </div>
+    <div class="cert">
+      <div class="certhd">
+        <div class="ttl"><small>Carbon Reduction Statement</small>탄소절감 확인서</div>
+        <div class="certno">
+          NO. <span id="certNo">CT-CRS-0000</span><br>
+          발급일 <span id="certDate">—</span><br>
+          방법론 v0.1 (draft)
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--forest2);margin-bottom:6px">아래 ICT 자산의 재사용·재활용 처분을 통해 다음의 온실가스 회피배출 효과가 산정되었습니다.</p>
+      <div class="certgrid">
+        <div class="cg"><div class="k">총 절감량</div><div class="v"><span id="cTot">0.00</span> tCO₂e</div></div>
+        <div class="cg"><div class="k">처분 대수</div><div class="v"><span id="cQty">0</span> 대</div></div>
+        <div class="cg"><div class="k">대당 평균</div><div class="v"><span id="cAvg">0</span> kg</div></div>
+      </div>
+      <div class="certfoot">
+        <div>
+          본 확인서는 ISO 14064-2 및 ISO 14040/44 프레임워크에 근거한 자체 산정 결과입니다.<br>
+          거래 가능한 자발적 크레딧으로 전환하려면 제3자 검증 및 등록부 등재가 필요합니다.<br>
+          <b style="color:var(--forest)">발급 · ㈜코어테일 (Coretail)</b>
+        </div>
+        <div class="stamp"><b>CORE<br>TAIL</b><small>VERIFIED*</small></div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:var(--forest2);margin-top:8px">* 현재 상태는 자체 산정(Tier 1)입니다. 제3자 검증 완료 시 "검증기관명 / 검증일"로 대체됩니다.</p>
+  </section>
+
+  <!-- 6. METHODOLOGY -->
+  <section>
+    <div class="sechead">
+      <span class="snum">06</span><span class="stitle">산식 & 방법론</span>
+    </div>
+    <div class="formula">
+      <span class="c">// 재사용 (reuse)</span><br>
+      순절감 = <span class="o">[</span> 내재탄소 × 대체율 <span class="o">]</span> − <span class="o">[</span> 내재탄소 × 리퍼율 <span class="o">]</span> − 운송배출<br><br>
+      <span class="c">// 재활용 (recycle)</span><br>
+      순절감 = <span class="o">[</span> 재활용 절감 <span class="o">]</span> − 운송배출<br><br>
+      <span class="c">// 운송배출 (공통)</span><br>
+      운송배출 = (중량kg ÷ 1000) × 거리km × 운송계수 ÷ 1000
+    </div>
+    <div class="mlist">
+      <div><b>Baseline</b> — 처분하지 않았을 경우 발생했을 배출(신규 제조 또는 1차 자원 생산).</div>
+      <div><b>Project</b> — 실제 처분 활동에서 발생한 배출(재제조·수거 운송).</div>
+      <div><b>대체율 &lt; 1</b> — 재사용이 신규 구매를 완전히 대체하지 못함을 보수적으로 반영.</div>
+      <div><b>이중계상 방지</b> — 사용단계 배출은 신·구 동일 가정으로 상쇄 처리(미산입).</div>
+      <div><b>추적성</b> — 향후 시리얼 단위로 매핑하면 기기별 탄소원장 구축 가능.</div>
+      <div><b>검증 경로</b> — 계수 출처 명시 → 제3자 검증 → 등록부 등재 → 자발적 크레딧.</div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap fl">
+    <div>코어테일 탄소절감 산정 엔진 · prototype v0.1 — 산정 로직 검증용. 상용 배포 전 공인 배출계수 교체 필수.</div>
+    <div style="display:flex;gap:10px">
+      <button class="btn ghost sm" onclick="window.print()">인쇄 / PDF</button>
+      <button class="btn ghost sm" onclick="exportJSON()">설정 내보내기 (JSON)</button>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ---------- state ---------- */
+let factors = [
+  {name:"노트북",          embodied:250,  recycle:25,  weight:2.0, src:"제조사 PCF 평균(예시)"},
+  {name:"데스크탑 PC",     embodied:350,  recycle:40,  weight:8.0, src:"문헌 추정(예시)"},
+  {name:"모니터 (LCD 24\")",embodied:230, recycle:20,  weight:5.0, src:"제조사 PCF(예시)"},
+  {name:"서버 (2U)",       embodied:1300, recycle:120, weight:20.0,src:"문헌 추정(예시)"},
+  {name:"스토리지 (HDD/SSD)",embodied:60, recycle:8,   weight:0.7, src:"문헌 추정(예시)"},
+  {name:"스마트폰/태블릿",  embodied:60,  recycle:6,   weight:0.4, src:"제조사 PCF(예시)"},
+  {name:"네트워크 장비",    embodied:180, recycle:20,  weight:4.0, src:"문헌 추정(예시)"},
+];
+let lines = [];
+
+/* ---------- helpers ---------- */
+const $=id=>document.getElementById(id);
+const num=v=>{v=parseFloat(v);return isNaN(v)?0:v;};
+const fmt=(v,d=0)=>v.toLocaleString('ko-KR',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+function params(){return{
+  disp:num($('p_disp').value), refurb:num($('p_refurb').value)/100,
+  trans:num($('p_trans').value), dist:num($('p_dist').value)
+};}
+
+/* ---------- factor table ---------- */
+function renderFactors(){
+  const b=$('factorBody'); b.innerHTML='';
+  factors.forEach((f,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><input value="${f.name}" oninput="setF(${i},'name',this.value)"></td>
+      <td class="r"><input class="num" type="number" value="${f.embodied}" oninput="setF(${i},'embodied',this.value)"></td>
+      <td class="r"><input class="num" type="number" value="${f.recycle}" oninput="setF(${i},'recycle',this.value)"></td>
+      <td class="r"><input class="num" type="number" step="0.1" value="${f.weight}" oninput="setF(${i},'weight',this.value)"></td>
+      <td class="src"><input value="${f.src}" oninput="setF(${i},'src',this.value)"></td>
+      <td class="r"><button class="del" onclick="delF(${i})" title="삭제">×</button></td>`;
+    b.appendChild(tr);
+  });
+  refreshLineSelects();
+}
+function setF(i,k,v){factors[i][k]=(k==='name'||k==='src')?v:num(v);calc();}
+function delF(i){factors.splice(i,1);renderFactors();calc();}
+function addFactor(){factors.push({name:"신규 기기군",embodied:100,recycle:10,weight:1.0,src:""});renderFactors();}
+
+/* ---------- line items ---------- */
+function renderLines(){
+  const b=$('lineBody'); b.innerHTML='';
+  lines.forEach((l,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${factorSelect(l.fi,i)}</td>
+      <td class="r"><input class="num" type="number" value="${l.qty}" oninput="setL(${i},'qty',this.value)"></td>
+      <td>${pathSelect(l.path,i)}</td>
+      <td class="r"><input class="num" type="number" placeholder="기본값" value="${l.dist===''?'':l.dist}" oninput="setL(${i},'dist',this.value)"></td>
+      <td class="r num" id="lb${i}">0</td>
+      <td class="r num" id="lp${i}">0</td>
+      <td class="r num" id="ln${i}" style="font-weight:700">0</td>
+      <td class="r"><button class="del" onclick="delL(${i})">×</button></td>`;
+    b.appendChild(tr);
+  });
+}
+function factorSelect(fi,i){
+  let o=factors.map((f,k)=>`<option value="${k}" ${k==fi?'selected':''}>${f.name}</option>`).join('');
+  return `<select onchange="setL(${i},'fi',this.value)">${o}</select>`;
+}
+function pathSelect(p,i){
+  return `<select onchange="setL(${i},'path',this.value)">
+    <option value="reuse" ${p==='reuse'?'selected':''}>♻ 재사용</option>
+    <option value="recycle" ${p==='recycle'?'selected':''}>⚙ 재활용</option></select>`;
+}
+function refreshLineSelects(){ if(lines.length) renderLines(); }
+function setL(i,k,v){
+  if(k==='fi') lines[i].fi=parseInt(v);
+  else if(k==='path') lines[i].path=v;
+  else if(k==='dist') lines[i].dist=(v===''?'':num(v));
+  else lines[i][k]=num(v);
+  calc();
+}
+function delL(i){lines.splice(i,1);renderLines();calc();}
+function addLine(){lines.push({fi:0,qty:10,path:'reuse',dist:''});renderLines();calc();}
+function loadSample(){
+  lines=[
+    {fi:0,qty:120,path:'reuse',dist:40},
+    {fi:1,qty:60,path:'reuse',dist:40},
+    {fi:2,qty:80,path:'reuse',dist:40},
+    {fi:3,qty:8,path:'recycle',dist:120},
+    {fi:4,qty:200,path:'recycle',dist:''},
+  ];
+  renderLines();calc();
+}
+
+/* ---------- calculation ---------- */
+function calc(){
+  const p=params();
+  let A=0,B=0,C=0,qtyTot=0,nReuse=0,nRecycle=0;
+  lines.forEach((l,i)=>{
+    const f=factors[l.fi]; if(!f){return;}
+    const q=l.qty, dist=(l.dist===''?p.dist:l.dist);
+    const transUnit=(f.weight/1000)*dist*p.trans/1000;
+    let base=0,proj=0;
+    if(l.path==='reuse'){
+      base=f.embodied*p.disp;
+      proj=f.embodied*p.refurb + transUnit;
+      nReuse+=q;
+    }else{
+      base=f.recycle;
+      proj=transUnit;
+      nRecycle+=q;
+    }
+    const lineBase=base*q, lineProj=proj*q, lineNet=lineBase-lineProj;
+    A+=lineBase; B+= (l.path==='reuse'? f.embodied*p.refurb*q:0); C+=transUnit*q; qtyTot+=q;
+    const lb=$('lb'+i),lp=$('lp'+i),ln=$('ln'+i);
+    if(lb){lb.textContent=fmt(lineBase);lp.textContent=fmt(lineProj);ln.textContent=fmt(lineNet);
+      ln.style.color=lineNet>=0?'var(--forest)':'var(--neg)';}
+  });
+  const net=A-B-C;
+  $('rBase').textContent=fmt(A)+' kg';
+  $('rProj').textContent='− '+fmt(B)+' kg';
+  $('rTrans').textContent='− '+fmt(C)+' kg';
+  $('rNet').textContent=fmt(net)+' kg';
+  $('rCount').textContent=fmt(nReuse)+' / '+fmt(nRecycle);
+  const tot=net/1000;
+  $('totT').textContent=fmt(tot,2);
+  $('barBase').style.width='100%';
+  const trees=net/21.8, km=net/0.17;
+  $('equiv').innerHTML=`≈ 30년생 소나무 <b>${fmt(trees,0)}</b>그루의 연간 흡수량<br>≈ 승용차 <b>${fmt(km,0)}</b> km 주행 배출 상쇄 <span style="opacity:.6">(환산 예시)</span>`;
+  $('cTot').textContent=fmt(tot,2);
+  $('cQty').textContent=fmt(qtyTot);
+  $('cAvg').textContent= qtyTot? fmt(net/qtyTot,1):'0';
+  const d=new Date();
+  $('certDate').textContent=d.toLocaleDateString('ko-KR');
+  $('certNo').textContent='CT-CRS-'+String(d.getFullYear()).slice(2)+
+    String(d.getMonth()+1).padStart(2,'0')+'-'+String(Math.floor(net)%10000).padStart(4,'0');
+}
+
+/* ---------- export ---------- */
+function exportJSON(){
+  const data={parameters:params(),factors,lines,note:"코어테일 탄소절감 산정엔진 v0.1 설정 — Claude Code 이식용"};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='coretail_carbon_config.json';a.click();
+}
+
+/* ---------- param listeners ---------- */
+['p_disp','p_refurb','p_trans','p_dist'].forEach(id=>$(id).addEventListener('input',calc));
+
+/* ---------- init ---------- */
+renderFactors();
+loadSample();
+</script>
+</body>
+</html>

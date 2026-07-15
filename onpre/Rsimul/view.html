@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>렌탈 신청</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body { background: #F8FAFC; font-family: 'Apple SD Gothic Neo', -apple-system, 'Segoe UI', sans-serif; }
+    .hero { background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); color: #fff; padding: 32px 24px; border-radius: 0 0 24px 24px; }
+    .hero h1 { font-size: 1.4rem; font-weight: 800; margin-bottom: 4px; }
+    .hero .price { font-size: 1.1rem; opacity: .85; }
+    .plan-card { background: #fff; border-radius: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08); padding: 20px; margin-bottom: 12px; border: 2px solid transparent; transition: .2s; cursor: pointer; }
+    .plan-card:hover, .plan-card.selected { border-color: #4F46E5; box-shadow: 0 4px 16px rgba(79,70,229,.15); }
+    .plan-card.selected { background: #F5F3FF; }
+    .plan-card .badge-period { background: #4F46E5; color: #fff; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .plan-card .monthly-price { font-size: 1.5rem; font-weight: 800; color: #4F46E5; }
+    .plan-card .meta { font-size: 12px; color: #94A3B8; }
+    .sticky-bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 16px 20px; border-top: 1px solid #E2E8F0; z-index: 100; }
+    .prd-img { width: 100%; max-height: 220px; object-fit: contain; border-radius: 12px; background: #F1F5F9; padding: 8px; }
+    .section-title { font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+    pb-80 { padding-bottom: 80px; }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <div class="hero" id="hero">
+    <div class="container" style="max-width:560px">
+      <p class="mb-1" style="font-size:12px;opacity:.7">렌탈 상품</p>
+      <h1 id="vNm">—</h1>
+      <div class="price" id="vPrice">—</div>
+    </div>
+  </div>
+
+  <div class="container py-4 pb-5" style="max-width:560px">
+    <!-- Product image -->
+    <div id="imgWrap" class="mb-4 d-none">
+      <img id="vImg" class="prd-img" alt="상품이미지">
+    </div>
+
+    <!-- Plan cards -->
+    <p class="section-title">렌탈 기간 선택</p>
+    <div id="plans"></div>
+
+    <!-- Info -->
+    <div class="mt-4 p-4 rounded-3" style="background:#F8FAFC;font-size:13px">
+      <div class="d-flex justify-content-between mb-2">
+        <span class="text-muted">배송비</span>
+        <span id="vDelivery" class="fw-semibold">—</span>
+      </div>
+      <div class="d-flex justify-content-between">
+        <span class="text-muted">상품 URL</span>
+        <a id="vUrl" href="#" target="_blank" class="fw-semibold text-primary text-decoration-none">상품 보기 <i class="bi bi-box-arrow-up-right"></i></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sticky CTA -->
+<div class="sticky-bottom-bar">
+  <div class="container d-flex align-items-center gap-3" style="max-width:560px">
+    <div class="flex-grow-1">
+      <div id="ctaInfo" class="text-muted" style="font-size:12px">기간을 선택하세요</div>
+      <div id="ctaPrice" class="fw-bold" style="font-size:1.1rem">—</div>
+    </div>
+    <button class="btn btn-primary px-4 py-2 fw-bold" id="applyBtn" onclick="applyRental()" disabled>
+      렌탈 신청
+    </button>
+  </div>
+</div>
+
+<script>
+const fmt = n => !n ? '0' : Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+const p = new URLSearchParams(location.search);
+const nm       = p.get('nm') || '상품명';
+const price    = parseInt(p.get('price')) || 0;
+const prdUrl   = p.get('url') || '';
+const img      = p.get('img') || '';
+const delivery = p.get('delivery') || '무료';
+const rawPeriods = p.get('periods') || '';
+
+// Parse periods: "per:dis:monthly:total|..."
+const plans = rawPeriods.split('|').filter(Boolean).map(s => {
+  const [per, dis, monthly, total] = s.split(':');
+  return { per: parseInt(per), dis: parseFloat(dis), monthly: parseInt(monthly), total: parseInt(total) };
+}).filter(x => x.per && x.monthly);
+
+// Render header
+document.getElementById('vNm').textContent = nm;
+document.getElementById('vPrice').textContent = price ? `판매가 ${fmt(price)}원` : '';
+document.getElementById('vDelivery').textContent = delivery;
+
+if (prdUrl) {
+  const a = document.getElementById('vUrl');
+  a.href = prdUrl;
+} else {
+  document.getElementById('vUrl').parentElement.style.display = 'none';
+}
+
+if (img) {
+  document.getElementById('vImg').src = img;
+  document.getElementById('imgWrap').classList.remove('d-none');
+}
+
+// Render plan cards
+let selectedPlan = null;
+document.getElementById('plans').innerHTML = plans.map((pl, i) => `
+  <div class="plan-card" id="plan_${i}" onclick="selectPlan(${i})">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <span class="badge-period">${pl.per}개월</span>
+      <span class="text-muted" style="font-size:12px">총 ${fmt(pl.total)}원</span>
+    </div>
+    <div class="monthly-price">${fmt(pl.monthly)}<small class="fs-6 fw-normal text-muted ms-1">원 / 월</small></div>
+    <div class="meta mt-1">공급가 ${fmt(Math.round(price * pl.dis))}원 · 할인율 ${Math.round(pl.dis * 100)}%</div>
+  </div>`).join('');
+
+function selectPlan(i) {
+  document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('plan_' + i).classList.add('selected');
+  selectedPlan = plans[i];
+
+  document.getElementById('ctaInfo').textContent = `${selectedPlan.per}개월 렌탈`;
+  document.getElementById('ctaPrice').textContent = `월 ${fmt(selectedPlan.monthly)}원`;
+  document.getElementById('applyBtn').disabled = false;
+}
+
+function applyRental() {
+  if (!selectedPlan) return;
+  // 실제 신청 페이지 연동 시 이 부분 수정
+  alert(`[${nm}]\n${selectedPlan.per}개월 · 월 ${fmt(selectedPlan.monthly)}원\n신청 기능 연동 필요`);
+}
+</script>
+</body>
+</html>
