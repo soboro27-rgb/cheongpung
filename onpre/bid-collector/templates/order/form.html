@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}계약건 등록 — WWM{% endblock %}
+{% block page_title %}매입 계약건 등록{% endblock %}
+{% block content %}
+<div style="max-width:560px;">
+  <form method="post">
+    <div class="sc">
+      <div class="sc-title"><i class="bi bi-inbox me-2 text-primary"></i>계약 정보</div>
+      <div class="row g-3">
+        <div class="col-sm-6">
+          <label class="form-label">매입일자 *</label>
+          <input type="date" name="purchase_date" class="form-control" value="{{ today }}" required>
+        </div>
+        <div class="col-sm-6">
+          <label class="form-label">수량 *</label>
+          <input type="number" name="quantity" class="form-control" value="1" min="1" required>
+        </div>
+        <div class="col-sm-6">
+          <label class="form-label">업체명 (한글) *</label>
+          <input type="text" name="vendor_name" class="form-control" placeholder="예: 삼성전자" required>
+        </div>
+        <div class="col-sm-6">
+          <label class="form-label">업체명 (영문) *
+            <span style="font-size:10px;color:#94A3B8;font-weight:400;">QR에 사용 (최대 8자)</span>
+          </label>
+          <input type="text" name="vendor_name_en" class="form-control" placeholder="예: samsung"
+                 pattern="[a-zA-Z0-9]+" title="영문+숫자만 입력" required id="vendorEn">
+          <div style="font-size:11px;color:#64748B;margin-top:3px;" id="vendorPreview"></div>
+        </div>
+        <div class="col-sm-6">
+          <label class="form-label">담당자 성 (영문2자) *
+            <span style="font-size:10px;color:#94A3B8;font-weight:400;">예: ko (고), le (이)</span>
+          </label>
+          <input type="text" name="manager_last_en" class="form-control" placeholder="예: ko"
+                 maxlength="2" pattern="[a-zA-Z]{2}" title="영문 2자" required id="managerEn">
+        </div>
+        <div class="col-sm-6">
+          <label class="form-label">비고</label>
+          <input type="text" name="memo" class="form-control" placeholder="선택사항">
+        </div>
+      </div>
+
+      <!-- QR 미리보기 -->
+      <div class="mt-3 p-3 rounded" style="background:#EFF6FF;border:1px solid #BFDBFE;">
+        <div style="font-size:11px;font-weight:700;color:#1D4ED8;margin-bottom:4px;">QR 코드 미리보기</div>
+        <code id="qrPreview" style="font-size:13px;color:#1E293B;">— 위 필드를 입력하면 자동 생성됩니다 —</code>
+        <div style="font-size:10px;color:#64748B;margin-top:2px;">
+          형식: YYYY_MMDD_업체8자_담당자2자_001 ~ N
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary px-4">
+        <i class="bi bi-qr-code me-1"></i>등록 및 QR 생성
+      </button>
+      <a href="{{ url_for('order_list') }}" class="btn btn-outline-secondary">취소</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updatePreview() {
+  const dateEl = document.querySelector('[name=purchase_date]');
+  const vendorEl = document.getElementById('vendorEn');
+  const managerEl = document.getElementById('managerEn');
+  const qtyEl = document.querySelector('[name=quantity]');
+  const d = dateEl.value;
+  const v = vendorEl.value.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8);
+  const m = managerEl.value.toLowerCase().replace(/[^a-z]/g,'').substring(0,2);
+  const q = parseInt(qtyEl.value)||1;
+
+  document.getElementById('vendorPreview').textContent = v ? `QR에 사용: "${v}"` : '';
+
+  if (d && v && m) {
+    const y=d.substring(0,4), md=d.substring(5,7)+d.substring(8,10);
+    document.getElementById('qrPreview').textContent =
+      `${y}_${md}_${v}_${m}_001  ~  ${y}_${md}_${v}_${m}_${String(q).padStart(3,'0')}`;
+  } else {
+    document.getElementById('qrPreview').textContent = '— 위 필드를 입력하면 자동 생성됩니다 —';
+  }
+}
+document.querySelectorAll('input').forEach(el => el.addEventListener('input', updatePreview));
+</script>
+{% endblock %}

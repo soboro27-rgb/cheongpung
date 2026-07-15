@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>중고 IT기기 매입 관리 시스템 기획안</title>
+<style>
+  @page { size: A4; margin: 14mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    font-size: 10px;
+    line-height: 1.45;
+    color: #1a1a2e;
+    background: #fff;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 14mm;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 2.5px solid #1a1a2e;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+  .header h1 { font-size: 17px; font-weight: 900; letter-spacing: -.3px; }
+  .header .sub { font-size: 9px; color: #555; }
+  .header .meta { font-size: 8.5px; color: #888; text-align: right; }
+
+  /* ── Section ── */
+  .section { margin-bottom: 9px; }
+  .section-title {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #fff;
+    background: #1a1a2e;
+    padding: 2px 8px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-bottom: 6px;
+  }
+
+  /* ── Flow ── */
+  .flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+  }
+  .flow-step {
+    flex: 1;
+    border: 1.5px solid #c8c8d8;
+    border-radius: 6px;
+    padding: 6px 5px;
+    text-align: center;
+    position: relative;
+    background: #f9f9fc;
+  }
+  .flow-step .num {
+    display: inline-block;
+    background: #4F46E5;
+    color: #fff;
+    font-size: 8px;
+    font-weight: 800;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    line-height: 16px;
+    margin-bottom: 4px;
+  }
+  .flow-step .title { font-size: 10px; font-weight: 800; color: #1a1a2e; }
+  .flow-step .items { font-size: 8.5px; color: #555; margin-top: 3px; text-align: left; padding: 0 2px; }
+  .flow-step .items li { list-style: none; padding-left: 8px; position: relative; }
+  .flow-step .items li::before { content: '·'; position: absolute; left: 0; }
+  .flow-arrow {
+    display: flex; align-items: center;
+    font-size: 14px; color: #4F46E5;
+    padding: 0 3px;
+    font-weight: 900;
+  }
+
+  /* ── Two-col ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+
+  /* ── Card ── */
+  .card {
+    border: 1.5px solid #e2e2ee;
+    border-radius: 6px;
+    padding: 7px 8px;
+    background: #fafafa;
+  }
+  .card .ctitle {
+    font-size: 9.5px; font-weight: 800;
+    color: #4F46E5; margin-bottom: 4px;
+    border-bottom: 1px solid #e8e8f0;
+    padding-bottom: 3px;
+  }
+  .card ul { padding: 0; }
+  .card ul li {
+    list-style: none;
+    font-size: 8.5px;
+    color: #333;
+    padding: 1.5px 0 1.5px 10px;
+    position: relative;
+    border-bottom: 1px dotted #eee;
+  }
+  .card ul li:last-child { border-bottom: none; }
+  .card ul li::before { content: '▸'; position: absolute; left: 0; color: #4F46E5; font-size: 7px; top: 2px; }
+
+  /* ── Role boxes ── */
+  .role-box {
+    border-radius: 6px;
+    padding: 7px 8px;
+  }
+  .role-admin { background: #EEF2FF; border: 1.5px solid #4F46E5; }
+  .role-inspector { background: #F0FDF4; border: 1.5px solid #16A34A; }
+  .role-badge {
+    display: inline-block;
+    font-size: 8.5px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-bottom: 4px;
+  }
+  .badge-admin { background: #4F46E5; color: #fff; }
+  .badge-inspector { background: #16A34A; color: #fff; }
+  .role-box ul li { border-bottom: 1px dotted #d8d8e8; }
+
+  /* ── DB Table ── */
+  .db-table {
+    border: 1.5px solid #c8c8d8;
+    border-radius: 6px;
+    overflow: hidden;
+    font-size: 8.5px;
+  }
+  .db-table .db-head {
+    background: #1a1a2e;
+    color: #fff;
+    font-weight: 700;
+    padding: 3px 7px;
+    font-size: 9px;
+  }
+  .db-table .db-row {
+    display: flex;
+    border-top: 1px solid #e8e8f0;
+    padding: 2px 7px;
+  }
+  .db-table .db-row .field { flex: 2; color: #1a1a2e; font-weight: 600; }
+  .db-table .db-row .type  { flex: 1.5; color: #4F46E5; }
+  .db-table .db-row .desc  { flex: 3; color: #555; }
+  .db-table .db-row:nth-child(even) { background: #f9f9fc; }
+
+  /* ── Tech ── */
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+  }
+  .tech-item {
+    border: 1.5px solid #e2e2ee;
+    border-radius: 5px;
+    padding: 5px 6px;
+    text-align: center;
+    background: #f9f9fc;
+  }
+  .tech-item .tlabel { font-size: 7.5px; color: #888; }
+  .tech-item .tval   { font-size: 9.5px; font-weight: 800; color: #1a1a2e; }
+
+  /* ── Screen list ── */
+  .screen-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+  }
+  .screen-item {
+    border-left: 3px solid #4F46E5;
+    padding: 4px 7px;
+    background: #f5f5ff;
+    border-radius: 0 4px 4px 0;
+  }
+  .screen-item.green { border-color: #16A34A; background: #f0fdf4; }
+  .screen-item .sname { font-size: 9px; font-weight: 700; }
+  .screen-item .sdesc { font-size: 8px; color: #666; }
+
+  /* ── ERP ── */
+  .erp-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 3px;
+  }
+  .erp-col {
+    border: 1px solid #c8c8d8;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 8px;
+    background: #fafafa;
+  }
+  .erp-col.key { background: #EEF2FF; border-color: #4F46E5; font-weight: 700; }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 10px;
+    padding-top: 6px;
+    border-top: 1px solid #ccc;
+    display: flex;
+    justify-content: space-between;
+    font-size: 8px;
+    color: #999;
+  }
+
+  /* ── Grade badges ── */
+  .grade { display: inline-flex; gap: 4px; margin-top: 3px; flex-wrap: wrap; }
+  .gbadge {
+    font-size: 8px; font-weight: 700;
+    padding: 1px 6px; border-radius: 3px;
+  }
+  .gS  { background:#FEF3C7; color:#92400E; }
+  .gA  { background:#DCFCE7; color:#166534; }
+  .gB  { background:#DBEAFE; color:#1E40AF; }
+  .gC  { background:#FEE2E2; color:#991B1B; }
+  .gD  { background:#F1F5F9; color:#475569; }
+
+  @media print {
+    body { padding: 14mm; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<div class="header">
+  <div>
+    <h1>중고 IT기기 매입 관리 시스템</h1>
+    <div class="sub">Used IT Asset Purchase · Inspection · Label · ERP 통합 업무 관리 플랫폼</div>
+  </div>
+  <div class="meta">기획안 v1.0 &nbsp;|&nbsp; 2026-06-10<br>담당: 관리자</div>
+</div>
+
+<!-- ═══════════════ 01 업무 흐름 ═══════════════ -->
+<div class="section">
+  <div class="section-title">01 &nbsp; 업무 흐름 (Business Flow)</div>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="num">1</div>
+      <div class="title">매입 접수</div>
+      <ul class="items">
+        <li>거래처 / 매입처 등록</li>
+        <li>기기 종류 (PC/노트북)</li>
+        <li>수량 · 매입 금액 입력</li>
+        <li>매입 일자 기록</li>
+      </ul>
+    </div>
+    <div class="flow-arrow">›</div>
+    <div class="flow-step">
+      <div class="num">2</div>
+      <div class="title">검수 입력</div>
+      <ul class="items">
+        <li>제조사 · 모델명 입력</li>
+        <li>CPU / RAM / 저장장치</li>
+        <li>외관·기능 체크리스트</li>
+        <li>등급 분류 S/A/B/C/D</li>
+        <li>검수자 · 검수일 자동기록</li>
+      </ul>
+    </div>
+    <div class="flow-arrow">›</div>
+    <div class="flow-step">
+      <div class="num">3</div>
+      <div class="title">라벨 생성</div>
+      <ul class="items">
+        <li>고유 자산번호 자동 채번</li>
+        <li>QR코드 자동 생성</li>
+        <li>라벨 미리보기</li>
+        <li>스티커 출력 (PDF/인쇄)</li>
+      </ul>
+    </div>
+    <div class="flow-arrow">›</div>
+    <div class="flow-step">
+      <div class="num">4</div>
+      <div class="title">엑셀 정리</div>
+      <ul class="items">
+        <li>검수 데이터 일괄 추출</li>
+        <li>필터 · 정렬 · 검색</li>
+        <li>매입 현황 엑셀 다운로드</li>
+        <li>기간별 / 등급별 집계</li>
+      </ul>
+    </div>
+    <div class="flow-arrow">›</div>
+    <div class="flow-step">
+      <div class="num">5</div>
+      <div class="title">ERP 등록</div>
+      <ul class="items">
+        <li>ERP 양식 템플릿 선택</li>
+        <li>대량등록 엑셀 파일 생성</li>
+        <li>필드 매핑 설정</li>
+        <li>ERP 업로드용 다운로드</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ 02 계정 & 권한 + 검수 등급 ═══════════════ -->
+<div class="section two-col">
+  <!-- 계정 -->
+  <div>
+    <div class="section-title">02 &nbsp; 계정 / 권한</div>
+    <div style="display:flex; flex-direction:column; gap:6px;">
+      <div class="role-box role-admin">
+        <span class="role-badge badge-admin">ADMIN · 어드민</span>
+        <ul class="card" style="border:none;background:transparent;padding:0;">
+          <li>전체 매입 · 검수 조회 / 수정 / 삭제</li>
+          <li>ERP 대량등록 파일 생성 · 다운로드</li>
+          <li>매입 통계 대시보드</li>
+          <li>검수자 계정 생성 · 권한 관리</li>
+          <li>ERP 필드 매핑 템플릿 설정</li>
+          <li>라벨 양식 커스터마이즈</li>
+        </ul>
+      </div>
+      <div class="role-box role-inspector">
+        <span class="role-badge badge-inspector">INSPECTOR · 검수자</span>
+        <ul class="card" style="border:none;background:transparent;padding:0;">
+          <li>본인 담당 매입 건 검수 입력</li>
+          <li>검수 정보 수정 (검수완료 전까지)</li>
+          <li>라벨 미리보기 · 스티커 출력</li>
+          <li>매입 목록 조회 (읽기 전용)</li>
+          <li>ERP 파일 다운로드 불가</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 검수 등급 + 체크리스트 -->
+  <div>
+    <div class="section-title">03 &nbsp; 검수 등급 / 체크리스트</div>
+    <div class="card" style="margin-bottom:5px;">
+      <div class="ctitle">외관·기능 체크리스트</div>
+      <div class="two-col" style="gap:4px;">
+        <ul>
+          <li>화면 (사점·줄·색감)</li>
+          <li>키보드 · 터치패드</li>
+          <li>USB · HDMI · 이어폰잭</li>
+          <li>카메라 · 마이크</li>
+        </ul>
+        <ul>
+          <li>배터리 상태 / 충전여부</li>
+          <li>전원 버튼 · 슬립/웨이크</li>
+          <li>Wi-Fi · 블루투스</li>
+          <li>외관 흠집 / 찌그러짐</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle">등급 기준</div>
+      <div class="grade">
+        <span class="gbadge gS">S등급</span><span style="font-size:8px;color:#555">미사용/신품급</span>
+      </div>
+      <div class="grade">
+        <span class="gbadge gA">A등급</span><span style="font-size:8px;color:#555">사용감 극미·완전작동</span>
+      </div>
+      <div class="grade">
+        <span class="gbadge gB">B등급</span><span style="font-size:8px;color:#555">경미한 흠집·완전작동</span>
+      </div>
+      <div class="grade">
+        <span class="gbadge gC">C등급</span><span style="font-size:8px;color:#555">기능 일부결함 or 외관불량</span>
+      </div>
+      <div class="grade">
+        <span class="gbadge gD">D등급</span><span style="font-size:8px;color:#555">부품용 / 수리필요</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ 04 데이터 구조 ═══════════════ -->
+<div class="section">
+  <div class="section-title">04 &nbsp; 핵심 데이터 구조</div>
+  <div class="three-col">
+
+    <div class="db-table">
+      <div class="db-head">📦 매입 (Purchase)</div>
+      <div class="db-row"><span class="field">id</span><span class="type">UUID</span><span class="desc">고유 매입 ID</span></div>
+      <div class="db-row"><span class="field">purchaseDate</span><span class="type">Date</span><span class="desc">매입 일자</span></div>
+      <div class="db-row"><span class="field">vendor</span><span class="type">String</span><span class="desc">매입처 / 거래처명</span></div>
+      <div class="db-row"><span class="field">quantity</span><span class="type">Int</span><span class="desc">매입 수량</span></div>
+      <div class="db-row"><span class="field">totalPrice</span><span class="type">Int</span><span class="desc">총 매입 금액</span></div>
+      <div class="db-row"><span class="field">memo</span><span class="type">Text</span><span class="desc">비고</span></div>
+      <div class="db-row"><span class="field">createdBy</span><span class="type">FK→User</span><span class="desc">등록자</span></div>
+    </div>
+
+    <div class="db-table">
+      <div class="db-head">🖥️ 자산 (Asset)</div>
+      <div class="db-row"><span class="field">assetNo</span><span class="type">String</span><span class="desc">자산번호 (채번)</span></div>
+      <div class="db-row"><span class="field">category</span><span class="type">Enum</span><span class="desc">PC / NOTEBOOK</span></div>
+      <div class="db-row"><span class="field">maker</span><span class="type">String</span><span class="desc">제조사</span></div>
+      <div class="db-row"><span class="field">model</span><span class="type">String</span><span class="desc">모델명</span></div>
+      <div class="db-row"><span class="field">cpu / ram / storage</span><span class="type">String</span><span class="desc">사양</span></div>
+      <div class="db-row"><span class="field">grade</span><span class="type">Enum</span><span class="desc">S/A/B/C/D</span></div>
+      <div class="db-row"><span class="field">serialNo</span><span class="type">String</span><span class="desc">제품 시리얼</span></div>
+      <div class="db-row"><span class="field">purchaseId</span><span class="type">FK</span><span class="desc">→ Purchase</span></div>
+      <div class="db-row"><span class="field">inspectedBy</span><span class="type">FK→User</span><span class="desc">검수자</span></div>
+      <div class="db-row"><span class="field">inspectedAt</span><span class="type">DateTime</span><span class="desc">검수 완료일시</span></div>
+      <div class="db-row"><span class="field">labelPrinted</span><span class="type">Bool</span><span class="desc">라벨출력 여부</span></div>
+      <div class="db-row"><span class="field">erpExported</span><span class="type">Bool</span><span class="desc">ERP등록 여부</span></div>
+    </div>
+
+    <div class="db-table">
+      <div class="db-head">✅ 검수항목 (Checklist)</div>
+      <div class="db-row"><span class="field">assetId</span><span class="type">FK</span><span class="desc">→ Asset</span></div>
+      <div class="db-row"><span class="field">screen</span><span class="type">Pass/Fail</span><span class="desc">화면 상태</span></div>
+      <div class="db-row"><span class="field">keyboard</span><span class="type">Pass/Fail</span><span class="desc">키보드</span></div>
+      <div class="db-row"><span class="field">battery</span><span class="type">Pass/Fail</span><span class="desc">배터리</span></div>
+      <div class="db-row"><span class="field">ports</span><span class="type">Pass/Fail</span><span class="desc">포트류</span></div>
+      <div class="db-row"><span class="field">wifi</span><span class="type">Pass/Fail</span><span class="desc">무선랜</span></div>
+      <div class="db-row"><span class="field">appearance</span><span class="type">1~5</span><span class="desc">외관 점수</span></div>
+      <div class="db-row"><span class="field">defectNote</span><span class="type">Text</span><span class="desc">불량 메모</span></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ 05 화면 구성 ═══════════════ -->
+<div class="section">
+  <div class="section-title">05 &nbsp; 화면 구성 (Pages)</div>
+  <div class="screen-grid">
+    <div class="screen-item">
+      <div class="sname">📊 대시보드</div>
+      <div class="sdesc">오늘 매입·검수·출력 건수 / 등급별 현황 / 미완료 목록</div>
+    </div>
+    <div class="screen-item">
+      <div class="sname">📥 매입 접수</div>
+      <div class="sdesc">매입처·날짜·수량·금액 등록 / 매입 목록 조회</div>
+    </div>
+    <div class="screen-item">
+      <div class="sname">🔍 검수 입력</div>
+      <div class="sdesc">제품별 사양 입력 / 체크리스트 / 등급 선택</div>
+    </div>
+    <div class="screen-item">
+      <div class="sname">🏷️ 라벨 관리</div>
+      <div class="sdesc">QR코드 포함 라벨 미리보기 / 단건·일괄 PDF 출력</div>
+    </div>
+    <div class="screen-item">
+      <div class="sname">📋 자산 목록</div>
+      <div class="sdesc">전체 자산 검색·필터·정렬 / 엑셀 다운로드</div>
+    </div>
+    <div class="screen-item green">
+      <div class="sname">📤 ERP 내보내기</div>
+      <div class="sdesc">ERP 대량등록 엑셀 생성 / 필드 매핑 / 어드민 전용</div>
+    </div>
+    <div class="screen-item green">
+      <div class="sname">⚙️ 설정 (Admin)</div>
+      <div class="sdesc">계정 관리 / 라벨 양식 / ERP 템플릿 / 자산번호 채번규칙</div>
+    </div>
+    <div class="screen-item">
+      <div class="sname">🔗 QR 상세</div>
+      <div class="sdesc">QR스캔 → 자산 상세 페이지 (외부 접근 가능)</div>
+    </div>
+    <div class="screen-item">
+      <div class="sname">🔐 로그인</div>
+      <div class="sdesc">이메일+비밀번호 / 역할별 메뉴 분기</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ 06 라벨 + ERP ═══════════════ -->
+<div class="section two-col">
+  <div>
+    <div class="section-title">06 &nbsp; 라벨 스티커 구성</div>
+    <div class="card">
+      <div style="display:flex; gap:8px; align-items:flex-start;">
+        <!-- 라벨 미리보기 -->
+        <div style="border:1.5px solid #4F46E5; border-radius:5px; padding:5px 7px; width:90px; flex-shrink:0; background:#fff;">
+          <div style="font-size:7px; font-weight:800; color:#4F46E5; text-align:center; border-bottom:1px solid #eee; padding-bottom:2px; margin-bottom:3px;">ASSET LABEL</div>
+          <div style="text-align:center; margin-bottom:3px;">
+            <!-- QR 시뮬레이션 -->
+            <div style="width:36px; height:36px; margin:0 auto; background: repeating-linear-gradient(0deg, #000 0px, #000 3px, transparent 3px, transparent 6px), repeating-linear-gradient(90deg, #000 0px, #000 3px, transparent 3px, transparent 6px); border:2px solid #000;"></div>
+          </div>
+          <div style="font-size:6.5px; font-weight:800; text-align:center; letter-spacing:.05em;">IT-2026-000123</div>
+          <div style="font-size:6px; color:#333; text-align:center;">ThinkPad X1 Carbon</div>
+          <div style="font-size:5.5px; color:#555; text-align:center;">i7-1165G7 / 16GB / 512GB</div>
+          <div style="font-size:6px; font-weight:700; text-align:center; color:#166534; margin-top:2px;">A등급</div>
+        </div>
+        <div style="flex:1;">
+          <ul class="card" style="border:none; background:transparent; padding:0;">
+            <li>자산번호 (채번 규칙 설정 가능)</li>
+            <li>QR코드 → 자산 상세 URL 인코딩</li>
+            <li>제조사 · 모델명 · 사양</li>
+            <li>등급 · 검수일 · 검수자</li>
+            <li>매입일 · 시리얼번호</li>
+            <li>출력: PDF 단건 / 일괄 (선택)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-title">07 &nbsp; ERP 대량등록 엑셀 컬럼</div>
+    <div class="card">
+      <div class="ctitle">생성 파일: erp_bulk_YYYYMMDD.xlsx</div>
+      <div class="erp-row">
+        <span class="erp-col key">자산번호</span>
+        <span class="erp-col key">자산분류</span>
+        <span class="erp-col key">제조사</span>
+        <span class="erp-col key">모델명</span>
+        <span class="erp-col">CPU</span>
+        <span class="erp-col">RAM</span>
+        <span class="erp-col">저장장치</span>
+        <span class="erp-col key">등급</span>
+        <span class="erp-col">시리얼</span>
+        <span class="erp-col key">매입금액</span>
+        <span class="erp-col">매입처</span>
+        <span class="erp-col key">매입일자</span>
+        <span class="erp-col">검수일자</span>
+        <span class="erp-col">검수자</span>
+        <span class="erp-col key">등록상태</span>
+      </div>
+      <div style="font-size:8px;color:#888;margin-top:5px;">
+        ▸ 어드민이 기간·등급·미등록 기준으로 필터 후 생성<br>
+        ▸ 컬럼 매핑은 ERP 종류에 따라 설정 화면에서 조정 가능
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ 08 기술스택 ═══════════════ -->
+<div class="section">
+  <div class="section-title">08 &nbsp; 기술 스택</div>
+  <div class="tech-grid">
+    <div class="tech-item">
+      <div class="tlabel">Frontend</div>
+      <div class="tval">HTML / JS</div>
+      <div style="font-size:7.5px;color:#888;">Vanilla · Bootstrap 5</div>
+    </div>
+    <div class="tech-item">
+      <div class="tlabel">Backend</div>
+      <div class="tval">Python Flask</div>
+      <div style="font-size:7.5px;color:#888;">REST API · Blueprints</div>
+    </div>
+    <div class="tech-item">
+      <div class="tlabel">Database</div>
+      <div class="tval">SQLite → MySQL</div>
+      <div style="font-size:7.5px;color:#888;">SQLAlchemy ORM</div>
+    </div>
+    <div class="tech-item">
+      <div class="tlabel">인증</div>
+      <div class="tval">Flask-Login</div>
+      <div style="font-size:7.5px;color:#888;">Session 기반 2역할</div>
+    </div>
+    <div class="tech-item">
+      <div class="tlabel">QR 생성</div>
+      <div class="tval">qrcode (py)</div>
+      <div style="font-size:7.5px;color:#888;">서버측 PNG 생성</div>
+    </div>
+    <div class="tech-item">
+      <div class="tlabel">Excel 출력</div>
+      <div class="tval">openpyxl</div>
+      <div style="font-size:7.5px;color:#888;">xlsxwriter 대안</div>
+    </div>
+    <div class="tech-item">
+      <div class="tlabel">라벨 PDF</div>
+      <div class="tval">WeasyPrint</div>
+      <div style="font-size:7.5px;color:#888;">HTML→PDF 서버렌더</div>
+    </div>
+    <div class="tech-item">
+      <div class="tlabel">배포</div>
+      <div class="tval">단일 서버</div>
+      <div style="font-size:7.5px;color:#888;">로컬 or Render/VM</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<div class="footer">
+  <span>중고 IT기기 매입 관리 시스템 기획안 v1.0</span>
+  <span>기능 범위: 매입접수 · 검수 · 라벨출력(QR) · 엑셀 · ERP대량등록 · 2계정(어드민/검수자)</span>
+  <span>2026-06-10</span>
+</div>
+
+</body>
+</html>

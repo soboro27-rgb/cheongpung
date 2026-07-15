@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}검수 완료 — WWM{% endblock %}
+{% block page_title %}검수 완료{% endblock %}
+{% block content %}
+<div style="max-width:480px;">
+  <div class="sc text-center py-4">
+    <i class="bi bi-lock-fill" style="font-size:3rem;color:#2563EB;"></i>
+    <h5 class="mt-3 fw-bold">입력 완료된 QR입니다</h5>
+    <p class="text-muted" style="font-size:13px;">이 QR 코드는 이미 검수가 완료되어 잠금 처리되었습니다.</p>
+
+    <div class="p-3 rounded mb-3 text-start" style="background:#F1F5F9;font-size:13px;">
+      <div><strong>QR:</strong> <code>{{ qr.qr_string }}</code></div>
+      {% if qr.locked_by %}
+      <div class="mt-1"><strong>검수자:</strong> {{ qr.locked_by.name }}</div>
+      {% endif %}
+      {% if qr.locked_at %}
+      <div class="mt-1"><strong>완료일시:</strong> {{ qr.locked_at.strftime('%Y-%m-%d %H:%M') }}</div>
+      {% endif %}
+      {% if qr.inspection %}
+      <div class="mt-1"><strong>등급:</strong>
+        {% if qr.inspection.grade %}
+        <span class="badge badge-{{ qr.inspection.grade }}">{{ qr.inspection.grade }}</span>
+        {% else %}—{% endif %}
+      </div>
+      <div class="mt-1"><strong>판정:</strong>
+        {% if qr.inspection.quality %}
+        <span class="badge {{ 'bg-danger' if qr.inspection.quality=='불량' else 'bg-success' }}">{{ qr.inspection.quality }}</span>
+        {% else %}—{% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <a href="{{ url_for('scan') }}" class="btn btn-primary w-100">
+      <i class="bi bi-qr-code-scan me-1"></i>다른 QR 스캔
+    </a>
+  </div>
+</div>
+{% endblock %}

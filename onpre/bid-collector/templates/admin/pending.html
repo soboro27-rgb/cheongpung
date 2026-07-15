@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}미검수 QR — WWM{% endblock %}
+{% block page_title %}미검수 QR 현황{% endblock %}
+{% block content %}
+<div class="sc mb-3">
+  <form method="get" class="row g-2 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label">계약건</label>
+      <select name="order_id" class="form-select form-select-sm">
+        <option value="">전체</option>
+        {% for o in orders %}
+        <option value="{{ o.id }}" {{ 'selected' if f_order==o.id|string }}>
+          {{ o.order_no }} — {{ o.vendor_name }} ({{ o.quantity }}대)
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-sm btn-primary w-100">조회</button>
+    </div>
+  </form>
+</div>
+
+<div class="sc">
+  <div class="sc-title">
+    미검수 QR
+    <span class="badge bg-danger ms-2" style="font-size:12px;">{{ qr_codes|length }}건</span>
+  </div>
+  {% if qr_codes %}
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr>
+        <th>QR 코드</th><th>계약건</th><th>매입처</th><th>매입일자</th><th>생성일시</th>
+      </tr></thead>
+      <tbody>
+      {% for qr in qr_codes %}
+      <tr>
+        <td><code style="font-size:12px;">{{ qr.qr_string }}</code></td>
+        <td style="font-size:12px;">{{ qr.order.order_no if qr.order else '—' }}</td>
+        <td style="font-size:12px;">{{ qr.order.vendor_name if qr.order else '—' }}</td>
+        <td style="font-size:12px;">{{ qr.order.purchase_date.strftime('%Y-%m-%d') if qr.order and qr.order.purchase_date else '—' }}</td>
+        <td style="font-size:11px;color:#94A3B8;">{{ qr.created_at.strftime('%Y-%m-%d %H:%M') if qr.created_at else '—' }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-4 text-success">
+    <i class="bi bi-check-circle-fill" style="font-size:2rem;"></i>
+    <p class="mt-2 fw-bold">미검수 QR 없음 — 전량 검수 완료!</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

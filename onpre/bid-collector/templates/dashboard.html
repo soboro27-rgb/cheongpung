@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}대시보드 — WWM{% endblock %}
+{% block page_title %}대시보드{% endblock %}
+
+{% block topbar_actions %}
+{% if current_user.is_admin %}
+<a href="{{ url_for('order_new') }}" class="btn btn-sm btn-primary">
+  <i class="bi bi-plus-lg me-1"></i>계약건 등록
+</a>
+{% else %}
+<a href="{{ url_for('scan') }}" class="btn btn-sm btn-primary">
+  <i class="bi bi-qr-code-scan me-1"></i>QR 스캔 시작
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if current_user.is_admin %}
+<!-- 어드민 대시보드 -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="scard">
+      <div class="slbl">전체 QR</div>
+      <div class="sval">{{ total_qr }}</div>
+      <div style="font-size:11px;color:#94A3B8;margin-top:3px;">등록된 QR 코드</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="scard">
+      <div class="slbl">검수 완료</div>
+      <div class="sval text-success">{{ locked }}</div>
+      <div style="font-size:11px;color:#94A3B8;margin-top:3px;">락 처리된 QR</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="scard">
+      <div class="slbl">검수 대기</div>
+      <div class="sval text-warning">{{ unlocked }}</div>
+      <div style="font-size:11px;color:#94A3B8;margin-top:3px;">미완료 QR</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="scard">
+      <div class="slbl">오늘 검수</div>
+      <div class="sval text-primary">{{ today_cnt }}</div>
+      <div style="font-size:11px;color:#94A3B8;margin-top:3px;">오늘 완료 건</div>
+    </div>
+  </div>
+</div>
+
+<div class="sc">
+  <div class="sc-title d-flex justify-content-between">
+    <span><i class="bi bi-inbox me-2 text-primary"></i>최근 계약건 현황</span>
+    <a href="{{ url_for('order_list') }}" class="btn btn-sm btn-outline-secondary">전체보기</a>
+  </div>
+  {% if orders %}
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr>
+        <th>계약번호</th><th>매입처</th><th>매입일</th><th>수량</th>
+        <th>검수완료</th><th>진행률</th>
+      </tr></thead>
+      <tbody>
+      {% for po in orders %}
+      <tr style="cursor:pointer;" onclick="location.href='{{ url_for('order_detail', id=po.id) }}'">
+        <td class="fw-semibold" style="font-size:12px;">{{ po.order_no }}</td>
+        <td>{{ po.vendor_name }}</td>
+        <td style="font-size:12px;">{{ po.purchase_date.strftime('%Y-%m-%d') }}</td>
+        <td>{{ po.quantity }}대</td>
+        <td>
+          <span class="{{ 'text-success fw-bold' if po.locked_count==po.quantity else 'text-warning' }}">
+            {{ po.locked_count }}/{{ po.quantity }}
+          </span>
+        </td>
+        <td style="min-width:100px;">
+          <div class="progress" style="height:6px;">
+            <div class="progress-bar bg-primary"
+                 style="width:{{ (po.locked_count/po.quantity*100)|int if po.quantity else 0 }}%"></div>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center text-muted py-4">등록된 계약건이 없습니다.</div>
+  {% endif %}
+</div>
+
+{% else %}
+<!-- 검수자 대시보드 -->
+<div class="row g-3 mb-4">
+  <div class="col-6">
+    <div class="scard">
+      <div class="slbl">내 총 검수</div>
+      <div class="sval text-primary">{{ my_total }}</div>
+      <div style="font-size:11px;color:#94A3B8;margin-top:3px;">누적 검수 건수</div>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="scard" style="background:linear-gradient(135deg,#2563EB,#1D4ED8);border:none;">
+      <div class="slbl" style="color:rgba(255,255,255,.7);">QR 스캔</div>
+      <a href="{{ url_for('scan') }}" class="btn btn-sm btn-light fw-bold mt-2 w-100">
+        <i class="bi bi-qr-code-scan me-1"></i>검수 시작
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="sc">
+  <div class="sc-title"><i class="bi bi-clock-history me-2 text-primary"></i>최근 검수 이력</div>
+  {% if my %}
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>QR</th><th>모델</th><th>등급</th><th>판정</th><th>저장일시</th></tr></thead>
+      <tbody>
+      {% for r in my %}
+      <tr>
+        <td style="font-size:11px;font-family:monospace;">{{ r.qr_code.qr_string }}</td>
+        <td style="font-size:13px;">{{ r.maker }} {{ r.model_name or '—' }}</td>
+        <td>{% if r.grade %}<span class="badge badge-{{ r.grade }}">{{ r.grade }}</span>{% else %}—{% endif %}</td>
+        <td>
+          {% if r.quality %}
+          <span class="badge {{ 'bg-danger' if r.quality=='불량' else 'bg-success' }}" style="font-size:11px;">{{ r.quality }}</span>
+          {% else %}—{% endif %}
+        </td>
+        <td style="font-size:11px;color:#94A3B8;">{{ r.saved_at.strftime('%m/%d %H:%M') }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center text-muted py-4">
+    <i class="bi bi-clipboard" style="font-size:2rem;"></i>
+    <p class="mt-2 mb-0">아직 검수 내역이 없습니다.</p>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

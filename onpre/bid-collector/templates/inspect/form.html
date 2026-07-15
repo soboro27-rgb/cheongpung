@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+{% block title %}검수 입력 — WWM{% endblock %}
+{% block page_title %}검수 입력{% endblock %}
+{% block head %}
+<style>
+  .ro-field{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;
+    padding:6px 10px;font-size:13px;color:#1E293B;font-weight:600;}
+  .oy-btn{display:inline-flex;gap:6px;}
+  .oy-btn input[type=radio]{display:none;}
+  .oy-btn label{border:2px solid #E2E8F0;border-radius:6px;padding:5px 14px;
+    cursor:pointer;font-weight:700;font-size:13px;transition:.15s;}
+  .oy-btn input:checked + label.o{border-color:#2563EB;background:#EFF6FF;color:#2563EB;}
+  .oy-btn input:checked + label.x{border-color:#EF4444;background:#FEF2F2;color:#EF4444;}
+  .oy-btn label.o:hover{border-color:#2563EB;}
+  .oy-btn label.x:hover{border-color:#EF4444;}
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="post" style="max-width:700px;">
+  <!-- A: QR 자동 입력 (읽기 전용) -->
+  <div class="sc">
+    <div class="sc-title">
+      <i class="bi bi-lock-fill me-2 text-secondary"></i>A. QR 자동 입력
+      <span class="badge bg-secondary ms-2" style="font-size:10px;">읽기 전용</span>
+    </div>
+    <div class="row g-3">
+      <div class="col-6 col-md-3">
+        <label class="form-label">매입일자</label>
+        <div class="ro-field">{{ parsed.get('purchase_date', '—') }}</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">매입처</label>
+        <div class="ro-field">{{ qr.order.vendor_name if qr.order else parsed.get('vendor', '—') }}</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">담당자(성)</label>
+        <div class="ro-field">{{ parsed.get('manager', '—') }}</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">입고번호</label>
+        <div class="ro-field">{{ '%03d'|format(parsed.get('seq', 0)) }}</div>
+      </div>
+    </div>
+    <div class="mt-2" style="font-size:11px;color:#94A3B8;">QR: <code>{{ qr.qr_string }}</code></div>
+  </div>
+
+  <!-- B: 제품 스펙 -->
+  <div class="sc">
+    <div class="sc-title"><i class="bi bi-cpu me-2 text-primary"></i>B. 제품 스펙</div>
+    <div class="row g-3">
+      {% set ei = insp %}
+      <div class="col-sm-4">
+        <label class="form-label">제조사</label>
+        <input type="text" name="maker" class="form-control"
+               value="{{ ei.maker if ei else '' }}" list="makers" placeholder="Samsung, LG, Lenovo...">
+        <datalist id="makers">
+          <option>Samsung</option><option>LG</option><option>Lenovo</option>
+          <option>HP</option><option>Dell</option><option>ASUS</option><option>Apple</option>
+        </datalist>
+      </div>
+      <div class="col-sm-8">
+        <label class="form-label">모델명</label>
+        <input type="text" name="model_name" class="form-control"
+               value="{{ ei.model_name if ei else '' }}" placeholder="Galaxy Book3 Pro, ThinkPad X1...">
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label">CPU</label>
+        <input type="text" name="cpu" class="form-control"
+               value="{{ ei.cpu if ei else '' }}" placeholder="i7-1355U, Ryzen 5 5600U...">
+      </div>
+      <div class="col-sm-3">
+        <label class="form-label">RAM</label>
+        <input type="text" name="ram" class="form-control"
+               value="{{ ei.ram if ei else '' }}" placeholder="16GB DDR4" list="rams">
+        <datalist id="rams"><option>4GB DDR4</option><option>8GB DDR4</option>
+          <option>16GB DDR4</option><option>32GB DDR4</option><option>16GB LPDDR5</option></datalist>
+      </div>
+      <div class="col-sm-3">
+        <label class="form-label">저장장치</label>
+        <input type="text" name="storage" class="form-control"
+               value="{{ ei.storage if ei else '' }}" placeholder="512GB NVMe" list="storages">
+        <datalist id="storages"><option>256GB SSD</option><option>512GB NVMe</option>
+          <option>1TB NVMe</option><option>256GB NVMe</option></datalist>
+      </div>
+      <div class="col-sm-4">
+        <label class="form-label">VGA</label>
+        <input type="text" name="vga" class="form-control"
+               value="{{ ei.vga if ei else '' }}" placeholder="Intel Iris Xe, RTX 3060...">
+      </div>
+      <div class="col-sm-4">
+        <label class="form-label">사이즈</label>
+        <input type="text" name="screen_size" class="form-control"
+               value="{{ ei.screen_size if ei else '' }}" placeholder='15.6"' list="sizes">
+        <datalist id="sizes"><option>13.3"</option><option>14"</option>
+          <option>15.6"</option><option>17.3"</option></datalist>
+      </div>
+      <div class="col-sm-4">
+        <label class="form-label">해상도</label>
+        <input type="text" name="resolution" class="form-control"
+               value="{{ ei.resolution if ei else '' }}" placeholder="1920x1080" list="ress">
+        <datalist id="ress"><option>1920x1080</option><option>2560x1440</option>
+          <option>2560x1600</option><option>3840x2160</option></datalist>
+      </div>
+      <div class="col-sm-4">
+        <label class="form-label">액정 상태</label>
+        <input type="text" name="lcd_condition" class="form-control"
+               value="{{ ei.lcd_condition if ei else '' }}" placeholder="정상, 잔상, 사점1개..." list="lcds">
+        <datalist id="lcds"><option>정상</option><option>잔상있음</option>
+          <option>사점1개</option><option>불량</option></datalist>
+      </div>
+      <div class="col-sm-4">
+        <label class="form-label">키보드 · 터치</label>
+        <select name="keyboard_touch" class="form-select">
+          <option value="">— 선택 —</option>
+          {% for v in ['정상','불량','없음'] %}
+          <option value="{{ v }}" {{ 'selected' if ei and ei.keyboard_touch==v }}>{{ v }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-sm-4">
+        <label class="form-label">배터리 손실률 (%)</label>
+        <div class="input-group">
+          <input type="number" name="battery_loss_rate" class="form-control"
+                 value="{{ ei.battery_loss_rate if ei else '' }}" min="0" max="100" step="0.1" placeholder="0">
+          <span class="input-group-text">%</span>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="form-check">
+          <input type="checkbox" name="battery_45_checked" class="form-check-input" id="bat45"
+                 {{ 'checked' if ei and ei.battery_45_checked }}>
+          <label class="form-check-label" for="bat45" style="font-size:13px;">
+            45% 방전 확인 완료
+          </label>
+        </div>
+      </div>
+      <div class="col-12">
+        <label class="form-label">특이사항</label>
+        <textarea name="notes" class="form-control" rows="2"
+                  placeholder="특이사항, 불량 내용 등 자유롭게 작성">{{ ei.notes if ei else '' }}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- C: 상태 평가 -->
+  <div class="sc">
+    <div class="sc-title"><i class="bi bi-clipboard-check me-2 text-primary"></i>C. 상태 평가</div>
+    <div class="row g-3 align-items-start">
+      <div class="col-6 col-md-3">
+        <label class="form-label">아답터 여부</label>
+        <div class="oy-btn">
+          {% for v in ['O','X'] %}
+          <input type="radio" name="has_adapter" id="adp{{ v }}" value="{{ v }}"
+                 {{ 'checked' if ei and ((v=='O' and ei.has_adapter) or (v=='X' and ei.has_adapter==False)) }}>
+          <label for="adp{{ v }}" class="{{ v.lower() }}">{{ v }}</label>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">바라시</label>
+        <div class="oy-btn">
+          {% for v in ['O','X'] %}
+          <input type="radio" name="is_barasi" id="bar{{ v }}" value="{{ v }}"
+                 {{ 'checked' if ei and ((v=='O' and ei.is_barasi) or (v=='X' and ei.is_barasi==False)) }}>
+          <label for="bar{{ v }}" class="{{ v.lower() }}">{{ v }}</label>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">불량 · 양품</label>
+        <div class="d-flex gap-2">
+          {% for v in ['양품','불량'] %}
+          <div>
+            <input type="radio" name="quality" id="q{{ v }}" value="{{ v }}" class="btn-check"
+                   {{ 'checked' if ei and ei.quality==v }}>
+            <label for="q{{ v }}" class="btn btn-outline-{{ 'success' if v=='양품' else 'danger' }}" style="min-width:60px;">
+              {{ v }}
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label">등급</label>
+        <div class="d-flex gap-2">
+          {% for g in ['S','A','B','C'] %}
+          <div>
+            <input type="radio" name="grade" id="g{{ g }}" value="{{ g }}" class="btn-check"
+                   {{ 'checked' if ei and ei.grade==g }}>
+            <label for="g{{ g }}" class="btn btn-outline-secondary" style="padding:5px 10px;min-width:36px;">
+              <span class="badge badge-{{ g }}">{{ g }}</span>
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <label class="form-label">매입가 (원)</label>
+        <input type="number" name="purchase_price" class="form-control"
+               value="{{ ei.purchase_price if ei else '' }}" placeholder="0">
+      </div>
+      <div class="col-sm-4">
+        <label class="form-label">검수자</label>
+        <div class="ro-field">{{ current_user.name }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2">
+    <button type="submit" class="btn btn-primary px-5">
+      <i class="bi bi-lock-fill me-1"></i>저장 및 잠금
+    </button>
+    <a href="{{ url_for('scan') }}" class="btn btn-outline-secondary">취소</a>
+  </div>
+  <div class="mt-2" style="font-size:11px;color:#EF4444;">
+    * 저장 즉시 이 QR은 잠금 처리되며, 이후 검수자는 수정할 수 없습니다.
+  </div>
+</form>
+{% endblock %}

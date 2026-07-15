@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}QR 스캔 — WWM{% endblock %}
+{% block page_title %}QR 스캔{% endblock %}
+{% block head %}
+<style>
+  #camWrap{position:relative;width:100%;max-width:380px;border-radius:12px;overflow:hidden;background:#000;}
+  #camWrap video{width:100%;display:block;}
+  .scan-frame{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:200px;height:200px;border:3px solid #2563EB;border-radius:8px;pointer-events:none;}
+  .scan-line{position:absolute;top:0;left:0;right:0;height:2px;background:#2563EB;
+    animation:scanMove 1.5s linear infinite;}
+  @keyframes scanMove{0%{top:0}100%{top:100%}}
+  #camWrap canvas{display:none;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="row g-3" style="max-width:600px;">
+  <div class="col-12">
+    <div class="sc">
+      <div class="sc-title"><i class="bi bi-camera-fill me-2 text-primary"></i>카메라 QR 스캔</div>
+      <div class="d-flex flex-column align-items-center gap-3">
+        <div id="camWrap">
+          <video id="video" playsinline autoplay muted></video>
+          <canvas id="canvas"></canvas>
+          <div class="scan-frame"><div class="scan-line"></div></div>
+        </div>
+        <div id="camStatus" class="text-muted" style="font-size:13px;">카메라 권한을 허용하면 자동으로 스캔됩니다.</div>
+        <button class="btn btn-outline-primary btn-sm" onclick="startCamera()">
+          <i class="bi bi-camera me-1"></i>카메라 시작
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="sc">
+      <div class="sc-title"><i class="bi bi-keyboard me-2 text-primary"></i>직접 입력</div>
+      <form id="manualForm" onsubmit="gotoInspect(event)">
+        <div class="row g-2">
+          <div class="col">
+            <input type="text" id="qrInput" class="form-control"
+                   placeholder="QR 문자열 입력 (예: 2026_0611_samsung_ko_001)" autocomplete="off">
+          </div>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-primary px-4">이동</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#94A3B8;margin-top:6px;">
+          QR 스캐너로 스캔하거나 코드를 직접 붙여넣을 수 있습니다.
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script>
+let scanning = false;
+
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia(
+      { video: { facingMode: 'environment' } });
+    const video = document.getElementById('video');
+    video.srcObject = stream;
+    document.getElementById('camStatus').textContent = '스캔 중...';
+    scanning = true;
+    scanLoop();
+  } catch(e) {
+    document.getElementById('camStatus').textContent = '카메라 사용 불가: ' + e.message;
+  }
+}
+
+function scanLoop() {
+  if (!scanning) return;
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  if (video.readyState === video.HAVE_ENOUGH_DATA) {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+    if (code && code.data) {
+      scanning = false;
+      document.getElementById('camStatus').textContent = '스캔 완료: ' + code.data;
+      window.location.href = '/inspect/' + encodeURIComponent(code.data);
+      return;
+    }
+  }
+  requestAnimationFrame(scanLoop);
+}
+
+function gotoInspect(e) {
+  e.preventDefault();
+  const v = document.getElementById('qrInput').value.trim();
+  if (!v) return;
+  window.location.href = '/inspect/' + encodeURIComponent(v);
+}
+
+// 자동 시작 시도
+startCamera();
+</script>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}라벨 출력 — WWM{% endblock %}
+{% block page_title %}QR 라벨 출력{% endblock %}
+{% block head %}
+<style>
+  @media print {
+    body * { visibility: hidden; }
+    #label-area, #label-area * { visibility: visible; }
+    #label-area { position: absolute; top: 0; left: 0; width: 100%; }
+    .no-print { display: none !important; }
+  }
+
+  .label-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 200px);
+    gap: 12px;
+    padding: 12px;
+    background: #F8FAFC;
+  }
+
+  .label-card {
+    width: 200px;
+    border: 1.5px solid #CBD5E1;
+    border-radius: 6px;
+    background: #fff;
+    padding: 8px;
+    font-size: 10px;
+    line-height: 1.4;
+    page-break-inside: avoid;
+  }
+
+  .label-header {
+    font-weight: 800;
+    font-size: 11px;
+    color: #1E293B;
+    border-bottom: 1px solid #E2E8F0;
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+  }
+
+  .label-qr {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .label-qr img { width: 70px; height: 70px; }
+
+  .label-qr-text { font-size: 8px; color: #64748B; word-break: break-all; }
+
+  .label-row { display: flex; gap: 4px; margin-bottom: 2px; }
+  .label-key { color: #64748B; min-width: 50px; }
+  .label-val { font-weight: 600; color: #1E293B; }
+
+  .badge-grade-S { background:#1E40AF;color:#fff;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700; }
+  .badge-grade-A { background:#0F766E;color:#fff;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700; }
+  .badge-grade-B { background:#92400E;color:#fff;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700; }
+  .badge-grade-C { background:#6B7280;color:#fff;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="sc mb-3 no-print">
+  <form method="get" class="row g-2 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label">계약건 선택</label>
+      <select name="order_id" class="form-select form-select-sm">
+        <option value="">— 전체 —</option>
+        {% for o in orders %}
+        <option value="{{ o.id }}" {{ 'selected' if sel_order==o.id|string }}>
+          {{ o.order_no }} — {{ o.vendor_name }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-sm btn-primary w-100">불러오기</button>
+    </div>
+    <div class="col-md-2">
+      <button type="button" class="btn btn-sm btn-success w-100" onclick="window.print()">
+        <i class="bi bi-printer me-1"></i>인쇄
+      </button>
+    </div>
+  </form>
+</div>
+
+{% if labels %}
+<div id="label-area">
+  <div class="label-grid">
+    {% for lb in labels %}
+    <div class="label-card">
+      <div class="label-header">월드와이드메모리(주) 매입검수</div>
+      <div class="label-qr">
+        <img src="{{ lb.qr_img }}" alt="QR">
+        <div>
+          <div class="label-qr-text">{{ lb.qr_string }}</div>
+          {% if lb.grade %}
+          <div class="mt-1"><span class="badge-grade-{{ lb.grade }}">{{ lb.grade }}</span></div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="label-row"><span class="label-key">제조사</span><span class="label-val">{{ lb.maker or '—' }}</span></div>
+      <div class="label-row"><span class="label-key">모델</span><span class="label-val" style="font-size:9px;">{{ lb.model_name or '—' }}</span></div>
+      <div class="label-row"><span class="label-key">CPU</span><span class="label-val" style="font-size:9px;">{{ lb.cpu or '—' }}</span></div>
+      <div class="label-row"><span class="label-key">RAM</span><span class="label-val">{{ lb.ram or '—' }}</span></div>
+      <div class="label-row"><span class="label-key">저장</span><span class="label-val">{{ lb.storage or '—' }}</span></div>
+      <div class="label-row"><span class="label-key">매입처</span><span class="label-val" style="font-size:9px;">{{ lb.vendor_name or '—' }}</span></div>
+      <div class="label-row"><span class="label-key">매입일</span><span class="label-val">{{ lb.purchase_date or '—' }}</span></div>
+      <div class="label-row"><span class="label-key">판정</span><span class="label-val {{ 'text-danger' if lb.quality=='불량' }}">{{ lb.quality or '—' }}</span></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% elif sel_order %}
+<div class="text-center py-5 text-muted">
+  <i class="bi bi-printer" style="font-size:2rem;"></i>
+  <p class="mt-2">출력할 라벨이 없습니다. (검수 완료된 QR만 라벨 출력 가능)</p>
+</div>
+{% else %}
+<div class="text-center py-5 text-muted">
+  <i class="bi bi-printer" style="font-size:2rem;"></i>
+  <p class="mt-2">위에서 계약건을 선택하면 라벨을 불러옵니다.</p>
+</div>
+{% endif %}
+{% endblock %}

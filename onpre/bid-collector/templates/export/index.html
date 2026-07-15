@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}엑셀 내보내기 — WWM{% endblock %}
+{% block page_title %}엑셀 내보내기{% endblock %}
+{% block content %}
+<div style="max-width:560px;">
+  <div class="sc">
+    <div class="sc-title"><i class="bi bi-file-earmark-excel me-2 text-success"></i>검수 데이터 엑셀 다운로드</div>
+    <p style="font-size:13px;color:#64748B;">아래 옵션으로 필터링하여 엑셀 파일을 내려받습니다.<br>
+    파일에는 검수 완료(잠금) 항목만 포함됩니다.</p>
+
+    <form method="get" action="{{ url_for('export_excel') }}">
+      <div class="mb-3">
+        <label class="form-label">계약건</label>
+        <select name="order_id" class="form-select">
+          <option value="">전체 (모든 계약건)</option>
+          {% for o in orders %}
+          <option value="{{ o.id }}">{{ o.order_no }} — {{ o.vendor_name }} ({{ o.purchase_date }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col">
+          <label class="form-label">시작일</label>
+          <input type="date" name="date_from" class="form-control">
+        </div>
+        <div class="col">
+          <label class="form-label">종료일</label>
+          <input type="date" name="date_to" class="form-control">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-success w-100 fw-bold">
+        <i class="bi bi-download me-2"></i>엑셀 다운로드
+      </button>
+    </form>
+  </div>
+
+  <div class="sc">
+    <div class="sc-title"><i class="bi bi-table me-2 text-primary"></i>포함 컬럼 (ERP 대량등록 형식)</div>
+    <div class="table-responsive">
+      <table class="table table-sm mb-0" style="font-size:12px;">
+        <thead><tr><th>컬럼</th><th>내용</th></tr></thead>
+        <tbody>
+          {% for row in [
+            ('QR코드','고유 QR 문자열'),
+            ('매입일자','계약 매입일자'),
+            ('매입처(한글)','업체 한글명'),
+            ('매입처(영문)','업체 영문명'),
+            ('담당자','담당자 성(영문)'),
+            ('입고번호','3자리 시퀀스'),
+            ('제조사','maker'),
+            ('모델명','model_name'),
+            ('CPU','cpu'),
+            ('RAM','ram'),
+            ('저장장치','storage'),
+            ('VGA','vga'),
+            ('화면크기','screen_size'),
+            ('해상도','resolution'),
+            ('액정상태','lcd_condition'),
+            ('키보드/터치','keyboard_touch'),
+            ('배터리손실률','battery_loss_rate (%)'),
+            ('45%방전','O/X'),
+            ('아답터','O/X'),
+            ('바라시','O/X'),
+            ('판정','양품/불량'),
+            ('등급','S/A/B/C'),
+            ('매입가','purchase_price (원)'),
+            ('특이사항','notes'),
+            ('검수자','inspector name'),
+            ('검수일시','saved_at'),
+          ] %}
+          <tr><td>{{ row[0] }}</td><td style="color:#64748B;">{{ row[1] }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

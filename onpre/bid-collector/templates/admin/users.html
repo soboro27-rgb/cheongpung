@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}사용자 관리 — WWM{% endblock %}
+{% block page_title %}사용자 관리{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('admin_user_new') }}" class="btn btn-sm btn-primary">
+  <i class="bi bi-person-plus me-1"></i>신규 등록
+</a>
+{% endblock %}
+{% block content %}
+<div class="sc">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr>
+        <th>이름</th><th>아이디</th><th>역할</th><th>상태</th><th>등록일</th><th></th>
+      </tr></thead>
+      <tbody>
+      {% for u in users %}
+      <tr>
+        <td class="fw-semibold" style="font-size:14px;">{{ u.name }}</td>
+        <td><code style="font-size:12px;">{{ u.username }}</code></td>
+        <td>
+          {% if u.role == 'ADMIN' %}
+          <span class="badge bg-danger" style="font-size:11px;">ADMIN</span>
+          {% else %}
+          <span class="badge bg-secondary" style="font-size:11px;">INSPECTOR</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if u.is_active %}
+          <span class="badge bg-success" style="font-size:11px;">활성</span>
+          {% else %}
+          <span class="badge bg-secondary" style="font-size:11px;">비활성</span>
+          {% endif %}
+        </td>
+        <td style="font-size:11px;color:#94A3B8;">{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else '—' }}</td>
+        <td>
+          <a href="{{ url_for('admin_user_edit', id=u.id) }}" class="btn btn-outline-secondary" style="font-size:11px;padding:2px 8px;">
+            <i class="bi bi-pencil"></i>
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}검수 수정 — WWM{% endblock %}
+{% block page_title %}검수 데이터 수정 (관리자){% endblock %}
+{% block head %}
+<style>
+  .ro-field{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;
+    padding:6px 10px;font-size:13px;color:#1E293B;font-weight:600;}
+  .oy-btn{display:inline-flex;gap:6px;}
+  .oy-btn input[type=radio]{display:none;}
+  .oy-btn label{border:2px solid #E2E8F0;border-radius:6px;padding:5px 14px;
+    cursor:pointer;font-weight:700;font-size:13px;transition:.15s;}
+  .oy-btn input:checked + label.o{border-color:#2563EB;background:#EFF6FF;color:#2563EB;}
+  .oy-btn input:checked + label.x{border-color:#EF4444;background:#FEF2F2;color:#EF4444;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="row g-3" style="max-width:800px;">
+  <div class="col-12">
+    <div class="p-3 rounded mb-2" style="background:#FEF3C7;border:1px solid #FCD34D;font-size:12px;color:#92400E;">
+      <i class="bi bi-shield-fill me-1"></i>
+      <strong>관리자 수정 모드</strong> — 모든 변경사항이 수정이력에 자동 기록됩니다.
+    </div>
+  </div>
+
+  <div class="col-12">
+    <form method="post">
+      <!-- A 자동입력 -->
+      <div class="sc">
+        <div class="sc-title"><i class="bi bi-lock-fill me-2 text-secondary"></i>A. QR 정보</div>
+        <div class="row g-2">
+          <div class="col-6 col-md-3"><label class="form-label">QR</label><div class="ro-field" style="font-size:11px;"><code>{{ insp.qr_code.qr_string }}</code></div></div>
+          <div class="col-6 col-md-3"><label class="form-label">매입일자</label><div class="ro-field">{{ parsed.get('purchase_date','—') }}</div></div>
+          <div class="col-6 col-md-3"><label class="form-label">매입처</label><div class="ro-field">{{ insp.qr_code.order.vendor_name if insp.qr_code.order else '—' }}</div></div>
+          <div class="col-6 col-md-3"><label class="form-label">입고번호</label><div class="ro-field">{{ '%03d'|format(parsed.get('seq',0)) }}</div></div>
+        </div>
+      </div>
+
+      <!-- B 스펙 -->
+      <div class="sc">
+        <div class="sc-title"><i class="bi bi-cpu me-2 text-primary"></i>B. 제품 스펙</div>
+        <div class="row g-3">
+          <div class="col-sm-4"><label class="form-label">제조사</label><input type="text" name="maker" class="form-control" value="{{ insp.maker or '' }}"></div>
+          <div class="col-sm-8"><label class="form-label">모델명</label><input type="text" name="model_name" class="form-control" value="{{ insp.model_name or '' }}"></div>
+          <div class="col-sm-6"><label class="form-label">CPU</label><input type="text" name="cpu" class="form-control" value="{{ insp.cpu or '' }}"></div>
+          <div class="col-sm-3"><label class="form-label">RAM</label><input type="text" name="ram" class="form-control" value="{{ insp.ram or '' }}"></div>
+          <div class="col-sm-3"><label class="form-label">저장장치</label><input type="text" name="storage" class="form-control" value="{{ insp.storage or '' }}"></div>
+          <div class="col-sm-4"><label class="form-label">VGA</label><input type="text" name="vga" class="form-control" value="{{ insp.vga or '' }}"></div>
+          <div class="col-sm-4"><label class="form-label">사이즈</label><input type="text" name="screen_size" class="form-control" value="{{ insp.screen_size or '' }}"></div>
+          <div class="col-sm-4"><label class="form-label">해상도</label><input type="text" name="resolution" class="form-control" value="{{ insp.resolution or '' }}"></div>
+          <div class="col-sm-4"><label class="form-label">액정 상태</label><input type="text" name="lcd_condition" class="form-control" value="{{ insp.lcd_condition or '' }}"></div>
+          <div class="col-sm-4"><label class="form-label">키보드·터치</label>
+            <select name="keyboard_touch" class="form-select">
+              <option value="">—</option>
+              {% for v in ['정상','불량','없음'] %}<option {{ 'selected' if insp.keyboard_touch==v }}>{{ v }}</option>{% endfor %}
+            </select></div>
+          <div class="col-sm-4"><label class="form-label">배터리 손실률</label>
+            <div class="input-group"><input type="number" name="battery_loss_rate" class="form-control" value="{{ insp.battery_loss_rate or '' }}" step="0.1"><span class="input-group-text">%</span></div></div>
+          <div class="col-12">
+            <div class="form-check">
+              <input type="checkbox" name="battery_45_checked" class="form-check-input" id="bat45" {{ 'checked' if insp.battery_45_checked }}>
+              <label class="form-check-label" for="bat45">45% 방전 확인</label>
+            </div>
+          </div>
+          <div class="col-12"><label class="form-label">특이사항</label><textarea name="notes" class="form-control" rows="2">{{ insp.notes or '' }}</textarea></div>
+        </div>
+      </div>
+
+      <!-- C 상태 평가 -->
+      <div class="sc">
+        <div class="sc-title"><i class="bi bi-clipboard-check me-2 text-primary"></i>C. 상태 평가</div>
+        <div class="row g-3 align-items-start">
+          <div class="col-6 col-md-3"><label class="form-label">아답터</label>
+            <div class="oy-btn">{% for v in ['O','X'] %}<input type="radio" name="has_adapter" id="adp{{ v }}" value="{{ v }}" {{ 'checked' if (v=='O' and insp.has_adapter) or (v=='X' and insp.has_adapter==False) }}><label for="adp{{ v }}" class="{{ v.lower() }}">{{ v }}</label>{% endfor %}</div></div>
+          <div class="col-6 col-md-3"><label class="form-label">바라시</label>
+            <div class="oy-btn">{% for v in ['O','X'] %}<input type="radio" name="is_barasi" id="bar{{ v }}" value="{{ v }}" {{ 'checked' if (v=='O' and insp.is_barasi) or (v=='X' and insp.is_barasi==False) }}><label for="bar{{ v }}" class="{{ v.lower() }}">{{ v }}</label>{% endfor %}</div></div>
+          <div class="col-6 col-md-3"><label class="form-label">불량·양품</label>
+            <div class="d-flex gap-2">{% for v in ['양품','불량'] %}<div><input type="radio" name="quality" id="q{{ v }}" value="{{ v }}" class="btn-check" {{ 'checked' if insp.quality==v }}><label for="q{{ v }}" class="btn btn-outline-{{ 'success' if v=='양품' else 'danger' }}" style="min-width:60px;">{{ v }}</label></div>{% endfor %}</div></div>
+          <div class="col-6 col-md-3"><label class="form-label">등급</label>
+            <div class="d-flex gap-2">{% for g in ['S','A','B','C'] %}<div><input type="radio" name="grade" id="g{{ g }}" value="{{ g }}" class="btn-check" {{ 'checked' if insp.grade==g }}><label for="g{{ g }}" class="btn btn-outline-secondary" style="padding:5px 10px;"><span class="badge badge-{{ g }}">{{ g }}</span></label></div>{% endfor %}</div></div>
+          <div class="col-sm-4"><label class="form-label">매입가</label><input type="number" name="purchase_price" class="form-control" value="{{ insp.purchase_price or '' }}"></div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-warning px-4 fw-bold">수정 저장 (이력 기록)</button>
+        <a href="{{ url_for('admin_inspections') }}" class="btn btn-outline-secondary">취소</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- 수정이력 -->
+  {% if insp.edits %}
+  <div class="col-12">
+    <div class="sc">
+      <div class="sc-title"><i class="bi bi-journal-text me-2 text-warning"></i>수정이력</div>
+      <div class="table-responsive">
+        <table class="table table-sm mb-0" style="font-size:12px;">
+          <thead><tr><th>수정일시</th><th>수정자</th><th>필드</th><th>변경 전</th><th>변경 후</th></tr></thead>
+          <tbody>
+          {% for e in insp.edits %}
+          <tr>
+            <td style="color:#64748B;">{{ e.edited_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>{{ e.editor.name if e.editor else '—' }}</td>
+            <td><code>{{ e.field_name }}</code></td>
+            <td style="color:#EF4444;">{{ e.old_value or '—' }}</td>
+            <td style="color:#16A34A;">{{ e.new_value or '—' }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

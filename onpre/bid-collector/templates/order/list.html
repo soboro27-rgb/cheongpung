@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}계약건 목록 — WWM{% endblock %}
+{% block page_title %}매입 계약건 목록{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('order_new') }}" class="btn btn-sm btn-primary">
+  <i class="bi bi-plus-lg me-1"></i>계약건 등록
+</a>
+{% endblock %}
+{% block content %}
+<div class="sc">
+  {% if orders %}
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr>
+        <th>계약번호</th><th>매입처</th><th>영문</th><th>담당자</th>
+        <th>매입일</th><th>수량</th><th>검수</th><th>진행률</th><th></th>
+      </tr></thead>
+      <tbody>
+      {% for po in orders %}
+      <tr>
+        <td class="fw-semibold" style="font-size:12px;">{{ po.order_no }}</td>
+        <td>{{ po.vendor_name }}</td>
+        <td style="font-size:12px;color:#64748B;">{{ po.vendor_name_en }}</td>
+        <td style="font-size:12px;">{{ po.manager_last_en }}</td>
+        <td style="font-size:12px;">{{ po.purchase_date.strftime('%Y-%m-%d') }}</td>
+        <td>{{ po.quantity }}</td>
+        <td><span class="{{ 'text-success fw-bold' if po.locked_count==po.quantity else 'text-warning' }}">
+          {{ po.locked_count }}/{{ po.quantity }}
+        </span></td>
+        <td style="min-width:80px;">
+          <div class="progress" style="height:6px;">
+            <div class="progress-bar bg-primary" style="width:{{ (po.locked_count/po.quantity*100)|int if po.quantity else 0 }}%"></div>
+          </div>
+        </td>
+        <td>
+          <a href="{{ url_for('order_detail', id=po.id) }}" class="btn btn-xs btn-outline-primary" style="font-size:11px;padding:2px 7px;">상세</a>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-inbox" style="font-size:2rem;"></i>
+    <p class="mt-2">등록된 계약건이 없습니다.</p>
+    <a href="{{ url_for('order_new') }}" class="btn btn-primary">첫 계약건 등록</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

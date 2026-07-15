@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}전체 검수 현황 — WWM{% endblock %}
+{% block page_title %}전체 검수 현황{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('export_excel') }}" class="btn btn-sm btn-outline-success">
+  <i class="bi bi-file-earmark-excel me-1"></i>엑셀 다운로드
+</a>
+{% endblock %}
+{% block content %}
+<div class="sc mb-3">
+  <form method="get" class="row g-2 align-items-end">
+    <div class="col-md-3">
+      <label class="form-label">계약건</label>
+      <select name="order_id" class="form-select form-select-sm">
+        <option value="">전체</option>
+        {% for o in orders %}
+        <option value="{{ o.id }}" {{ 'selected' if f_order==o.id|string }}>
+          {{ o.order_no }} — {{ o.vendor_name }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">검수자</label>
+      <select name="inspector_id" class="form-select form-select-sm">
+        <option value="">전체</option>
+        {% for u in inspectors %}
+        <option value="{{ u.id }}" {{ 'selected' if f_inspector==u.id|string }}>{{ u.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">판정</label>
+      <select name="quality" class="form-select form-select-sm">
+        <option value="">전체</option>
+        <option value="양품" {{ 'selected' if f_quality=='양품' }}>양품</option>
+        <option value="불량" {{ 'selected' if f_quality=='불량' }}>불량</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">시작일</label>
+      <input type="date" name="date_from" class="form-control form-control-sm" value="{{ f_df }}">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">종료일</label>
+      <input type="date" name="date_to" class="form-control form-control-sm" value="{{ f_dt }}">
+    </div>
+    <div class="col-md-1">
+      <button type="submit" class="btn btn-sm btn-primary w-100">조회</button>
+    </div>
+  </form>
+</div>
+
+<div class="sc">
+  <div class="sc-title">검색결과 <span class="text-primary fw-bold">{{ records|length }}</span>건</div>
+  {% if records %}
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr>
+        <th>QR</th><th>모델</th><th>등급</th><th>판정</th>
+        <th>매입가</th><th>검수자</th><th>저장일시</th><th></th>
+      </tr></thead>
+      <tbody>
+      {% for r in records %}
+      <tr>
+        <td><code style="font-size:11px;">{{ r.qr_code.qr_string }}</code></td>
+        <td>
+          <div style="font-size:13px;">{{ r.maker }} {{ r.model_name or '—' }}</div>
+          <div style="font-size:11px;color:#94A3B8;">{{ r.cpu or '' }}</div>
+        </td>
+        <td>{% if r.grade %}<span class="badge badge-{{ r.grade }}">{{ r.grade }}</span>{% else %}—{% endif %}</td>
+        <td>{% if r.quality %}
+          <span class="badge {{ 'bg-danger' if r.quality=='불량' else 'bg-success' }}" style="font-size:11px;">{{ r.quality }}</span>
+          {% else %}—{% endif %}</td>
+        <td style="font-size:12px;">{{ '{:,}'.format(r.purchase_price)+'원' if r.purchase_price else '—' }}</td>
+        <td style="font-size:12px;">{{ r.inspector.name if r.inspector else '—' }}</td>
+        <td style="font-size:11px;color:#94A3B8;">{{ r.saved_at.strftime('%m/%d %H:%M') }}</td>
+        <td>
+          <a href="{{ url_for('admin_edit', id=r.id) }}" class="btn btn-xs btn-outline-primary" style="font-size:11px;padding:2px 7px;">수정</a>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-4 text-muted">검색 결과가 없습니다.</div>
+  {% endif %}
+</div>
+{% endblock %}
