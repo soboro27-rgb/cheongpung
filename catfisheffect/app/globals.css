@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --smoke-blue-dark: #212e3a;
+  --smoke-blue: #38495a;
+  --smoke-blue-light: #5c7285;
+  --lime-mint: #7cffb2;
+  --lime-mint-dark: #1fa362;
+  --bg-dark: #0b0f13;
+  --text-primary: #f2f2f4;
+  --text-muted: #6a7580;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+}
+
+.section {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+
+@media (max-width: 640px) {
+  .section {
+    padding-top: 3.5rem;
+    padding-bottom: 3.5rem;
+  }
+}
+
+.btn-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--lime-mint);
+  color: var(--bg-dark);
+  font-weight: 700;
+  padding: 0.875rem 1.75rem;
+  border-radius: 999px;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.btn-cta:hover {
+  background-color: var(--lime-mint-dark);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid var(--smoke-blue-light);
+  color: var(--text-primary);
+  font-weight: 600;
+  padding: 0.875rem 1.75rem;
+  border-radius: 999px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-outline:hover {
+  border-color: var(--lime-mint);
+  background-color: rgba(124, 255, 178, 0.06);
+}
+
+.card {
+  background-color: var(--smoke-blue-dark);
+  border: 1px solid rgba(92, 114, 133, 0.25);
+  border-radius: 1rem;
+}
+
+.eyebrow {
+  color: var(--lime-mint);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.field-input {
+  width: 100%;
+  background-color: var(--bg-dark);
+  border: 1px solid rgba(92, 114, 133, 0.35);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  transition: border-color 0.15s ease;
+}
+
+.field-input::placeholder {
+  color: var(--text-muted);
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--lime-mint);
+}

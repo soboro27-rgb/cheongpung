@@ -1,0 +1,67 @@
+<svg viewBox="0 0 900 560" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="topGrad" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#5c7285"/>
+      <stop offset="70%" stop-color="#38495a"/>
+      <stop offset="100%" stop-color="#212e3a"/>
+    </radialGradient>
+    <linearGradient id="sideGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4c5f70"/>
+      <stop offset="50%" stop-color="#2c3944"/>
+      <stop offset="100%" stop-color="#1a232b"/>
+    </linearGradient>
+    <radialGradient id="btnGrad" cx="40%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#7CFFB2"/>
+      <stop offset="100%" stop-color="#1FA362"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="560" fill="#0b0b0e"/>
+
+  <text x="450" y="45" text-anchor="middle" font-size="24" font-weight="700" fill="#f2f2f4" font-family="sans-serif">AI 보이스 퍽 스피커 — 디자인 시안</text>
+  <text x="450" y="70" text-anchor="middle" font-size="13" fill="#6a6a72" font-family="sans-serif">Ø58mm × H32mm · 무게 약 85g (목표 스펙)</text>
+
+  <!-- TOP VIEW -->
+  <g transform="translate(230,240)">
+    <circle r="150" fill="url(#topGrad)" stroke="#3a3a42" stroke-width="2"/>
+    <circle cx="0" cy="-115" r="6" fill="#7CFFB2"/>
+    <circle cx="99" cy="-57" r="6" fill="#7CFFB2"/>
+    <circle cx="99" cy="57" r="6" fill="#7CFFB2"/>
+    <circle cx="0" cy="115" r="6" fill="#7CFFB2"/>
+    <circle cx="-99" cy="57" r="6" fill="#7CFFB2"/>
+    <circle cx="-99" cy="-57" r="6" fill="#7CFFB2"/>
+    <circle r="95" fill="none" stroke="#232328" stroke-width="1.5" stroke-dasharray="2 6"/>
+    <circle r="75" fill="none" stroke="#232328" stroke-width="1.5" stroke-dasharray="2 6"/>
+    <circle r="55" fill="none" stroke="#232328" stroke-width="1.5" stroke-dasharray="2 6"/>
+    <circle r="42" fill="url(#btnGrad)"/>
+    <circle r="42" fill="none" stroke="#0a0a0c" stroke-width="2"/>
+    <text x="0" y="6" text-anchor="middle" font-size="16" font-weight="700" fill="#0a0a0c" font-family="sans-serif">AI</text>
+  </g>
+  <text x="230" y="425" text-anchor="middle" font-size="15" fill="#8a8a92" font-family="sans-serif">TOP VIEW — Ø 58mm</text>
+
+  <!-- SIDE VIEW -->
+  <g transform="translate(620,190)">
+    <ellipse cx="0" cy="0" rx="100" ry="14" fill="#2c2c32" stroke="#3a3a42" stroke-width="1.5"/>
+    <rect x="-100" y="0" width="200" height="70" fill="url(#sideGrad)" stroke="#3a3a42" stroke-width="2"/>
+    <ellipse cx="0" cy="70" rx="100" ry="14" fill="#0a0a0c" stroke="#3a3a42" stroke-width="1.5"/>
+    <ellipse cx="0" cy="-2" rx="30" ry="8" fill="url(#btnGrad)"/>
+    <rect x="-100" y="30" width="200" height="4" fill="#7CFFB2" opacity="0.7"/>
+    <rect x="-14" y="66" width="28" height="7" rx="3" fill="#050506"/>
+  </g>
+
+  <g transform="translate(760,190)" font-family="sans-serif">
+    <line x1="0" y1="0" x2="0" y2="70" stroke="#7CFFB2" stroke-width="1.5"/>
+    <line x1="-6" y1="0" x2="6" y2="0" stroke="#7CFFB2" stroke-width="1.5"/>
+    <line x1="-6" y1="70" x2="6" y2="70" stroke="#7CFFB2" stroke-width="1.5"/>
+    <text x="14" y="40" font-size="14" fill="#7CFFB2">32mm</text>
+  </g>
+
+  <text x="620" y="310" text-anchor="middle" font-size="15" fill="#8a8a92" font-family="sans-serif">SIDE VIEW — 납작한 퍽(disc) 형태</text>
+
+  <g font-family="sans-serif" font-size="13" fill="#c8c8cf">
+    <text x="60" y="490">● 중앙 터치 버튼: 원터치 AI 호출 (탭 = 폰의 AI 앱 음성모드 실행)</text>
+    <text x="60" y="515">● 6홀 마이크 어레이: 360도 원거리 음성 픽업 + 노이즈캔슬</text>
+    <text x="480" y="490">● 측면 LED 링: 듣는 중 / 응답 중 상태 표시</text>
+    <text x="480" y="515">● 하단 USB-C: 충전 전용, 무게중심 낮춰 안정적으로 놓임</text>
+  </g>
+</svg>

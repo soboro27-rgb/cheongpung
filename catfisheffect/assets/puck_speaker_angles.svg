@@ -1,0 +1,99 @@
+<svg viewBox="0 0 1000 620" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="topGrad" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#5c7285"/>
+      <stop offset="70%" stop-color="#38495a"/>
+      <stop offset="100%" stop-color="#212e3a"/>
+    </radialGradient>
+    <linearGradient id="sideGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4c5f70"/>
+      <stop offset="50%" stop-color="#2c3944"/>
+      <stop offset="100%" stop-color="#1a232b"/>
+    </linearGradient>
+    <linearGradient id="sideGradPersp" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#425667"/>
+      <stop offset="100%" stop-color="#182028"/>
+    </linearGradient>
+    <radialGradient id="btnGrad" cx="40%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#7CFFB2"/>
+      <stop offset="100%" stop-color="#1FA362"/>
+    </radialGradient>
+    <radialGradient id="topGradPersp" cx="45%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#66809591"/>
+      <stop offset="0%" stop-color="#6c8598"/>
+      <stop offset="75%" stop-color="#3a4c5c"/>
+      <stop offset="100%" stop-color="#212e3a"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="620" fill="#0b0b0e"/>
+  <text x="500" y="42" text-anchor="middle" font-size="22" font-weight="700" fill="#f2f2f4" font-family="sans-serif">AI 보이스 퍽 스피커 — 각도별 렌더링</text>
+  <text x="500" y="65" text-anchor="middle" font-size="12" fill="#6a6a72" font-family="sans-serif">스모크블루 × 라임민트 · Ø58mm × H32mm</text>
+
+  <!-- ============ TOP VIEW ============ -->
+  <g transform="translate(160,220)">
+    <circle r="130" fill="url(#topGrad)" stroke="#0f151b" stroke-width="2"/>
+    <circle cx="0" cy="-100" r="5" fill="#7CFFB2"/>
+    <circle cx="87" cy="-50" r="5" fill="#7CFFB2"/>
+    <circle cx="87" cy="50" r="5" fill="#7CFFB2"/>
+    <circle cx="0" cy="100" r="5" fill="#7CFFB2"/>
+    <circle cx="-87" cy="50" r="5" fill="#7CFFB2"/>
+    <circle cx="-87" cy="-50" r="5" fill="#7CFFB2"/>
+    <circle r="82" fill="none" stroke="#1a232b" stroke-width="1.3" stroke-dasharray="2 6"/>
+    <circle r="64" fill="none" stroke="#1a232b" stroke-width="1.3" stroke-dasharray="2 6"/>
+    <circle r="46" fill="none" stroke="#1a232b" stroke-width="1.3" stroke-dasharray="2 6"/>
+    <circle r="36" fill="url(#btnGrad)"/>
+    <circle r="36" fill="none" stroke="#182028" stroke-width="2"/>
+    <text x="0" y="5" text-anchor="middle" font-size="14" font-weight="700" fill="#0d1a14" font-family="sans-serif">AI</text>
+  </g>
+  <text x="160" y="390" text-anchor="middle" font-size="14" fill="#8a8a92" font-family="sans-serif">TOP VIEW (0°)</text>
+
+  <!-- ============ SIDE VIEW ============ -->
+  <g transform="translate(440,190)">
+    <ellipse cx="0" cy="0" rx="85" ry="12" fill="#3a4c5c" stroke="#0f151b" stroke-width="1.5"/>
+    <rect x="-85" y="0" width="170" height="60" fill="url(#sideGrad)" stroke="#0f151b" stroke-width="2"/>
+    <ellipse cx="0" cy="60" rx="85" ry="12" fill="#141a1f" stroke="#0f151b" stroke-width="1.5"/>
+    <ellipse cx="0" cy="-2" rx="26" ry="7" fill="url(#btnGrad)"/>
+    <rect x="-85" y="26" width="170" height="3" fill="#7CFFB2" opacity="0.7"/>
+    <rect x="-12" y="56" width="24" height="6" rx="3" fill="#050506"/>
+  </g>
+  <text x="440" y="390" text-anchor="middle" font-size="14" fill="#8a8a92" font-family="sans-serif">SIDE VIEW (90°)</text>
+
+  <!-- ============ 3/4 PERSPECTIVE VIEW ============ -->
+  <g transform="translate(760,215) rotate(-8)">
+    <!-- body cylinder in perspective -->
+    <ellipse cx="0" cy="55" rx="140" ry="42" fill="#0d1116"/>
+    <path d="M -140 0 A 140 46 0 0 0 140 0 L 140 40 A 140 46 0 0 1 -140 40 Z" fill="url(#sideGradPersp)"/>
+    <ellipse cx="0" cy="0" rx="140" ry="46" fill="url(#topGradPersp)" stroke="#101720" stroke-width="2"/>
+    <!-- mic dots on perspective top -->
+    <circle cx="0" cy="-34" r="4.5" fill="#7CFFB2"/>
+    <circle cx="90" cy="-14" r="4.5" fill="#7CFFB2"/>
+    <circle cx="90" cy="20" r="4.5" fill="#7CFFB2"/>
+    <circle cx="0" cy="34" r="4.5" fill="#7CFFB2"/>
+    <circle cx="-90" cy="20" r="4.5" fill="#7CFFB2"/>
+    <circle cx="-90" cy="-14" r="4.5" fill="#7CFFB2"/>
+    <!-- grille rings -->
+    <ellipse cx="0" cy="0" rx="105" ry="34" fill="none" stroke="#0f1a12" stroke-width="1.2" stroke-dasharray="2 5" opacity="0.5"/>
+    <ellipse cx="0" cy="0" rx="75" ry="24" fill="none" stroke="#0f1a12" stroke-width="1.2" stroke-dasharray="2 5" opacity="0.5"/>
+    <!-- center button -->
+    <ellipse cx="0" cy="0" rx="40" ry="14" fill="url(#btnGrad)" stroke="#0d1a14" stroke-width="1.5"/>
+    <text x="0" y="4" text-anchor="middle" font-size="13" font-weight="700" fill="#0d1a14" font-family="sans-serif">AI</text>
+    <!-- LED ring edge highlight -->
+    <path d="M -140 20 A 140 46 0 0 0 140 20" fill="none" stroke="#7CFFB2" stroke-width="2.5" opacity="0.6"/>
+  </g>
+  <text x="760" y="390" text-anchor="middle" font-size="14" fill="#8a8a92" font-family="sans-serif">3/4 PERSPECTIVE (45°)</text>
+
+  <!-- ============ Bottom callouts ============ -->
+  <g font-family="sans-serif" font-size="13" fill="#c8c8cf">
+    <text x="80" y="460">● 상단 버튼: 원터치 AI 호출</text>
+    <text x="80" y="485">● 6홀 마이크 어레이: 360도 픽업</text>
+    <text x="80" y="510">● 측면 LED 링: 상태 표시(대기/듣는중/응답중)</text>
+    <text x="80" y="535">● 하단 USB-C 충전 포트</text>
+  </g>
+  <g font-family="sans-serif" font-size="13" fill="#c8c8cf">
+    <text x="560" y="460">● 컬러: 스모크블루(#38495a 계열) 바디</text>
+    <text x="560" y="485">● 포인트: 라임민트(#7CFFB2) 버튼 · LED</text>
+    <text x="560" y="510">● 재질: 무광 플라스틱 사출 + 실리콘 하단 패드</text>
+    <text x="560" y="535">● 목표 사이즈: Ø58mm × H32mm · 약 85g</text>
+  </g>
+</svg>
