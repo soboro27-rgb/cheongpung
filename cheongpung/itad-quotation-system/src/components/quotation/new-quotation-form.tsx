@@ -23,7 +23,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
-import { CurrencyDisplay } from "@/components/ui/currency-display";
 import { AssetTable } from "./asset-table";
 import { CustomerCombobox } from "./customer-combobox";
 import { cn } from "@/lib/utils";
@@ -45,6 +44,7 @@ const schema = z.object({
       quantity: z.coerce.number().int().positive(),
       cpuClock: z.string().max(100).nullable().optional(),
       ram: z.string().max(50).nullable().optional(),
+      storage: z.string().max(50).nullable().optional(),
     })
   ).min(1, "자산을 1개 이상 입력하세요"),
   targetMarginRate: z.number().min(0).max(0.3),
@@ -65,14 +65,15 @@ export function NewQuotationForm() {
       pickupRegion: "SEOUL",
       dataErasure: "PHYSICAL",
       leadTimeDays: 14,
-      assets: [{ rawModelName: "", category: "LAPTOP", manufactureYear: null, grade: "UNKNOWN", quantity: 1, cpuClock: null, ram: null }],
+      assets: [{ rawModelName: "", category: "LAPTOP", manufactureYear: null, grade: "UNKNOWN", quantity: 1, cpuClock: null, ram: null, storage: null }],
       targetMarginRate: 0.12,
       riskBufferRate: 0.05,
       historyWindowMonths: 12,
     },
   });
 
-  const { control, handleSubmit, watch, setValue, formState: { errors } } = form;
+  const { control, handleSubmit, watch, setValue: _setValue, formState: { errors } } = form;
+  const setValue = _setValue as (name: `assets.${number}.cpuClock` | `assets.${number}.ram` | `assets.${number}.storage`, value: string | null) => void;
   const marginRate = watch("targetMarginRate");
   const riskRate = watch("riskBufferRate");
 

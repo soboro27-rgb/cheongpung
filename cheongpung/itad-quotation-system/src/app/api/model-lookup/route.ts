@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractSpecFromTexts, stripHtml } from "@/lib/model-lookup/spec-extractor";
+import { matchAssetLine } from "@/lib/matching/asset-matcher";
+import { prisma } from "@/lib/prisma";
+import type { AssetCategory } from "@/generated/prisma";
 
 export interface ModelLookupResponse {
   cpuClock: string | null;
   ram: string | null;
+  storage: string | null;
   source: string;
   query: string;
+  matched: {
+    assetMasterId: string;
+    modelDisplayName: string;
+    specSummary: string | null;
+    retailPriceKrw: number | null;
+    matchNote: string;
+    matchScore: number;
+  } | null;
 }
 
 interface NaverSearchItem {
@@ -19,6 +31,8 @@ interface NaverSearchResponse {
 
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim();
+  const categoryParam = req.nextUrl.searchParams.get("category") as AssetCategory | null;
+
   if (!q || q.length < 3) {
     return NextResponse.json({ error: "모델명을 3자 이상 입력하세요." }, { status: 400 });
   }
@@ -33,7 +47,6 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // 네이버 웹 검색 — 모델명 + "CPU 스펙 사양" 검색
   const query = encodeURIComponent(`${q} CPU 스펙 사양`);
   const naverUrl = `https://openapi.naver.com/v1/search/webkr.json?query=${query}&display=5`;
 
@@ -42,7 +55,7 @@ export async function GET(req: NextRequest) {
       "X-Naver-Client-Id": clientId,
       "X-Naver-Client-Secret": clientSecret,
     },
-    next: { revalidate: 3600 }, // 같은 모델은 1시간 캐시
+    next: { revalidate: 3600 },
   });
 
   if (!naverRes.ok) {
@@ -60,12 +73,34 @@ export async function GET(req: NextRequest) {
 
   const spec = extractSpecFromTexts(texts);
 
-  const result: ModelLookupResponse = {
+  // 카테고리가 있으면 AssetMaster 매칭 시도
+  let matched: ModelLookupResponse["matched"] = null;
+  if (categoryParam) {
+    const matchResult = await matchAssetLine(q, categoryParam, spec.cpuClock, spec.ram);
+    if (matchResult.assetMasterId) {
+      const asset = await prisma.assetMaster.findUnique({
+        where: { id: matchResult.assetMasterId },
+        select: { id: true, modelDisplayName: true, specSummary: true, retailPriceKrw: true },
+      });
+      if (asset) {
+        matched = {
+          assetMasterId: asset.id.toString(),
+          modelDisplayName: asset.modelDisplayName,
+          specSummary: asset.specSummary,
+          retailPriceKrw: asset.retailPriceKrw ? Number(asset.retailPriceKrw) : null,
+          matchNote: matchResult.matchNote,
+          matchScore: matchResult.matchScore,
+        };
+      }
+    }
+  }
+
+  return NextResponse.json({
     cpuClock: spec.cpuClock,
     ram: spec.ram,
+    storage: spec.storage,
     source: "naver_webkr",
     query: q,
-  };
-
-  return NextResponse.json(result);
+    matched,
+  } satisfies ModelLookupResponse);
 }

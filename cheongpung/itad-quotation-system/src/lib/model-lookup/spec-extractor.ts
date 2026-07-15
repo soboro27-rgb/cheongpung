@@ -1,6 +1,7 @@
 export interface ExtractedSpec {
   cpuClock: string | null;
   ram: string | null;
+  storage: string | null;
 }
 
 /**
@@ -13,6 +14,7 @@ export function extractSpecFromTexts(texts: string[]): ExtractedSpec {
   return {
     cpuClock: extractCpu(combined),
     ram: extractRam(combined),
+    storage: extractStorage(combined),
   };
 }
 
@@ -40,6 +42,18 @@ function extractRam(text: string): string | null {
     const val = parseInt(match[1], 10);
     // 주변 문맥이 SSD/저장장치일 가능성이 있는 큰 값은 제외
     if (val <= 128) return `${val}G`;
+  }
+  return null;
+}
+
+function extractStorage(text: string): string | null {
+  // SSD/NVMe/HDD 용량: "256GB SSD", "512GB NVMe", "1TB SSD"
+  const match = text.match(/\b(\d+)\s*(TB|GB)\s*(?:SSD|NVMe|HDD|eMMC)/i);
+  if (match) {
+    const val = parseInt(match[1], 10);
+    const unit = match[2].toUpperCase();
+    if (unit === "TB") return `${val}TB`;
+    if (val >= 128) return `${val}GB`; // RAM과 구분 (RAM은 보통 128GB 이하)
   }
   return null;
 }

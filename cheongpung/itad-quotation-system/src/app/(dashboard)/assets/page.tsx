@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { AssetMasterTable } from "@/components/assets/asset-master-table";
+import { PriceListUploadButton } from "@/components/assets/price-list-upload-button";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { PlusIcon } from "lucide-react";
@@ -12,12 +13,15 @@ export default function AssetsPage() {
           <h1 className="text-2xl font-bold">자산 마스터</h1>
           <p className="text-muted-foreground text-sm mt-1">표준화된 모델 정보를 관리합니다</p>
         </div>
-        <Link href="/assets/new">
-          <Button>
-            <PlusIcon className="mr-2 h-4 w-4" />
-            모델 등록
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <PriceListUploadButton />
+          <Link href="/assets/new">
+            <Button>
+              <PlusIcon className="mr-2 h-4 w-4" />
+              모델 등록
+            </Button>
+          </Link>
+        </div>
       </div>
       <Suspense fallback={<div className="text-muted-foreground text-sm">로딩 중...</div>}>
         <AssetMasterTable />

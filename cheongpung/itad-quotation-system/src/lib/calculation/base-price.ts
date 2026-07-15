@@ -62,6 +62,15 @@ export async function calculateBasePrice(
     return { ...result, confidence: Math.max(0, result.confidence - 40) };
   }
 
+  // 폴백 3: 매입단가표 retailPriceKrw
+  const priceRow = await prisma.assetMaster.findUnique({
+    where: { id: assetMasterId },
+    select: { retailPriceKrw: true },
+  });
+  if (priceRow?.retailPriceKrw) {
+    return { price: Number(priceRow.retailPriceKrw), sampleCount: 0, confidence: 10, fallbackLevel: 3 };
+  }
+
   return { price: 0, sampleCount: 0, confidence: 0, fallbackLevel: 3 };
 }
 
