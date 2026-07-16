@@ -1,0 +1,6 @@
+anthropic
+sounddevice
+numpy
+faster-whisper
+edge-tts
+playsound==1.2.2
