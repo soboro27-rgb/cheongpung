@@ -55,6 +55,11 @@ def intro_customer(request: Request):
     return templates.TemplateResponse(request, "intro_customer.html", {})
 
 
+@app.get("/guide")
+def guide(request: Request):
+    return templates.TemplateResponse(request, "guide.html", {})
+
+
 @app.get("/")
 def root(request: Request):
     if not request.session.get("user_id"):
