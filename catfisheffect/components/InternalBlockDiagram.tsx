@@ -13,7 +13,7 @@ export default function InternalBlockDiagram() {
           viewBox="0 0 1560 820"
           xmlns="http://www.w3.org/2000/svg"
           role="img"
-          aria-label="AI 보이스 캣피쉬 스피커 내부 전자 부품 블록 다이어그램"
+          aria-label="캐피시AI 보이스 스피커 내부 전자 부품 블록 다이어그램"
           className="h-auto min-w-[900px] w-full"
         >
           <defs>

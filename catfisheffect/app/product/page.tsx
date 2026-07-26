@@ -5,7 +5,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "제품",
   description:
-    "AI 보이스 캣피쉬 스피커 하드웨어 스펙, 각도별 렌더링, 기능 로드맵.",
+    "캐피시AI 보이스 스피커 하드웨어 스펙, 각도별 렌더링, 기능 로드맵.",
 };
 
 const SPECS = [
@@ -47,7 +47,7 @@ export default function ProductPage() {
         <div className="mx-auto max-w-content px-5 sm:px-8">
           <span className="eyebrow">Product</span>
           <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">
-            AI 보이스 캣피쉬 스피커
+            캐피시AI 보이스 스피커
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-text-muted">
             회의실 테이블 위에 놓는 퍽형 하드웨어입니다. 자체 LLM을 탑재하지
@@ -64,7 +64,7 @@ export default function ProductPage() {
             <div className="card overflow-hidden lg:col-span-3">
               <Image
                 src="/images/puck-speaker-design.svg"
-                alt="AI 보이스 캣피쉬 스피커 탑뷰 및 사이드뷰 디자인"
+                alt="캐피시AI 보이스 스피커 탑뷰 및 사이드뷰 디자인"
                 width={900}
                 height={560}
                 className="h-auto w-full"
@@ -73,7 +73,7 @@ export default function ProductPage() {
             <div className="card overflow-hidden lg:col-span-2">
               <Image
                 src="/images/puck-speaker-angles.svg"
-                alt="AI 보이스 캣피쉬 스피커 0도, 90도, 45도 각도별 렌더링"
+                alt="캐피시AI 보이스 스피커 0도, 90도, 45도 각도별 렌더링"
                 width={1000}
                 height={620}
                 className="h-auto w-full"

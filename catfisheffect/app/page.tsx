@@ -24,7 +24,7 @@ export default function HomePage() {
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_rgba(124,255,178,0.08),_transparent_55%)]" />
         <div className="mx-auto grid max-w-content items-center gap-12 px-5 sm:px-8 lg:grid-cols-2 lg:gap-8">
           <div>
-            <span className="eyebrow">AI Voice Catfish Speaker</span>
+            <span className="eyebrow">Catfish AI Voice Speaker</span>
             <h1 className="mt-4 text-4xl font-extrabold leading-[1.15] tracking-tight sm:text-5xl">
               형식에 파문을 일으키다
             </h1>
@@ -50,7 +50,7 @@ export default function HomePage() {
             <div className="card overflow-hidden">
               <Image
                 src="/images/puck-speaker-angles.svg"
-                alt="AI 보이스 캣피쉬 스피커 0도, 90도, 45도 각도 렌더링"
+                alt="캐피시AI 보이스 스피커 0도, 90도, 45도 각도 렌더링"
                 width={1000}
                 height={620}
                 priority
@@ -64,7 +64,7 @@ export default function HomePage() {
       {/* Value props */}
       <section className="section border-t border-white/5">
         <div className="mx-auto max-w-content px-5 sm:px-8">
-          <span className="eyebrow">Why Catfish Effect</span>
+          <span className="eyebrow">Why Catfish AI</span>
           <h2 className="mt-3 max-w-xl text-2xl font-bold sm:text-3xl">
             회의의 본질에 집중하도록 돕습니다
           </h2>
@@ -146,13 +146,13 @@ export default function HomePage() {
               메기 효과, 정체된 회의에 던지는 건설적인 파문
             </h2>
             <p className="mt-5 text-base leading-relaxed text-text-muted">
-              경직되고 형식적인 회의는 잔잔한 물과 같습니다. 캣피쉬이펙트는
+              경직되고 형식적인 회의는 잔잔한 물과 같습니다. 캐피시AI는
               그 물에 메기 한 마리를 풀어놓듯, 정체된 논의에 건설적인 자극을
               더합니다.
             </p>
             <p className="mt-4 text-base leading-relaxed text-text-muted">
               &ldquo;메기 효과&rdquo;는 정체된 조직이나 상황에 적절한 자극을
-              줘 활력을 만든다는 경영학 용어에서 착안했습니다. 캣피쉬이펙트는
+              줘 활력을 만든다는 경영학 용어에서 착안했습니다. 캐피시AI는
               회의를 대신 판단하지 않습니다. 다만 형식에 갇힌 논의가 다시
               흐르도록, 조용히 그러나 분명하게 파문을 일으킵니다.
             </p>

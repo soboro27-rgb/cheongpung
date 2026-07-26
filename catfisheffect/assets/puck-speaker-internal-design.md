@@ -1,4 +1,4 @@
-# AI 보이스 캣피쉬 스피커 — 내부 전자 설계 (개념 블록 다이어그램 v0.1)
+# 캐피시AI 보이스 스피커 — 내부 전자 설계 (개념 블록 다이어그램 v0.1)
 
 시각 자료: `puck_speaker_internal_block_diagram.svg`
 

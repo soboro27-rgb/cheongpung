@@ -9,7 +9,7 @@ export default function DataFlowDiagram() {
           <p className="text-xs font-bold uppercase tracking-wider text-lime-mint">
             Step 1
           </p>
-          <p className="mt-2 text-base font-bold">회의실 캣피쉬 스피커</p>
+          <p className="mt-2 text-base font-bold">회의실 캐피시AI 스피커</p>
           <p className="mt-2 text-xs leading-relaxed text-text-muted">
             버튼 호출 · 음성 픽업
           </p>
@@ -52,7 +52,7 @@ export default function DataFlowDiagram() {
       </div>
 
       <p className="mt-8 text-center text-xs leading-relaxed text-text-muted">
-        캣피쉬이펙트는 데이터 처리자가 아닙니다. 회의 콘텐츠는 당사 서버를
+        캐피시AI는 데이터 처리자가 아닙니다. 회의 콘텐츠는 당사 서버를
         거치지 않고 고객의 LLM 계정으로 직접 라우팅됩니다.
       </p>
     </div>

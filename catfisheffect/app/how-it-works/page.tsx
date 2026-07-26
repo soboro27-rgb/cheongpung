@@ -5,7 +5,7 @@ import DataFlowDiagram from "@/components/DataFlowDiagram";
 export const metadata: Metadata = {
   title: "작동 원리",
   description:
-    "BYO-LLM 데이터 흐름과 캣피쉬이펙트의 개입 원칙을 설명합니다. 당사 서버는 회의 콘텐츠를 경유하지 않습니다.",
+    "BYO-LLM 데이터 흐름과 캐피시AI의 개입 원칙을 설명합니다. 당사 서버는 회의 콘텐츠를 경유하지 않습니다.",
 };
 
 const PRINCIPLES = [
@@ -33,7 +33,7 @@ export default function HowItWorksPage() {
             작동 원리
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-text-muted">
-            캣피쉬이펙트는 자체 LLM을 갖지 않습니다. 고객사가 이미 계약한
+            캐피시AI는 자체 LLM을 갖지 않습니다. 고객사가 이미 계약한
             LLM 계정을 그대로 호출하는 BYO-LLM(Bring Your Own LLM) 구조로
             동작합니다.
           </p>
@@ -50,10 +50,10 @@ export default function HowItWorksPage() {
         <div className="mx-auto max-w-content px-5 sm:px-8">
           <span className="eyebrow">Intervention Principles</span>
           <h2 className="mt-3 max-w-xl text-2xl font-bold sm:text-3xl">
-            캣피쉬의 개입 원칙
+            캐피시AI의 개입 원칙
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-text-muted">
-            캣피쉬이펙트는 회의에 자극을 주되, 그 방식은 신중하게 설계되어
+            캐피시AI는 회의에 자극을 주되, 그 방식은 신중하게 설계되어
             있습니다. 세 가지 원칙 위에서 동작합니다.
           </p>
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

@@ -19,13 +19,13 @@ export default function Footer() {
             <div className="flex items-center gap-2">
               <CatfishMark className="h-5 w-auto" />
               <span className="text-sm font-extrabold tracking-tight text-text-primary">
-                CATFISH EFFECT
+                CATFISH AI
               </span>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-text-muted">
               형식에 파문을 일으키다.
               <br />
-              캣피쉬이펙트는 회의실을 위한 AI 보이스 캣피쉬 스피커를 만듭니다.
+              캐피시AI는 회의실을 위한 캐피시AI 보이스 스피커를 만듭니다.
             </p>
           </div>
 
@@ -43,7 +43,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col gap-2 border-t border-white/5 pt-6 text-xs text-text-muted sm:flex-row sm:items-center sm:justify-between">
-          <p>&copy; {new Date().getFullYear()} Catfish Effect. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Catfish AI. All rights reserved.</p>
           <p>catfisheffect.co.kr</p>
         </div>
       </div>

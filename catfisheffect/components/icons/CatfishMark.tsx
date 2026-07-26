@@ -9,7 +9,7 @@ export default function CatfishMark({ className }: CatfishMarkProps) {
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       role="img"
-      aria-label="Catfish Effect"
+      aria-label="Catfish AI"
     >
       <defs>
         <linearGradient id="catfishBodyGrad" x1="0%" y1="0%" x2="100%" y2="0%">

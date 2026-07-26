@@ -1,9 +1,9 @@
-# Catfish Effect — 웹사이트 구축 개발 브리프 (Claude Code용)
+# Catfish AI — 웹사이트 구축 개발 브리프 (Claude Code용)
 
 ## 1. 프로젝트 개요
 
-**브랜드/회사명**: Catfish Effect (캣피쉬이펙트)
-**제품명**: AI 보이스 캣피쉬 스피커 (AI Voice Catfish Speaker)
+**브랜드/회사명**: Catfish AI (캐피시AI)
+**제품명**: 캐피시AI 보이스 스피커 (Catfish AI Voice Speaker)
 **도메인**: catfisheffect.co.kr (구매 완료)
 **한 줄 정의**: 기업 회의실에 놓는 퍽(puck) 형태의 블루투스 AI 음성 트리거 하드웨어. 자체 LLM 없이(BYO-LLM), 고객사가 이미 사용 중인 LLM(MS Copilot, Claude Enterprise, Gemini Workspace 등)을 물리적 버튼 하나로 호출·연동한다.
 
@@ -19,7 +19,7 @@
 ## 2. 비즈니스 모델
 
 - **판매 방식**: 하드웨어 + 연동 소프트웨어 납품 (B2B 직판)
-- **LLM 비용 구조**: BYO-LLM — 고객사가 자체 LLM/엔터프라이즈 LLM 계정을 사용, API 비용은 전액 고객사 부담. Catfish Effect는 데이터 처리자가 아니며 회의 콘텐츠에 접근하지 않고 고객의 LLM 계정으로 직접 라우팅한다.
+- **LLM 비용 구조**: BYO-LLM — 고객사가 자체 LLM/엔터프라이즈 LLM 계정을 사용, API 비용은 전액 고객사 부담. Catfish AI는 데이터 처리자가 아니며 회의 콘텐츠에 접근하지 않고 고객의 LLM 계정으로 직접 라우팅한다.
 - **타겟 고객**: 이미 MS Copilot / GPT Enterprise / Claude Enterprise / Gemini Workspace 등을 계약한 기업의 회의실
 - **가격**: 대당 15만~25만원 (B2B 납품가) + 선택적 연동 유지보수 계약(SaaS형 이연수익)
 - **초기 채널**: 팔렌시아(계영근) 기존 B2B IT 영업 네트워크 — AJ네트웍스 등 파트너사 회의실 파일럿부터 시작
@@ -40,7 +40,7 @@
 - "법적 증거능력을 보장한다"는 표현 절대 사용 금지 — "객관적 기록을 남기는 도구"로만 포지셔닝
 - AI가 옳고 그름을 "판단"한다는 표현 금지 (있다면 "사실관계 정리"까지만)
 
-## 5. 하드웨어 스펙 — AI 보이스 캣피쉬 스피커
+## 5. 하드웨어 스펙 — 캐피시AI 보이스 스피커
 
 - **형태**: 퍽(disc)형
 - **사이즈**: Ø58mm × H32mm, 무게 약 85g
@@ -52,10 +52,10 @@
 
 첨부된 파일 참고 (모두 SVG, 이번 대화에서 생성):
 - `catfish_effect_logo.svg` — 브랜드 메인 로고 (메기 실루엣 + 워드마크 + 아이콘 단독 버전)
-- `puck_speaker_design.svg` — AI 보이스 캣피쉬 스피커 디자인 시안 (탑뷰/사이드뷰, 스모크블루×라임민트)
-- `puck_speaker_angles.svg` — AI 보이스 캣피쉬 스피커 각도별 렌더링 (0°/90°/45° 사시도)
+- `puck_speaker_design.svg` — 캐피시AI 보이스 스피커 디자인 시안 (탑뷰/사이드뷰, 스모크블루×라임민트)
+- `puck_speaker_angles.svg` — 캐피시AI 보이스 스피커 각도별 렌더링 (0°/90°/45° 사시도)
 
-※ 파일명은 개발 과정에서 붙인 임시명(puck_speaker)이며, 실제 제품명은 "AI 보이스 캣피쉬 스피커"로 사이트 카피에 반영할 것.
+※ 파일명은 개발 과정에서 붙인 임시명(puck_speaker)이며, 실제 제품명은 "캐피시AI 보이스 스피커"로 사이트 카피에 반영할 것.
 
 **컬러 시스템**
 ```
@@ -76,7 +76,7 @@
 ```
 /                   — 히어로(태그라인 + 제품 비주얼) + 핵심 가치 3가지 + CTA(문의)
 /product            — 제품 상세 (하드웨어 스펙, 각도별 렌더링, 기능 로드맵 1~2단계)
-/how-it-works       — BYO-LLM 구조 설명 (다이어그램: 회의실 → Catfish Effect → 고객사 LLM)
+/how-it-works       — BYO-LLM 구조 설명 (다이어그램: 회의실 → Catfish AI → 고객사 LLM)
 /for-business       — B2B 도입 안내 (가격, 파일럿 프로그램, 지원 LLM 벤더)
 /security           — 데이터 처리 정책, 법적 고지 (5번 항목 반영)
 /contact            — 문의 폼 (파일럿 신청, 영업 문의)
@@ -93,6 +93,6 @@
 1. Next.js(또는 단순 정적 사이트) 기반으로 위 6페이지 구조 스캐폴딩
 2. 컬러 시스템을 CSS 변수로 등록, 다크 테마 기본 적용
 3. 로고/제품 이미지 SVG 에셋 통합
-4. `/how-it-works` 페이지에 BYO-LLM 데이터 흐름 다이어그램 제작 (회의실 → Catfish Effect 기기 → 고객사 LLM 계정, 당사 서버 미경유 강조)
+4. `/how-it-works` 페이지에 BYO-LLM 데이터 흐름 다이어그램 제작 (회의실 → Catfish AI 기기 → 고객사 LLM 계정, 당사 서버 미경유 강조)
 5. `/contact` 파일럿 신청 폼 (회사명, 담당자, 사용 중인 LLM 벤더 선택, 회의실 규모)
 6. 반응형 — 담당자가 모바일로 링크 공유해서 볼 가능성 높음, 모바일 우선 최적화

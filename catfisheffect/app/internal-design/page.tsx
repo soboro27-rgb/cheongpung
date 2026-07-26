@@ -4,7 +4,7 @@ import InternalBlockDiagram from "@/components/InternalBlockDiagram";
 export const metadata: Metadata = {
   title: "내부 설계",
   description:
-    "AI 보이스 캣피쉬 스피커의 내부 전자 부품 블록 다이어그램, 부품 인덱스, 예시 BOM, 전력 예산. 개념설계 단계 자료입니다.",
+    "캐피시AI 보이스 스피커의 내부 전자 부품 블록 다이어그램, 부품 인덱스, 예시 BOM, 전력 예산. 개념설계 단계 자료입니다.",
 };
 
 const COMPONENTS = [
@@ -216,7 +216,7 @@ export default function InternalDesignPage() {
           </div>
 
           <div className="mt-10 flex items-center justify-between border-t border-white/5 pt-6 font-mono text-[11px] text-text-muted">
-            <span>Catfish Effect · Internal Design Draft v0.1</span>
+            <span>Catfish AI · Internal Design Draft v0.1</span>
             <span>검토용 — 확정 스펙 아님</span>
           </div>
         </div>

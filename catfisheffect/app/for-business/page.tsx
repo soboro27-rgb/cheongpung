@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "도입 안내",
   description:
-    "AI 보이스 캣피쉬 스피커 도입 가격, 지원 LLM 벤더, 파일럿 프로그램 안내.",
+    "캐피시AI 보이스 스피커 도입 가격, 지원 LLM 벤더, 파일럿 프로그램 안내.",
 };
 
 const VENDORS = [

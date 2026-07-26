@@ -3,7 +3,7 @@ import ContactForm from "@/components/ContactForm";
 
 export const metadata: Metadata = {
   title: "문의",
-  description: "AI 보이스 캣피쉬 스피커 파일럿 프로그램 신청 및 도입 문의.",
+  description: "캐피시AI 보이스 스피커 파일럿 프로그램 신청 및 도입 문의.",
 };
 
 export default function ContactPage() {
