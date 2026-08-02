@@ -60,6 +60,11 @@ def guide(request: Request):
     return templates.TemplateResponse(request, "guide.html", {})
 
 
+@app.get("/pricing-standard")
+def pricing_standard(request: Request):
+    return templates.TemplateResponse(request, "pricing_standard.html", {})
+
+
 @app.get("/")
 def root(request: Request):
     if not request.session.get("user_id"):

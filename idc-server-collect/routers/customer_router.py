@@ -132,6 +132,8 @@ async def new_app(request: Request, db: Session = Depends(get_db)):
         except ValueError: ram = 0
         try: cpu_c = int(form.get(f"cpu_count_{row_idx}", 1) or 1)
         except ValueError: cpu_c = 1
+        try: est_price = float(str(form.get(f"unit_price_estimated_{row_idx}", 0) or 0).replace(",", ""))
+        except ValueError: est_price = 0.0
 
         db.add(models.ServerAsset(
             application_id=app.id,
@@ -151,6 +153,7 @@ async def new_app(request: Request, db: Session = Depends(get_db)):
             data_wipe_required=bool(form.get(f"data_wipe_required_{row_idx}")),
             cert_required=bool(form.get(f"cert_required_{row_idx}")),
             description=form.get(f"description_{row_idx}", "").strip(),
+            unit_price_estimated=est_price,
         ))
         row_idx += 1
         if row_idx > 50:
