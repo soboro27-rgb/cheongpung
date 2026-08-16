@@ -28,7 +28,7 @@ SAMPLE_RATE = 16000
 MAX_CHUNK_SECONDS = 25
 TTS_VOICE = "ko-KR-SunHiNeural"
 TTS_RATE = "+2%"
-MODEL = "claude-opus-4-8"
+MODEL = "claude-opus-5"
 INTRO_MESSAGE = (
     "안녕하세요, 캐피시입니다. 오늘 회의에 함께하겠습니다. "
     "내용은 판단하지 않고, 필요할 때만 짧게 말씀드리겠습니다."
@@ -80,15 +80,19 @@ def transcribe(model: WhisperModel, audio: np.ndarray) -> str:
 
 
 def ask_catfish(
-    client: anthropic.Anthropic, system_prompt: str, transcript: str, meeting_log: list[str]
+    client: anthropic.Anthropic,
+    system_prompt: str,
+    transcript: str,
+    meeting_log: list[str],
+    elapsed_minutes: int,
 ) -> tuple[str, str]:
+    context_blocks: list[str] = []
     if meeting_log:
         meeting_summary = "\n".join(meeting_log)
-        user_content = (
-            f"[지금까지의 회의 요약]\n{meeting_summary}\n\n[회의 구간 스크립트]\n{transcript}"
-        )
-    else:
-        user_content = f"[회의 구간 스크립트]\n{transcript}"
+        context_blocks.append(f"[지금까지의 회의 요약]\n{meeting_summary}")
+    context_blocks.append(f"[현재까지 경과 시간] 약 {elapsed_minutes}분")
+    context_blocks.append(f"[회의 구간 스크립트]\n{transcript}")
+    user_content = "\n\n".join(context_blocks)
 
     response = client.messages.create(
         model=MODEL,
@@ -151,6 +155,7 @@ def main() -> None:
     print()
 
     meeting_log: list[str] = []
+    meeting_start_time = time.time()
 
     while True:
         try:
@@ -168,7 +173,10 @@ def main() -> None:
 
             print(f"[인식된 내용] {transcript}")
             print("캐피시AI 판단 중...")
-            summary, speak_text = ask_catfish(client, system_prompt, transcript, meeting_log)
+            elapsed_minutes = int((time.time() - meeting_start_time) / 60)
+            summary, speak_text = ask_catfish(
+                client, system_prompt, transcript, meeting_log, elapsed_minutes
+            )
 
             if summary and summary != "내용 없음":
                 meeting_log.append(f"[{time.strftime('%H:%M:%S')}] {summary}")
@@ -180,6 +188,7 @@ def main() -> None:
                 print("[캐피시AI] 조용히 관찰만 합니다. (개입 없음)\n")
                 continue
 
+            meeting_log.append(f"[{time.strftime('%H:%M:%S')}] (캐피시AI 발화) {speak_text}")
             print(f"[캐피시AI 발화] {speak_text}")
             speak(speak_text)
             print()
