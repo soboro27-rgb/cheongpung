@@ -60,6 +60,20 @@
 
 ---
 
+## 2026-09-01 — 개별 신청서 삭제 기능 추가 (커밋 d4a10a1)
+
+**요청:** 신청서를 하나씩 삭제하는 버튼.
+
+**구현:**
+- 고객: `POST /customer/applications/{id}/delete` — 본인 건, 상태가 `requested`/`received`/`rejected` 일 때만. 상세 화면에 접힘형 삭제 버튼(confirm). 수거 진행 건은 `?error=locked` 안내.
+- WM 슈퍼관리자: `POST /wm/applications/{id}/delete` — 상태 무관 완전 삭제. 상세 화면 "처리" 카드 하단에 노출.
+- 하위 레코드(assets/schedule/settlement)는 모델 `cascade="all, delete-orphan"` 로 함께 삭제.
+- 삭제 후 목록에서 `?deleted=ok` 성공 알림.
+
+**주의:** idc-server-collect 원본에는 이 기능 없음.
+
+---
+
 ## 브랜딩: 안 바꾼 것 (의도적)
 
 - `IDC 센터` 관련 문구 — 실제 데이터센터(Internet Data Center) 시설을 가리키는 일반명사라 유지
