@@ -18,7 +18,7 @@
 | **돌봄잇** | `dolbom-it` | dolbom.coretail.co.kr | ⚠️ 현재 사용 안 함 (2026-07-07 확인) — Render 배포 상태 점검 불필요 | 돌봄, 케어메이트, 매칭, 코레테일 돌봄 |
 | **inspect01** | `inspect01` | Render 배포 (블루프린트 서비스명 `inspect01`) | ⚠️ 현재 사용 안 함 (2026-07-07 확인) — Render 배포 상태 점검 불필요 | 검수, 매입, 스탬핑, 판정 |
 | **idc-server-collect (IDC브릿지)** | `idc-server-collect` | Render (서비스명 `cheongpung-1`→변경 권장) | 전 Phase(RBAC~정산~파기인증서) 구현 완료 | IDC, 서버수거, 파기, 정산 |
-| **GSP** | `GSP` | Render 블루프린트 `gsp` + DB `gsp-db` (2026-09-01 추가, 대시보드 Apply 대기) | idc-server-collect 전체 복제 독립 인스턴스. 코드·문구 동일 | GSP |
+| **GSP** | `GSP` | https://gsp-i0fi.onrender.com (Render 서비스 `gsp` + DB `gsp-db`, 수동 생성, Root Dir `GSP`) | ✅ 배포 완료 (2026-09-01). idc-server-collect 전체 복제 독립 인스턴스, 코드·문구 동일 | GSP |
 | **whcheck** | `onpre/whcheck` | 미배포 (로컬만) | 알림톡 배송주소 검증 완료, 실제 Solapi 연동·배포 전 | 배송주소, 주소확인, 알림톡 |
 | **estimate** | `onpre/estimate` | - (로컬 CLI) | 입찰단가 산출 리뉴얼 기획 중. 기초단가 DB 구축이 선행과제 | 입찰, 단가산출, 낙찰 |
 | **nexon-inspection** | `nexon` | Render 배포 (블루프린트 서비스명 `nexon-inspection`) | Express+Supabase 검수 관련 서비스 — 실사용 범위 재확인 필요 | 넥슨, 검수 (확인 필요) |
