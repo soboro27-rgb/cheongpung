@@ -12,3 +12,4 @@ idc.db
 *.db
 *.sqlite3
 static/uploads/
+CREDENTIALS.md
