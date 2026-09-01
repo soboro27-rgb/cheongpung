@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}로그인 — 월드와이드메모리{% endblock %}
+{% block title %}로그인 — GSP{% endblock %}
 
 {% block full_content %}
 <div class="min-vh-100 d-flex align-items-center justify-content-center position-relative overflow-hidden"
@@ -23,26 +23,14 @@
       transform:translate(-50%,-50%);
       background:radial-gradient(ellipse,rgba(29,78,216,0.07) 0%,transparent 65%);"></div>
 
-    <!-- ── 왼쪽: WORLD MEMORY 워터마크 ── -->
+    <!-- ── 왼쪽: GSP 워터마크 ── -->
     <div class="d-none d-xl-flex flex-column align-items-center justify-content-center"
          style="position:absolute;left:0;top:0;bottom:0;width:calc(50% - 230px);
          opacity:0.07;">
-      <!-- WD 로고 SVG (대형 워터마크) -->
-      <svg viewBox="0 0 100 60" style="width:200px;" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="wdBg" x1="50" y1="0" x2="50" y2="60" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#93d4f0"/>
-            <stop offset="50%" stop-color="#60a5d8"/>
-            <stop offset="100%" stop-color="#dbeafe"/>
-          </linearGradient>
-        </defs>
-        <!-- W 자형 -->
-        <path d="M2 3 L13 3 L22 38 L31 16 L40 38 L49 3 L60 3 L43 57 L31 27 L19 57 Z" fill="url(#wdBg)"/>
-        <!-- D 자형 -->
-        <path d="M63 3 L77 3 Q97 3 97 30 Q97 57 77 57 L63 57 L63 47 L75 47 Q84 47 84 30 Q84 13 75 13 L63 13 Z" fill="url(#wdBg)"/>
-      </svg>
+      <!-- GSP 대형 워터마크 -->
+      <div style="font-size:3.4rem;font-weight:800;letter-spacing:0.05em;color:#b8d8f0;">GSP</div>
       <div style="color:#b8d8f0;font-size:0.75rem;letter-spacing:0.45em;font-weight:700;
-        margin-top:18px;white-space:nowrap;">WORLD MEMORY</div>
+        margin-top:18px;white-space:nowrap;">GREAT SERVER PLAN</div>
       <div style="color:#8ab4d0;font-size:0.62rem;letter-spacing:0.2em;margin-top:5px;">
         서버 매입 전문
       </div>
@@ -105,34 +93,20 @@
            style="background:linear-gradient(175deg,#0b1d38 0%,#0f2d52 100%);
            border-bottom:1px solid rgba(255,255,255,0.07);">
 
-        <!-- WD 로고 (카드용 컬러 버전) -->
-        <div class="mx-auto mb-3" style="line-height:0;">
-          <svg viewBox="0 0 100 60" style="width:88px;height:53px;" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="wdCard" x1="50" y1="0" x2="50" y2="60" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#64c8ec"/>
-                <stop offset="45%" stop-color="#1a72c4"/>
-                <stop offset="100%" stop-color="#0c2252"/>
-              </linearGradient>
-              <linearGradient id="wdCardD" x1="80" y1="0" x2="80" y2="60" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#52bce8"/>
-                <stop offset="50%" stop-color="#1560ac"/>
-                <stop offset="100%" stop-color="#0a1e48"/>
-              </linearGradient>
-            </defs>
-            <!-- W 자형 -->
-            <path d="M2 3 L13 3 L22 38 L31 16 L40 38 L49 3 L60 3 L43 57 L31 27 L19 57 Z" fill="url(#wdCard)"/>
-            <!-- D 자형 -->
-            <path d="M63 3 L77 3 Q97 3 97 30 Q97 57 77 57 L63 57 L63 47 L75 47 Q84 47 84 30 Q84 13 75 13 L63 13 Z" fill="url(#wdCardD)"/>
-          </svg>
+        <!-- GSP 로고 (카드용) -->
+        <div class="mx-auto mb-3 d-inline-flex align-items-center justify-content-center"
+             style="width:64px;height:64px;border-radius:16px;
+             background:linear-gradient(145deg,#52bce8 0%,#1560ac 55%,#0a1e48 100%);
+             box-shadow:0 8px 24px rgba(21,96,172,0.45);">
+          <span style="color:#fff;font-weight:800;font-size:1.15rem;letter-spacing:0.06em;">GSP</span>
         </div>
 
         <!-- 회사명 -->
         <h5 class="fw-bold mb-1" style="color:#eef4ff;letter-spacing:-0.2px;font-size:1.15rem;">
-          월드와이드메모리
+          GSP
         </h5>
         <p style="color:rgba(148,185,220,0.6);font-size:0.73rem;letter-spacing:0.35px;margin:0 0 16px;">
-          WorldWideMemory Co., Ltd.
+          Great Server Plan
         </p>
 
         <!-- 두 브랜드 배지 -->
@@ -140,7 +114,7 @@
           <span style="background:rgba(29,78,216,0.22);color:#93c5fd;font-size:0.67rem;
             padding:3px 11px;border-radius:20px;border:1px solid rgba(147,197,253,0.2);
             white-space:nowrap;">
-            <i class="bi bi-arrow-down-circle me-1" style="font-size:0.62rem;"></i>매입 · WORLD MEMORY
+            <i class="bi bi-arrow-down-circle me-1" style="font-size:0.62rem;"></i>매입 · GSP
           </span>
           <span style="background:rgba(5,150,105,0.18);color:#6ee7b7;font-size:0.67rem;
             padding:3px 11px;border-radius:20px;border:1px solid rgba(110,231,183,0.2);
@@ -228,7 +202,7 @@
 
     <p class="text-center mt-4 mb-0"
        style="color:rgba(255,255,255,0.18);font-size:0.67rem;letter-spacing:0.3px;">
-      © 2025 WorldWideMemory Co., Ltd. All rights reserved.
+      © 2026 GSP · Great Server Plan. All rights reserved.
     </p>
   </div>
 </div>

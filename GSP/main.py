@@ -18,8 +18,8 @@ run_migrations()
 
 from routers import auth_router, wm_router, dealer_router, customer_router, operator_router
 
-app = FastAPI(title="IDC 서버 수거 플랫폼")
-app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "idc-server-collect-2024-secret"))
+app = FastAPI(title="GSP — Great Server Plan")
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "gsp-great-server-plan-2026-secret"))
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 STATIC_DIR.mkdir(exist_ok=True)

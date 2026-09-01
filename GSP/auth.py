@@ -1,7 +1,7 @@
 from fastapi import Request
 from models import UserRole
 
-# 월드와이드메모리 내부 역할 집합
+# GSP 내부 역할 집합
 WM_ROLES = {UserRole.SUPER_ADMIN, UserRole.WM_COLLECTOR, UserRole.WM_INSPECTOR}
 OPERATOR_ROLES = {UserRole.OPERATOR_ADMIN, UserRole.OPERATOR_STAFF}
 DEALER_ROLES = {UserRole.DEALER_ADMIN, UserRole.DEALER_STAFF}
@@ -27,7 +27,7 @@ def get_session_user(request: Request) -> dict | None:
 
 
 def require_wm(request: Request) -> dict | None:
-    """월드와이드메모리 직원 (super_admin / wm_collector / wm_inspector)"""
+    """GSP 직원 (super_admin / wm_collector / wm_inspector)"""
     u = get_session_user(request)
     if not u:
         return None

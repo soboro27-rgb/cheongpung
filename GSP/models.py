@@ -12,7 +12,7 @@ import enum
 # ─────────────────────────────────────────
 
 class UserRole(str, enum.Enum):
-    SUPER_ADMIN    = "super_admin"    # 월드와이드메모리 슈퍼관리자
+    SUPER_ADMIN    = "super_admin"    # GSP 슈퍼관리자
     WM_COLLECTOR   = "wm_collector"   # 수거기사
     WM_INSPECTOR   = "wm_inspector"   # 검수자
     OPERATOR_ADMIN = "operator_admin" # 운영사 관리자

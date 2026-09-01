@@ -33,7 +33,7 @@
 {% if pending_pay %}
 <div class="alert alert-warning mb-3">
   <i class="bi bi-exclamation-triangle me-1"></i>
-  WM 지급이 완료된 딜러경유 건이 <strong>{{ pending_pay|length }}건</strong> 있습니다. 고객사에 지급 후 처리해주세요.
+  GSP 지급이 완료된 딜러경유 건이 <strong>{{ pending_pay|length }}건</strong> 있습니다. 고객사에 지급 후 처리해주세요.
 </div>
 {% endif %}
 
@@ -45,7 +45,7 @@
         <tr>
           <th>신청번호</th><th>고객사</th><th>정산방식</th>
           <th class="text-end">매입합계</th><th class="text-end">운영사수수료</th><th class="text-end">딜러수수료</th><th class="text-end">고객수령</th>
-          <th>WM지급</th><th>딜러→고객</th><th>정산일</th><th></th>
+          <th>GSP지급</th><th>딜러→고객</th><th>정산일</th><th></th>
         </tr>
       </thead>
       <tbody>
@@ -82,7 +82,7 @@
                 <button class="btn btn-sm btn-warning py-0">지급완료처리</button>
               </form>
               {% else %}
-              <span class="text-muted small">WM 지급 대기</span>
+              <span class="text-muted small">GSP 지급 대기</span>
               {% endif %}
             {% else %}
             <span class="text-muted small">-</span>

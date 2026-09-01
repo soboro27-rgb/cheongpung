@@ -51,7 +51,7 @@
   <div class="section">
     <div class="section-title">신청 정보</div>
     <table class="info">
-      <tr><td>신청번호</td><td>IDC-{{ '%05d'|format(app.id) }}</td>
+      <tr><td>신청번호</td><td>GSP-{{ '%05d'|format(app.id) }}</td>
           <td>고객사</td><td>{{ app.customer.name if app.customer else '-' }}</td></tr>
       <tr><td>딜러</td><td>{{ app.dealer.name if app.dealer else '-' }}</td>
           <td>IDC 센터</td><td>{{ app.idc_center.name if app.idc_center else '-' }}</td></tr>
@@ -103,7 +103,7 @@
     </div>
     <div class="sign-box">
       <div class="label">발행 기관</div>
-      <div class="name">WorldMemory (주)</div>
+      <div class="name">㈜ GSP</div>
     </div>
   </div>
 

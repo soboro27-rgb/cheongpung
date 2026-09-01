@@ -33,7 +33,7 @@
       <div class="col-md-2">
         <select name="role" class="form-select form-select-sm" id="roleSelect" required onchange="onRoleChange()">
           <option value="">역할 선택 *</option>
-          <optgroup label="WorldMemory">
+          <optgroup label="GSP">
             <option value="super_admin">슈퍼관리자</option>
             <option value="wm_collector">수거기사</option>
             <option value="wm_inspector">검수자</option>
@@ -161,7 +161,7 @@
                 <label class="form-label form-label-sm text-muted mb-0">역할</label>
                 <select name="role" class="form-select form-select-sm" style="width:140px"
                   onchange="onEditRoleChange({{ usr.id }}, this.value)">
-                  <optgroup label="WorldMemory">
+                  <optgroup label="GSP">
                     <option value="super_admin" {% if usr.role.value == 'super_admin' %}selected{% endif %}>슈퍼관리자</option>
                     <option value="wm_collector" {% if usr.role.value == 'wm_collector' %}selected{% endif %}>수거기사</option>
                     <option value="wm_inspector" {% if usr.role.value == 'wm_inspector' %}selected{% endif %}>검수자</option>

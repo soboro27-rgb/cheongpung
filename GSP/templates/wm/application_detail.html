@@ -167,7 +167,7 @@
           <dd class="col-6">{{ '{:,}'.format(app.settlement.dealer_fee_amount|int) }}원</dd>
           <dt class="col-6 text-muted">고객 수령액</dt>
           <dd class="col-6 fw-bold text-success">{{ '{:,}'.format(app.settlement.customer_amount|int) }}원</dd>
-          <dt class="col-6 text-muted">WM 지급</dt>
+          <dt class="col-6 text-muted">GSP 지급</dt>
           <dd class="col-6">
             {% if app.settlement.wm_paid %}<span class="badge bg-success">완료</span>
             {% else %}<span class="badge bg-secondary">미지급</span>{% endif %}
