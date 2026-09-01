@@ -110,20 +110,19 @@ async def new_app(request: Request, db: Session = Depends(get_db)):
     db.flush()
 
     # 서버 자산 등록 (row 기반)
-    row_idx = 0
-    while True:
-        manufacturer = form.get(f"manufacturer_{row_idx}", "")
-        if manufacturer is None and row_idx > 0:
-            break
-        if manufacturer is None:
-            row_idx += 1
-            continue
-        manufacturer = manufacturer.strip()
-        model = form.get(f"model_{row_idx}", "").strip()
+    # 폼에 존재하는 manufacturer_*/model_* 인덱스를 모두 수집해서 순회한다.
+    # (행 추가/삭제로 인덱스가 비연속적이거나 50을 넘어도 누락 없이 저장)
+    row_indices = set()
+    for key in form.keys():
+        for prefix in ("manufacturer_", "model_"):
+            if key.startswith(prefix):
+                suffix = key[len(prefix):]
+                if suffix.isdigit():
+                    row_indices.add(int(suffix))
+    for row_idx in sorted(row_indices):
+        manufacturer = (form.get(f"manufacturer_{row_idx}", "") or "").strip()
+        model = (form.get(f"model_{row_idx}", "") or "").strip()
         if not manufacturer and not model:
-            row_idx += 1
-            if row_idx > 50:
-                break
             continue
 
         try: qty = int(form.get(f"quantity_{row_idx}", 1) or 1)
@@ -155,9 +154,6 @@ async def new_app(request: Request, db: Session = Depends(get_db)):
             description=form.get(f"description_{row_idx}", "").strip(),
             unit_price_estimated=est_price,
         ))
-        row_idx += 1
-        if row_idx > 50:
-            break
 
     db.commit()
     return RedirectResponse(f"/customer/applications/{app.id}", status_code=302)

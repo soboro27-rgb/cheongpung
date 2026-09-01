@@ -349,7 +349,7 @@ function openRamModal(idx) {
     addRamRow();
   }
   updateRamTotal();
-  new bootstrap.Modal(document.getElementById('ramModal')).show();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('ramModal')).show();
 }
 
 function addRamRow(gb = 32, qty = 1) {
@@ -394,7 +394,7 @@ function confirmRam() {
   document.getElementById(`ram_config_${activeRowIdx}`).value = config;
   document.getElementById(`ram_label_${activeRowIdx}`).textContent = config ? `${config} (${total}GB)` : '미입력';
   document.getElementById(`ram_label_${activeRowIdx}`).classList.toggle('text-muted', !config);
-  bootstrap.Modal.getInstance(document.getElementById('ramModal')).hide();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('ramModal')).hide();
 }
 
 // ─── 스토리지 모달 ─────────────────────────────────────
@@ -423,7 +423,7 @@ function openStorageModal(idx) {
   } else {
     addStorageRow();
   }
-  new bootstrap.Modal(document.getElementById('storageModal')).show();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('storageModal')).show();
 }
 
 function addStorageRow(iface = 'SAS', media = 'HDD', cap = '', unit = 'TB', qty = 1) {
@@ -488,8 +488,29 @@ function confirmStorage() {
   document.getElementById(`storage_config_${activeRowIdx}`).value = config;
   document.getElementById(`storage_label_${activeRowIdx}`).textContent = config || '미입력';
   document.getElementById(`storage_label_${activeRowIdx}`).classList.toggle('text-muted', !config);
-  bootstrap.Modal.getInstance(document.getElementById('storageModal')).hide();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('storageModal')).hide();
 }
+
+// ─── 제출 전 검증 / 정리 ───────────────────────────────
+document.getElementById('appForm').addEventListener('submit', function (e) {
+  // 혹시 남아있는 모달 백드롭 제거 (클릭 가로채기 방지)
+  document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+  document.body.classList.remove('modal-open');
+  document.body.style.overflow = '';
+
+  // 자산 행이 하나도 채워지지 않았으면 경고
+  let filled = 0;
+  document.querySelectorAll('#assetRows tr').forEach(tr => {
+    const mfr = tr.querySelector('input[name^="manufacturer_"]');
+    const mdl = tr.querySelector('input[name^="model_"]');
+    if ((mfr && mfr.value.trim()) || (mdl && mdl.value.trim())) filled++;
+  });
+  if (filled === 0) {
+    if (!confirm('서버 자산 목록이 비어 있습니다. 자산 없이 신청서를 제출할까요?')) {
+      e.preventDefault();
+    }
+  }
+});
 
 // 첫 행 자동 추가
 addRow();
