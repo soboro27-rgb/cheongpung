@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>가격 산정 기준 — IDC브릿지</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <style>
+    :root {
+      --bg:       #080d1a;
+      --bg2:      #0e1629;
+      --bg3:      #141f38;
+      --border:   rgba(255,255,255,.08);
+      --orange:   #f97316;
+      --amber:    #fbbf24;
+      --text:     #e2e8f0;
+      --sub:      #94a3b8;
+      --glow:     rgba(249,115,22,.18);
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI','Noto Sans KR',sans-serif;
+      background: var(--bg); color: var(--text); margin: 0;
+    }
+    .bg-grid {
+      background-image:
+        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .nav-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8,13,26,.85); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: .85rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .brand { font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: -.3px; }
+    .brand span { color: var(--orange); }
+    .back-link { color: var(--sub); font-size: .82rem; text-decoration: none; transition: color .15s; }
+    .back-link:hover { color: var(--text); }
+    .btn-cta {
+      background: var(--orange); color: #fff; font-weight: 700; font-size: .88rem;
+      padding: .5rem 1.5rem; border-radius: .5rem; border: none;
+      text-decoration: none; transition: background .15s, transform .1s;
+    }
+    .btn-cta:hover { background: #ea6500; color: #fff; transform: translateY(-1px); }
+
+    .hero { padding: 70px 0 40px; text-align: center; }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(249,115,22,.12); border: 1px solid rgba(249,115,22,.3);
+      color: var(--orange); font-size: .75rem; font-weight: 700; letter-spacing: .8px;
+      padding: .35rem 1rem; border-radius: 2rem; margin-bottom: 1.4rem;
+    }
+    .hero h1 { font-size: 2.3rem; font-weight: 900; color: #fff; margin-bottom: .9rem; }
+    .hero h1 em { color: var(--orange); font-style: normal; }
+    .hero p { color: var(--sub); font-size: .98rem; max-width: 560px; margin: 0 auto; line-height: 1.8; }
+
+    .step-section { padding: 34px 0; border-top: 1px solid var(--border); }
+    .step-section:first-of-type { border-top: none; }
+    .step-head { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.4rem; }
+    .step-num {
+      flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%;
+      border: 2px solid var(--orange); color: var(--orange);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 1.05rem;
+    }
+    .step-title { font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0 0 .35rem; }
+    .step-desc { color: var(--sub); font-size: .87rem; line-height: 1.75; margin: 0; }
+
+    .mock {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: .9rem; overflow: hidden; margin-top: 1rem;
+    }
+    .mock-bar {
+      background: var(--bg3); border-bottom: 1px solid var(--border);
+      padding: .55rem 1rem; display: flex; align-items: center; gap: .45rem;
+    }
+    .mock-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .mock-title { font-size: .7rem; color: var(--sub); margin-left: .6rem; }
+    .mock-body { padding: 1rem 1.2rem; font-size: .8rem; }
+
+    .mock-table { width: 100%; border-collapse: collapse; margin-top: .2rem; font-size: .74rem; }
+    .mock-table th {
+      text-align: left; color: var(--sub); font-weight: 600; font-size: .68rem;
+      padding: .3rem .5rem; border-bottom: 1px solid var(--border);
+    }
+    .mock-table td { padding: .35rem .5rem; border-bottom: 1px solid var(--border); color: var(--text); }
+
+    .grade-row { display: flex; gap: .7rem; margin-top: 1rem; flex-wrap: wrap; }
+    .grade-card {
+      flex: 1; min-width: 150px;
+      background: var(--bg2); border: 1px solid var(--border); border-radius: .7rem;
+      padding: .9rem 1rem;
+    }
+    .grade-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 50%; font-weight: 900; font-size: .82rem;
+      margin-bottom: .5rem;
+    }
+    .grade-s { background: rgba(46,204,138,.15); color: #4ade95; border: 1px solid rgba(46,204,138,.35); }
+    .grade-a { background: rgba(79,142,247,.15); color: #7ab0ff; border: 1px solid rgba(79,142,247,.35); }
+    .grade-b { background: rgba(148,163,184,.15); color: #cbd5e1; border: 1px solid rgba(148,163,184,.35); }
+    .grade-card h4 { font-size: .92rem; font-weight: 800; color: #fff; margin: 0 0 .3rem; }
+    .grade-card p { font-size: .78rem; color: var(--sub); margin: 0; line-height: 1.6; }
+
+    .factor-list { margin-top: 1rem; display: flex; flex-direction: column; gap: .5rem; }
+    .factor-item {
+      display: flex; align-items: flex-start; gap: .6rem;
+      background: var(--bg2); border: 1px solid var(--border); border-radius: .6rem;
+      padding: .7rem .9rem; font-size: .82rem; color: var(--text);
+    }
+    .factor-item i { color: var(--orange); margin-top: .15rem; flex-shrink: 0; }
+
+    .flow-note {
+      background: rgba(249,115,22,.07); border: 1px solid rgba(249,115,22,.25);
+      border-radius: .6rem; padding: .7rem 1rem; font-size: .78rem; color: #fdba74;
+      margin-top: .9rem; display: flex; gap: .5rem; align-items: flex-start;
+    }
+    .flow-note i { margin-top: .15rem; flex-shrink: 0; }
+
+    .footer {
+      background: var(--bg2); border-top: 1px solid var(--border);
+      color: var(--sub); font-size: .78rem; text-align: center; padding: 1.5rem; margin-top: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 1.7rem; }
+      .step-head { flex-direction: column; }
+    }
+  </style>
+</head>
+<body class="bg-grid">
+
+<nav class="nav-bar">
+  <div class="d-flex align-items-center gap-3">
+    <a href="/login" class="back-link"><i class="bi bi-chevron-left me-1"></i>돌아가기</a>
+    <div class="brand" style="border-left:1px solid rgba(255,255,255,.12); padding-left:1rem;">
+      <i class="bi bi-server me-1"></i>IDC<span>브릿지</span>
+      <span style="font-size:.7rem; background:rgba(249,115,22,.15); color:var(--orange); border:1px solid rgba(249,115,22,.3); border-radius:.3rem; padding:.1rem .5rem; margin-left:.5rem; font-weight:600;">가격 산정 기준</span>
+    </div>
+  </div>
+  <div class="d-flex align-items-center gap-3">
+    <a href="/guide" class="back-link"><i class="bi bi-signpost-split me-1"></i>이용 가이드</a>
+    <a href="/login" class="btn-cta"><i class="bi bi-box-arrow-in-right me-1"></i>로그인</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-eyebrow"><i class="bi bi-tag"></i> PRICING STANDARD</div>
+    <h1>시세 반영부터 검수까지,<br><em>투명하게 산정합니다</em></h1>
+    <p>신청 시점의 예상단가와 수거 후 확정단가가 어떤 기준으로 정해지는지,
+       각 단계에서 무엇을 확인하는지 순서대로 안내합니다.</p>
+  </div>
+</section>
+
+<div class="container" style="max-width: 760px;">
+
+  <!-- STEP 1 -->
+  <div class="step-section">
+    <div class="step-head">
+      <div class="step-num">1</div>
+      <div>
+        <h2 class="step-title">시세 기준표 실시간 반영</h2>
+        <p class="step-desc">서버·스토리지·네트워크 장비 카테고리별 시세 기준표를 상시 갱신합니다.
+           신청서 작성 중 모델명을 입력하면 기준표에 등록된 모델의 예상단가가 바로 표시되어,
+           수거를 신청하는 시점에 대략적인 매입가를 미리 확인할 수 있습니다.</p>
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mock-bar">
+        <div class="mock-dot" style="background:#ef4444;"></div>
+        <div class="mock-dot" style="background:#f59e0b;"></div>
+        <div class="mock-dot" style="background:#22c55e;"></div>
+        <span class="mock-title">신규 수거 신청 — 모델명 자동완성</span>
+      </div>
+      <div class="mock-body">
+        <table class="mock-table">
+          <tr><th>모델명</th><th>스펙 요약</th><th style="color:#4ade95">예상단가</th></tr>
+          <tr><td>Dell PowerEdge R740</td><td>2CPU · 128GB RAM</td><td style="color:#4ade95;font-weight:700">700,000원</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step-section">
+    <div class="step-head">
+      <div class="step-num">2</div>
+      <div>
+        <h2 class="step-title">수거 후 기술 검수</h2>
+        <p class="step-desc">매입사(WorldMemory) 검수자가 실물을 직접 확인합니다.
+           전원 인가 시 정상 가동 여부, CPU·RAM·스토리지 구성이 신청 내용과 일치하는지,
+           주요 부품(전원 모듈, 레일킷 등)의 누락 여부를 점검한 뒤 단가에 반영합니다.</p>
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mock-bar">
+        <div class="mock-dot" style="background:#ef4444;"></div>
+        <div class="mock-dot" style="background:#f59e0b;"></div>
+        <div class="mock-dot" style="background:#22c55e;"></div>
+        <span class="mock-title">검수 체크리스트</span>
+      </div>
+      <div class="mock-body">
+        <div class="factor-list" style="margin-top:0">
+          <div class="factor-item"><i class="bi bi-cpu"></i>전원 인가 · 정상 부팅 여부</div>
+          <div class="factor-item"><i class="bi bi-hdd-stack"></i>RAM · 스토리지 실장 수량 신청 내용과 일치 여부</div>
+          <div class="factor-item"><i class="bi bi-box-seam"></i>레일킷 · 전원 모듈 등 부속품 누락 여부</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step-section">
+    <div class="step-head">
+      <div class="step-num">3</div>
+      <div>
+        <h2 class="step-title">상태 등급 분류</h2>
+        <p class="step-desc">검수 결과를 바탕으로 3단계 등급 중 하나로 분류하고, 등급에 따라 기준가에서
+           가감하여 최종 단가를 확정합니다.</p>
+      </div>
+    </div>
+    <div class="grade-row">
+      <div class="grade-card">
+        <div class="grade-badge grade-s">상</div>
+        <h4>상태 양호</h4>
+        <p>외관 손상 없고 전 구성품 정상 가동, 신청 내용과 실물이 정확히 일치</p>
+      </div>
+      <div class="grade-card">
+        <div class="grade-badge grade-a">중</div>
+        <h4>사용감 있음</h4>
+        <p>경미한 외관 마모가 있으나 가동에는 문제 없음</p>
+      </div>
+      <div class="grade-card">
+        <div class="grade-badge grade-b">하</div>
+        <h4>손상 · 미가동</h4>
+        <p>부품 누락, 미가동, 심한 외관 손상 등이 확인된 경우</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step-section">
+    <div class="step-head">
+      <div class="step-num">4</div>
+      <div>
+        <h2 class="step-title">감가 요소</h2>
+        <p class="step-desc">아래 항목이 확인되면 기준가에서 일부 차감됩니다. 차감 사유는 단가확정 시
+           고객사 화면에 함께 안내됩니다.</p>
+      </div>
+    </div>
+    <div class="factor-list">
+      <div class="factor-item"><i class="bi bi-exclamation-triangle"></i>주요 부품(RAM/스토리지/레일킷 등) 누락</div>
+      <div class="factor-item"><i class="bi bi-power"></i>전원 인가 시 미가동</div>
+      <div class="factor-item"><i class="bi bi-shield-x"></i>신청 시 명시한 사양과 실물 불일치</div>
+    </div>
+    <div class="flow-note">
+      <i class="bi bi-info-circle"></i>
+      세부 가중치는 시세 변동에 따라 조정될 수 있어 내부 기준표로 관리하며, 개별 건의 확정 단가와
+      산정 사유는 신청 상세 화면에서 항상 확인할 수 있습니다.
+    </div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <span style="color:rgba(255,255,255,.6); font-weight:700;">IDC브릿지</span> — 가격 산정 기준 · 실제 단가는 시세 변동 및 검수 결과에 따라 달라질 수 있습니다
+</footer>
+
+</body>
+</html>

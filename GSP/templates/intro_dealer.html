@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IDC브릿지 파트너 — 호스팅·IDC 운영사</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <style>
+    :root {
+      --bg:       #080d1a;
+      --bg2:      #0e1629;
+      --bg3:      #141f38;
+      --border:   rgba(255,255,255,.08);
+      --border-hi:rgba(249,115,22,.45);
+      --orange:   #f97316;
+      --orange-lo:#7c3a12;
+      --amber:    #fbbf24;
+      --text:     #e2e8f0;
+      --sub:      #94a3b8;
+      --glow:     rgba(249,115,22,.18);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI','Noto Sans KR',sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+    }
+
+    /* ── 배경 그리드 패턴 ── */
+    .bg-grid {
+      background-image:
+        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    /* ── 네비 ── */
+    .nav-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8,13,26,.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: .85rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .brand { font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: -.3px; }
+    .brand span { color: var(--orange); }
+    .back-link {
+      color: var(--sub); font-size: .82rem; text-decoration: none;
+      transition: color .15s;
+    }
+    .back-link:hover { color: var(--text); }
+    .btn-cta {
+      background: var(--orange); color: #fff;
+      font-weight: 700; font-size: .88rem;
+      padding: .5rem 1.5rem; border-radius: .5rem; border: none;
+      text-decoration: none; transition: background .15s, transform .1s;
+    }
+    .btn-cta:hover { background: #ea6500; color: #fff; transform: translateY(-1px); }
+
+    /* ── 히어로 ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 80px 0 60px;
+      position: relative;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(249,115,22,.12);
+      border: 1px solid rgba(249,115,22,.3);
+      color: var(--orange); font-size: .75rem; font-weight: 700; letter-spacing: .8px;
+      padding: .35rem 1rem; border-radius: 2rem; margin-bottom: 1.6rem;
+    }
+    .hero h1 {
+      font-size: 2.8rem; font-weight: 900; line-height: 1.2;
+      color: #fff; margin-bottom: 1.2rem;
+    }
+    .hero h1 em { color: var(--orange); font-style: normal; }
+    .hero .sub {
+      color: var(--sub); font-size: 1rem; line-height: 1.85;
+      max-width: 460px; margin-bottom: 2rem;
+    }
+    .hero-pill {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 2rem; padding: .4rem 1rem;
+      font-size: .8rem; color: var(--sub); margin-right: .5rem; margin-bottom: .5rem;
+    }
+    .hero-pill i { color: var(--orange); }
+
+    /* ── 계산기 카드 ── */
+    .calc-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      padding: 2rem;
+      box-shadow: 0 0 60px var(--glow);
+      position: relative;
+    }
+    .calc-card::before {
+      content: '';
+      position: absolute; inset: -1px; border-radius: 1.25rem;
+      background: linear-gradient(135deg, rgba(249,115,22,.2), transparent 60%);
+      z-index: -1;
+    }
+    .calc-label {
+      font-size: .7rem; font-weight: 700; letter-spacing: .8px;
+      color: var(--sub); text-transform: uppercase; margin-bottom: .5rem;
+    }
+    .calc-card h4 {
+      font-size: 1rem; font-weight: 700; color: #fff;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* 슬라이더 */
+    .slider-row { margin-bottom: 1.4rem; }
+    .slider-row .label-line {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: .5rem;
+    }
+    .slider-row .lbl { font-size: .83rem; color: var(--sub); }
+    .slider-row .val {
+      font-size: 1.05rem; font-weight: 800; color: #fff;
+      min-width: 3.5rem; text-align: right;
+    }
+    input[type=range] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 4px;
+      background: var(--bg3); border-radius: 2px; outline: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 0 3px rgba(249,115,22,.25);
+      cursor: pointer; transition: box-shadow .15s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 0 5px rgba(249,115,22,.35);
+    }
+
+    /* 등급 선택 */
+    .grade-select {
+      display: flex; gap: .5rem; margin-top: .3rem;
+    }
+    .grade-btn {
+      flex: 1; padding: .5rem; text-align: center;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: .5rem; cursor: pointer; font-size: .78rem;
+      color: var(--sub); transition: all .15s; user-select: none;
+    }
+    .grade-btn.active {
+      background: rgba(249,115,22,.15);
+      border-color: var(--orange);
+      color: var(--orange); font-weight: 700;
+    }
+
+    /* 파트너 등급 버튼 */
+    .tier-btn {
+      flex: 1; padding: .55rem .4rem; text-align: center;
+      border-radius: .5rem; cursor: pointer; font-size: .78rem;
+      color: var(--sub); transition: all .15s; user-select: none;
+      border: 1px solid var(--border); background: var(--bg3);
+    }
+    .tier-btn .tier-name { font-weight: 700; margin-bottom: .2rem; font-size: .82rem; }
+    .tier-btn .tier-rate { font-size: .95rem; font-weight: 900; }
+    .tier-btn[data-tier="bronze"].active { background:rgba(205,127,50,.15); border-color:#cd7f32; color:#cd7f32; }
+    .tier-btn[data-tier="silver"].active { background:rgba(148,163,184,.15); border-color:#94a3b8; color:#e2e8f0; }
+    .tier-btn[data-tier="gold"].active   { background:rgba(251,191,36,.15); border-color:#fbbf24; color:#fbbf24; }
+
+    /* 등급표 */
+    .tier-table-row {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem; margin-top: 1.5rem;
+    }
+    .tier-col {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 1.1rem; padding: 1.8rem; text-align: center;
+      transition: border-color .2s, transform .2s;
+    }
+    .tier-col:hover { transform: translateY(-3px); }
+    .tier-col.bronze { border-color: rgba(205,127,50,.3); }
+    .tier-col.silver { border-color: rgba(148,163,184,.3); }
+    .tier-col.gold   { border-color: rgba(251,191,36,.4); box-shadow: 0 0 30px rgba(251,191,36,.08); }
+    .tier-badge {
+      display: inline-block; padding: .3rem 1rem; border-radius: 2rem;
+      font-size: .72rem; font-weight: 700; letter-spacing: .6px; margin-bottom: 1rem;
+    }
+    .bronze .tier-badge { background:rgba(205,127,50,.15); border:1px solid rgba(205,127,50,.4); color:#cd7f32; }
+    .silver .tier-badge { background:rgba(148,163,184,.15); border:1px solid rgba(148,163,184,.4); color:#e2e8f0; }
+    .gold   .tier-badge { background:rgba(251,191,36,.15);  border:1px solid rgba(251,191,36,.4);  color:#fbbf24; }
+    .tier-col .rate { font-size: 2.6rem; font-weight: 900; line-height: 1; margin-bottom: .3rem; }
+    .bronze .rate { color: #cd7f32; }
+    .silver .rate { color: #e2e8f0; }
+    .gold   .rate { color: #fbbf24; }
+    .tier-col .rate-label { font-size: .75rem; color: var(--sub); margin-bottom: 1.2rem; }
+    .tier-col ul { list-style: none; padding: 0; text-align: left; }
+    .tier-col ul li { font-size: .82rem; color: var(--sub); padding: .4rem 0; border-bottom: 1px solid var(--border); display: flex; gap: .5rem; }
+    .tier-col ul li:last-child { border-bottom: none; }
+    .tier-col ul li i { flex-shrink: 0; margin-top: .1rem; }
+
+    /* 결과 */
+    .result-box {
+      background: linear-gradient(135deg,rgba(249,115,22,.12),rgba(251,191,36,.06));
+      border: 1px solid rgba(249,115,22,.25);
+      border-radius: 1rem; padding: 1.5rem; margin-top: 1.5rem; text-align: center;
+    }
+    .result-label { font-size: .7rem; color: var(--sub); letter-spacing: .6px; margin-bottom: .3rem; }
+    .result-num {
+      font-size: 2.6rem; font-weight: 900; color: var(--orange);
+      letter-spacing: -1px; line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .result-sub { font-size: .8rem; color: var(--sub); margin-top: .4rem; }
+    .result-row {
+      display: flex; gap: 1rem; margin-top: 1rem;
+    }
+    .result-mini {
+      flex: 1; background: var(--bg3); border: 1px solid var(--border);
+      border-radius: .7rem; padding: .8rem; text-align: center;
+    }
+    .result-mini .mn { font-size: 1.1rem; font-weight: 800; color: #fff; }
+    .result-mini .ml { font-size: .7rem; color: var(--sub); margin-top: .15rem; }
+
+    /* ── 스탯 바 ── */
+    .stat-bar {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+      padding: 2rem 0;
+    }
+    .stat-item { text-align: center; }
+    .stat-item .num {
+      font-size: 2rem; font-weight: 900;
+      background: linear-gradient(135deg,var(--orange),var(--amber));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .stat-item .lbl { font-size: .78rem; color: var(--sub); margin-top: .2rem; }
+
+    /* ── 페인포인트 ── */
+    .pain-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 1rem; padding: 1.8rem; height: 100%;
+      transition: border-color .2s;
+    }
+    .pain-card:hover { border-color: rgba(249,115,22,.3); }
+    .pain-icon { font-size: 1.8rem; color: var(--sub); margin-bottom: .9rem; }
+    .pain-card h6 { color: #fff; font-weight: 700; margin-bottom: .4rem; }
+    .pain-card p { font-size: .83rem; color: var(--sub); line-height: 1.7; margin: 0; }
+    .pain-resolve {
+      display: flex; align-items: center; gap: .4rem;
+      margin-top: .9rem; font-size: .8rem; color: var(--orange); font-weight: 600;
+    }
+
+    /* ── 대시보드 프리뷰 ── */
+    .preview-wrap {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 1.25rem; overflow: hidden;
+    }
+    .preview-topbar {
+      background: var(--bg3); border-bottom: 1px solid var(--border);
+      padding: .7rem 1.2rem;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .preview-body { padding: 1.2rem; }
+    .prev-stat-row { display: flex; gap: .8rem; margin-bottom: 1rem; }
+    .prev-stat {
+      flex: 1; background: var(--bg3); border: 1px solid var(--border);
+      border-radius: .7rem; padding: .8rem; text-align: center;
+    }
+    .prev-stat .pnum { font-size: 1.3rem; font-weight: 800; color: var(--orange); }
+    .prev-stat .plbl { font-size: .68rem; color: var(--sub); margin-top: .1rem; }
+    .prev-row {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: .6rem; padding: .65rem 1rem; margin-bottom: .5rem;
+      font-size: .82rem;
+    }
+    .prev-row .co { font-weight: 700; color: #fff; }
+    .prev-row .info { color: var(--sub); font-size: .74rem; margin-top: .1rem; }
+    .badge-o { background: rgba(249,115,22,.2); color:var(--orange); border:1px solid rgba(249,115,22,.3); font-size:.68rem; padding:.2rem .55rem; border-radius:.4rem; font-weight:700; }
+    .badge-g { background: rgba(46,204,138,.15); color:#2ecc8a; border:1px solid rgba(46,204,138,.3); font-size:.68rem; padding:.2rem .55rem; border-radius:.4rem; font-weight:700; }
+    .badge-b { background: rgba(79,142,247,.15); color:#4f8ef7; border:1px solid rgba(79,142,247,.3); font-size:.68rem; padding:.2rem .55rem; border-radius:.4rem; font-weight:700; }
+    .fee-line { font-weight: 800; color: var(--amber); font-size: .9rem; }
+
+    /* ── 프로세스 ── */
+    .process-step { text-align: center; }
+    .ps-num {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 2px solid var(--orange);
+      color: var(--orange); font-size: 1rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto .8rem;
+    }
+    .ps-title { font-size: .9rem; font-weight: 700; color: #fff; margin-bottom: .25rem; }
+    .ps-desc { font-size: .78rem; color: var(--sub); line-height: 1.55; }
+    .ps-arrow { position:absolute; top:22px; left:calc(50% + 30px); width:calc(100% - 60px); height:1px; background:linear-gradient(90deg,var(--orange-lo),transparent); }
+
+    /* ── CTA ── */
+    .cta-section {
+      background: radial-gradient(ellipse at 50% 0%,rgba(249,115,22,.15) 0%,transparent 65%),
+                  var(--bg);
+      border-top: 1px solid var(--border);
+      text-align: center; padding: 80px 1rem;
+    }
+    .cta-section h2 { font-size: 2rem; font-weight: 900; color: #fff; }
+    .cta-section p { color: var(--sub); font-size: .95rem; margin-top: .7rem; }
+
+    .footer {
+      background: var(--bg2); border-top: 1px solid var(--border);
+      color: var(--sub); font-size: .78rem; text-align: center; padding: 1.5rem;
+    }
+
+    /* 섹션 레이블 */
+    .sec-label {
+      font-size: .7rem; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--orange); margin-bottom: .4rem;
+    }
+    .sec-title { font-size: 1.7rem; font-weight: 800; color: #fff; }
+    .sec-sub { color: var(--sub); font-size: .9rem; margin-top: .5rem; line-height: 1.75; }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2rem; }
+      .result-num { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body class="bg-grid">
+
+<!-- 네비 -->
+<nav class="nav-bar">
+  <div class="d-flex align-items-center gap-3">
+    <a href="/intro" class="back-link"><i class="bi bi-chevron-left me-1"></i>돌아가기</a>
+    <div class="brand" style="border-left:1px solid rgba(255,255,255,.12); padding-left:1rem;">
+      <i class="bi bi-server me-1"></i>IDC<span>브릿지</span>
+      <span style="font-size:.7rem; background:rgba(249,115,22,.15); color:var(--orange); border:1px solid rgba(249,115,22,.3); border-radius:.3rem; padding:.1rem .5rem; margin-left:.5rem; font-weight:600;">파트너</span>
+    </div>
+  </div>
+  <a href="/login" class="btn-cta"><i class="bi bi-box-arrow-in-right me-1"></i>파트너 로그인</a>
+</nav>
+
+<!-- 히어로 + 계산기 -->
+<section class="hero">
+  <div class="container">
+    <div class="row align-items-center g-5">
+
+      <!-- 왼쪽 카피 -->
+      <div class="col-lg-5">
+        <div class="hero-eyebrow">
+          <i class="bi bi-building"></i> 호스팅·IDC 운영사 전용
+        </div>
+        <h1>
+          관리 중인<br>고객사 서버가<br>
+          <em>수수료 수익</em>이<br>됩니다
+        </h1>
+        <p class="sub">
+          수거·검수·파기·정산은 WorldMemory가 전담합니다.
+          귀사는 고객사를 연결하기만 하면 됩니다.
+        </p>
+        <div>
+          <div class="hero-pill"><i class="bi bi-check2"></i> 초기 투자 0원</div>
+          <div class="hero-pill"><i class="bi bi-check2"></i> 수거·검수 WM 전담</div>
+          <div class="hero-pill"><i class="bi bi-check2"></i> 수수료 자동 정산</div>
+          <div class="hero-pill"><i class="bi bi-check2"></i> 파기 인증서 발급</div>
+        </div>
+      </div>
+
+      <!-- 오른쪽: 수익 계산기 -->
+      <div class="col-lg-7">
+        <div class="calc-card">
+          <div class="calc-label">수익 시뮬레이터</div>
+          <h4><i class="bi bi-calculator me-2" style="color:var(--orange);"></i>귀사의 예상 수수료를 계산해 보세요</h4>
+
+          <!-- 슬라이더 1: 고객사 수 -->
+          <div class="slider-row">
+            <div class="label-line">
+              <span class="lbl">보유 고객사 수</span>
+              <span class="val" id="valCustomers">10<span style="font-size:.75rem; color:var(--sub); font-weight:400;"> 개사</span></span>
+            </div>
+            <input type="range" id="sliderCustomers" min="1" max="100" value="10" oninput="updateCalc()" />
+            <div class="d-flex justify-content-between" style="font-size:.68rem; color:var(--sub); margin-top:.3rem;">
+              <span>1개사</span><span>100개사</span>
+            </div>
+          </div>
+
+          <!-- 슬라이더 2: 고객사당 서버 대수 -->
+          <div class="slider-row">
+            <div class="label-line">
+              <span class="lbl">고객사당 평균 수거 서버 대수</span>
+              <span class="val" id="valServers">8<span style="font-size:.75rem; color:var(--sub); font-weight:400;"> 대</span></span>
+            </div>
+            <input type="range" id="sliderServers" min="1" max="50" value="8" oninput="updateCalc()" />
+            <div class="d-flex justify-content-between" style="font-size:.68rem; color:var(--sub); margin-top:.3rem;">
+              <span>1대</span><span>50대</span>
+            </div>
+          </div>
+
+          <!-- 서버 등급 선택 -->
+          <div class="slider-row">
+            <div class="label-line">
+              <span class="lbl">평균 서버 단가</span>
+              <span id="gradePrice" style="font-size:.82rem; color:var(--sub);">대당 700,000원</span>
+            </div>
+            <div class="grade-select" id="gradeSelect">
+              <div class="grade-btn" data-price="300000" onclick="selectGrade(this)">
+                <div style="font-weight:700; margin-bottom:.2rem;">보급형</div>
+                <div style="font-size:.7rem;">30만원</div>
+              </div>
+              <div class="grade-btn active" data-price="700000" onclick="selectGrade(this)">
+                <div style="font-weight:700; margin-bottom:.2rem;">중급형</div>
+                <div style="font-size:.7rem;">70만원</div>
+              </div>
+              <div class="grade-btn" data-price="1500000" onclick="selectGrade(this)">
+                <div style="font-weight:700; margin-bottom:.2rem;">엔터프라이즈</div>
+                <div style="font-size:.7rem;">150만원</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 파트너 등급 선택 -->
+          <div class="slider-row">
+            <div class="label-line">
+              <span class="lbl">파트너 등급</span>
+              <span id="tierLabel" style="font-size:.82rem; color:var(--sub);">브론즈 · 5%</span>
+            </div>
+            <div class="grade-select" id="tierSelect">
+              <div class="tier-btn active" data-tier="bronze" data-rate="0.05" onclick="selectTier(this)">
+                <div class="tier-name">🥉 브론즈</div>
+                <div class="tier-rate">5%</div>
+              </div>
+              <div class="tier-btn" data-tier="silver" data-rate="0.07" onclick="selectTier(this)">
+                <div class="tier-name">🥈 실버</div>
+                <div class="tier-rate">7%</div>
+              </div>
+              <div class="tier-btn" data-tier="gold" data-rate="0.09" onclick="selectTier(this)">
+                <div class="tier-name">🥇 골드</div>
+                <div class="tier-rate">9%</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 결과 -->
+          <div class="result-box">
+            <div class="result-label">예상 연간 수수료 수익</div>
+            <div class="result-num" id="resultAnnual">28,000,000원</div>
+            <div class="result-sub" id="resultSub">수수료율 5% (브론즈) 기준 · 고객사당 1회 처리 시</div>
+          </div>
+          <div class="result-row">
+            <div class="result-mini">
+              <div class="mn" id="resultPerDeal">35,000원</div>
+              <div class="ml">건당 수수료</div>
+            </div>
+            <div class="result-mini">
+              <div class="mn" id="resultTotal">10개사</div>
+              <div class="ml">처리 고객사 수</div>
+            </div>
+            <div class="result-mini">
+              <div class="mn" id="resultMonthly">2,333,333원</div>
+              <div class="ml">월 환산 수익</div>
+            </div>
+          </div>
+
+          <p style="font-size:.72rem; color:var(--sub); margin:1rem 0 0; line-height:1.6;">
+            * 실제 수수료는 계약 조건·서버 상태·매각 성사 여부에 따라 달라질 수 있습니다.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- 스탯 바 -->
+<div class="stat-bar">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-6 col-md-3 stat-item">
+        <div class="num">₩0</div>
+        <div class="lbl">딜러 초기 투자</div>
+      </div>
+      <div class="col-6 col-md-3 stat-item">
+        <div class="num">5~9%</div>
+        <div class="lbl">파트너 등급별 수수료율</div>
+      </div>
+      <div class="col-6 col-md-3 stat-item">
+        <div class="num">100%</div>
+        <div class="lbl">수거·검수 WM 전담</div>
+      </div>
+      <div class="col-6 col-md-3 stat-item">
+        <div class="num">자동</div>
+        <div class="lbl">수수료 정산</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 파트너 등급표 -->
+<section class="py-5" style="background:var(--bg); border-bottom:1px solid var(--border);">
+  <div class="container">
+    <div class="text-center mb-2">
+      <div class="sec-label">PARTNER TIER</div>
+      <h2 class="sec-title">파트너 등급 수수료</h2>
+      <p class="sec-sub" style="max-width:480px; margin-inline:auto;">
+        매각 금액(매입가) 기준으로 딜러 수수료가 정산됩니다.<br>
+        처리 실적이 쌓이면 등급이 올라갑니다.
+      </p>
+    </div>
+    <div class="tier-table-row">
+
+      <!-- 브론즈 -->
+      <div class="tier-col bronze">
+        <div class="tier-badge">🥉 BRONZE</div>
+        <div class="rate">5%</div>
+        <div class="rate-label">매입금액 기준</div>
+        <ul>
+          <li><i class="bi bi-check2 text-success"></i>파트너 가입 즉시 적용</li>
+          <li><i class="bi bi-check2 text-success"></i>실적 조건 없음</li>
+          <li><i class="bi bi-check2 text-success"></i>딜러 대시보드 제공</li>
+          <li><i class="bi bi-check2 text-success"></i>파기 인증서 발행</li>
+          <li><i class="bi bi-dash" style="color:var(--sub);"></i>전담 매니저 없음</li>
+        </ul>
+      </div>
+
+      <!-- 실버 -->
+      <div class="tier-col silver">
+        <div class="tier-badge">🥈 SILVER</div>
+        <div class="rate">7%</div>
+        <div class="rate-label">매입금액 기준</div>
+        <ul>
+          <li><i class="bi bi-check2 text-success"></i>연간 누적 처리 5건 이상</li>
+          <li><i class="bi bi-check2 text-success"></i>전담 매니저 배정</li>
+          <li><i class="bi bi-check2 text-success"></i>딜러 대시보드 제공</li>
+          <li><i class="bi bi-check2 text-success"></i>파기 인증서 발행</li>
+          <li><i class="bi bi-check2 text-success"></i>우선 수거 일정 배정</li>
+        </ul>
+      </div>
+
+      <!-- 골드 -->
+      <div class="tier-col gold">
+        <div class="tier-badge">🥇 GOLD</div>
+        <div class="rate">9%</div>
+        <div class="rate-label">매입금액 기준</div>
+        <ul>
+          <li><i class="bi bi-check2 text-success"></i>연간 누적 처리 20건 이상</li>
+          <li><i class="bi bi-check2 text-success"></i>전담 매니저 배정</li>
+          <li><i class="bi bi-check2 text-success"></i>딜러 대시보드 제공</li>
+          <li><i class="bi bi-check2 text-success"></i>파기 인증서 발행</li>
+          <li><i class="bi bi-check2 text-success"></i>최우선 수거 일정 배정</li>
+        </ul>
+      </div>
+
+    </div>
+    <p style="text-align:center; font-size:.75rem; color:var(--sub); margin-top:1.2rem;">
+      * 등급 산정 기준 및 수수료율은 계약 조건에 따라 조정될 수 있습니다.
+    </p>
+  </div>
+</section>
+
+<!-- 페인포인트 → 해결 -->
+<section class="py-5" style="background:var(--bg);">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="sec-label">THE PROBLEM WE SOLVE</div>
+      <h2 class="sec-title">호스팅업체가 겪는 3가지 문제</h2>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="pain-card">
+          <div class="pain-icon"><i class="bi bi-box-seam"></i></div>
+          <h6>랙 공간을 점유하는 구형 서버</h6>
+          <p>고객사가 방치해 둔 노후 장비가 귀중한 랙 유닛을 차지하고 있습니다. 철거를 요청하기도 눈치 보입니다.</p>
+          <div class="pain-resolve"><i class="bi bi-arrow-right-circle-fill"></i> 수거를 제안하면 공간이 확보됩니다</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="pain-card">
+          <div class="pain-icon"><i class="bi bi-graph-down-arrow"></i></div>
+          <h6>고객사 관리 외 추가 수익이 없다</h6>
+          <p>관리비·전기료 마진은 한계가 있습니다. 기존 고객사 기반으로 추가 매출을 올릴 구조가 필요합니다.</p>
+          <div class="pain-resolve"><i class="bi bi-arrow-right-circle-fill"></i> 중계만으로 수수료 수익이 생깁니다</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="pain-card">
+          <div class="pain-icon"><i class="bi bi-file-earmark-x"></i></div>
+          <h6>고객사가 데이터 파기를 못 믿는다</h6>
+          <p>서버를 처분하고 싶어도 데이터 유출이 걱정돼 결정을 못 하는 고객사가 많습니다. 공인 절차가 없기 때문입니다.</p>
+          <div class="pain-resolve"><i class="bi bi-arrow-right-circle-fill"></i> 공인 파기 인증서로 신뢰를 드립니다</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 대시보드 미리보기 -->
+<section class="py-5" style="background:var(--bg2); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+  <div class="container">
+    <div class="row g-5 align-items-center">
+      <div class="col-lg-5">
+        <div class="sec-label">PARTNER DASHBOARD</div>
+        <h2 class="sec-title">고객사 현황을<br>한 화면에서</h2>
+        <p class="sec-sub">딜러 대시보드에서 연결된 고객사별 수거 진행 상태, 예상 단가, 정산 완료 수수료를 실시간으로 조회합니다.</p>
+        <ul style="list-style:none; padding:0; margin-top:1.5rem;">
+          <li style="display:flex; align-items:center; gap:.7rem; margin-bottom:.9rem; font-size:.88rem; color:var(--sub);">
+            <i class="bi bi-check-circle-fill" style="color:var(--orange); flex-shrink:0;"></i>
+            고객사별 신청·수거·정산 현황
+          </li>
+          <li style="display:flex; align-items:center; gap:.7rem; margin-bottom:.9rem; font-size:.88rem; color:var(--sub);">
+            <i class="bi bi-check-circle-fill" style="color:var(--orange); flex-shrink:0;"></i>
+            건별 딜러 수수료 자동 산정
+          </li>
+          <li style="display:flex; align-items:center; gap:.7rem; margin-bottom:.9rem; font-size:.88rem; color:var(--sub);">
+            <i class="bi bi-check-circle-fill" style="color:var(--orange); flex-shrink:0;"></i>
+            정산 완료 내역 및 지급 확인
+          </li>
+          <li style="display:flex; align-items:center; gap:.7rem; font-size:.88rem; color:var(--sub);">
+            <i class="bi bi-check-circle-fill" style="color:var(--orange); flex-shrink:0;"></i>
+            파기 인증서 고객사 직접 발행
+          </li>
+        </ul>
+      </div>
+      <div class="col-lg-7">
+        <div class="preview-wrap">
+          <div class="preview-topbar">
+            <div class="dot" style="background:#ef4444;"></div>
+            <div class="dot" style="background:#f59e0b;"></div>
+            <div class="dot" style="background:#22c55e;"></div>
+            <span style="font-size:.72rem; color:var(--sub); margin-left:.8rem;">IDC브릿지 파트너 — 딜러 대시보드</span>
+          </div>
+          <div class="preview-body">
+            <div class="prev-stat-row">
+              <div class="prev-stat"><div class="pnum">3</div><div class="plbl">처리 중인 건</div></div>
+              <div class="prev-stat"><div class="pnum">₩320K</div><div class="plbl">이번 달 수수료</div></div>
+              <div class="prev-stat"><div class="pnum">12</div><div class="plbl">연결 고객사</div></div>
+              <div class="prev-stat"><div class="pnum">₩1.8M</div><div class="plbl">올해 누계</div></div>
+            </div>
+            <div style="font-size:.7rem; color:var(--sub); margin-bottom:.5rem; letter-spacing:.4px;">최근 신청 현황</div>
+            <div class="prev-row">
+              <div>
+                <div class="co">카카오 (주)</div>
+                <div class="info">Dell R740 × 8대 · 2025.06.18 신청</div>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge-g">정산완료</span>
+                <span class="fee-line">+320,000원</span>
+              </div>
+            </div>
+            <div class="prev-row">
+              <div>
+                <div class="co">넥슨코리아</div>
+                <div class="info">HP DL380 × 6대 · 2025.06.22 신청</div>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge-o">검수중</span>
+                <span style="font-size:.82rem; color:var(--sub);">산정 중</span>
+              </div>
+            </div>
+            <div class="prev-row">
+              <div>
+                <div class="co">스타트업 A</div>
+                <div class="info">Lenovo SR650 × 3대 · 2025.06.24 신청</div>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge-b">수거예정</span>
+                <span style="font-size:.82rem; color:var(--sub);">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 프로세스 -->
+<section class="py-5" style="background:var(--bg);">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="sec-label">HOW IT WORKS</div>
+      <h2 class="sec-title">딜러의 역할은 딱 하나</h2>
+      <p class="sec-sub" style="max-width:440px; margin-inline:auto;">나머지는 전부 WorldMemory가 합니다.</p>
+    </div>
+    <div class="row g-0">
+      <div class="col text-center process-step position-relative">
+        <div class="ps-num">1</div>
+        <div class="ps-title">고객사 연결</div>
+        <div class="ps-desc">플랫폼에<br>고객사 계정 등록</div>
+        <div class="ps-arrow d-none d-md-block"></div>
+      </div>
+      <div class="col text-center process-step position-relative">
+        <div class="ps-num">2</div>
+        <div class="ps-title">신청 접수</div>
+        <div class="ps-desc">고객사가<br>온라인 신청 제출</div>
+        <div class="ps-arrow d-none d-md-block"></div>
+      </div>
+      <div class="col text-center process-step position-relative">
+        <div class="ps-num">3</div>
+        <div class="ps-title">WM 전담</div>
+        <div class="ps-desc">수거·검수·파기<br>WorldMemory 처리</div>
+        <div class="ps-arrow d-none d-md-block"></div>
+      </div>
+      <div class="col text-center process-step position-relative">
+        <div class="ps-num">4</div>
+        <div class="ps-title">정산 확정</div>
+        <div class="ps-desc">수수료 자동<br>산정 완료</div>
+        <div class="ps-arrow d-none d-md-block"></div>
+      </div>
+      <div class="col text-center process-step">
+        <div class="ps-num" style="background:var(--orange); border-color:var(--orange); color:#fff;">5</div>
+        <div class="ps-title" style="color:var(--orange);">수수료 수령</div>
+        <div class="ps-desc">딜러 계정에<br>지급 완료</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <div style="display:inline-block; background:rgba(249,115,22,.1); border:1px solid rgba(249,115,22,.25); border-radius:2rem; padding:.3rem 1rem; font-size:.75rem; color:var(--orange); font-weight:700; margin-bottom:1.2rem; letter-spacing:.6px;">
+      파트너 신청
+    </div>
+    <h2>지금 딜러 계정을 신청하세요</h2>
+    <p>고객사 등록 즉시 수익 파이프라인이 시작됩니다.</p>
+    <div class="mt-4">
+      <a href="/login" class="btn-cta" style="padding:.75rem 2.5rem; font-size:1rem; border-radius:.6rem; text-decoration:none;">
+        <i class="bi bi-box-arrow-in-right me-2"></i>파트너 로그인
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <span style="color:rgba(255,255,255,.6); font-weight:700;">IDC브릿지</span> — WorldMemory 파트너 프로그램 · 본 페이지는 딜러 파트너 전용입니다
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  let selectedPrice = 700000;
+  let selectedRate  = 0.05;
+
+  const tierNames = { '0.05':'브론즈', '0.07':'실버', '0.09':'골드' };
+
+  function selectGrade(el) {
+    document.querySelectorAll('.grade-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    selectedPrice = parseInt(el.dataset.price);
+    const labels = {300000:'대당 300,000원', 700000:'대당 700,000원', 1500000:'대당 1,500,000원'};
+    document.getElementById('gradePrice').textContent = labels[selectedPrice];
+    updateCalc();
+  }
+
+  function selectTier(el) {
+    document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    selectedRate = parseFloat(el.dataset.rate);
+    const pct = Math.round(selectedRate * 100);
+    const name = tierNames[String(selectedRate)] || '';
+    document.getElementById('tierLabel').textContent = `${name} · ${pct}%`;
+    updateCalc();
+  }
+
+  function fmt(n) {
+    return Math.round(n).toLocaleString('ko-KR') + '원';
+  }
+
+  let animFrame = null;
+  function animateTo(el, target) {
+    const start = parseInt(el.dataset.current || 0);
+    const delta = target - start;
+    const dur = 400;
+    const t0 = performance.now();
+    if (animFrame) cancelAnimationFrame(animFrame);
+    function step(t) {
+      const p = Math.min((t - t0) / dur, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      const cur = Math.round(start + delta * ease);
+      el.textContent = Math.round(cur).toLocaleString('ko-KR') + '원';
+      el.dataset.current = cur;
+      if (p < 1) animFrame = requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function updateCalc() {
+    const c = parseInt(document.getElementById('sliderCustomers').value);
+    const s = parseInt(document.getElementById('sliderServers').value);
+    document.getElementById('valCustomers').innerHTML = `${c}<span style="font-size:.75rem; color:var(--sub); font-weight:400;"> 개사</span>`;
+    document.getElementById('valServers').innerHTML = `${s}<span style="font-size:.75rem; color:var(--sub); font-weight:400;"> 대</span>`;
+
+    const perDeal = s * selectedPrice * selectedRate;
+    const annual  = c * perDeal;
+    const monthly = annual / 12;
+
+    animateTo(document.getElementById('resultAnnual'), annual);
+
+    document.getElementById('resultPerDeal').textContent = fmt(perDeal);
+    document.getElementById('resultTotal').textContent = c + '개사';
+    document.getElementById('resultMonthly').textContent = fmt(monthly);
+    const pct  = Math.round(selectedRate * 100);
+    const name = tierNames[String(selectedRate)] || '';
+    document.getElementById('resultSub').textContent = `수수료율 ${pct}% (${name}) 기준 · 고객사당 1회 처리 시`;
+  }
+
+  // 슬라이더 채우기 효과
+  function updateSliderFill(slider) {
+    const min = slider.min || 0, max = slider.max || 100;
+    const pct = ((slider.value - min) / (max - min)) * 100;
+    slider.style.background = `linear-gradient(90deg, var(--orange) ${pct}%, var(--bg3) ${pct}%)`;
+  }
+  document.querySelectorAll('input[type=range]').forEach(s => {
+    s.addEventListener('input', () => updateSliderFill(s));
+    updateSliderFill(s);
+  });
+
+  updateCalc();
+</script>
+</body>
+</html>

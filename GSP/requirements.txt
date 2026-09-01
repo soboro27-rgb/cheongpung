@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+starlette
+jinja2
+python-multipart
+itsdangerous
+bcrypt
+openpyxl
+psycopg2-binary

@@ -1,0 +1,39 @@
+{% extends "wm/base_wm.html" %}
+{% block title %}수정이력 — 신청 #{{ app.id }}{% endblock %}
+{% block page_title %}<i class="bi bi-clock-history me-2"></i>수정이력 #{{ app.id }}{% endblock %}
+{% block breadcrumb %}
+  <a href="/wm/applications">신청 목록</a> /
+  <a href="/wm/applications/{{ app.id }}">#{{ app.id }}</a> / 수정이력
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header fw-semibold small">
+    단가확정 후 수정이력 ({{ logs|length }}건)
+    <a href="/wm/applications/{{ app.id }}" class="btn btn-sm btn-outline-secondary py-0 ms-2">← 신청 상세</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr><th>자산</th><th>필드</th><th>변경 전</th><th>변경 후</th><th>수정자</th><th>수정 일시</th></tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td>
+            <small class="text-muted">{{ log.asset.manufacturer }} {{ log.asset.model }}</small>
+          </td>
+          <td><code>{{ log.field_name }}</code></td>
+          <td class="text-danger">{{ log.old_value or '-' }}</td>
+          <td class="text-success fw-bold">{{ log.new_value or '-' }}</td>
+          <td>{{ log.user.name if log.user else '-' }}</td>
+          <td class="text-muted">{{ log.changed_at.strftime('%Y.%m.%d %H:%M:%S') }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">수정이력이 없습니다.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

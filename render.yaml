@@ -1,22 +1,11 @@
 services:
   - type: web
-    name: it-asset-platform
-    env: python
-    rootDir: it-asset-platform
-    buildCommand: pip install -r requirements.txt
-    startCommand: python init_data.py && uvicorn main:app --host 0.0.0.0 --port $PORT
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: mgit-db
-          property: connectionString
-      - key: SECRET_KEY
-        generateValue: true
-
-  - type: web
     name: dolbom-it
     env: node
     rootDir: dolbom-it
+    buildFilter:
+      paths:
+        - dolbom-it/**
     buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy && npm run build
     startCommand: npm start
     domains:
@@ -43,6 +32,9 @@ services:
     name: idc-server-collect
     env: python
     rootDir: idc-server-collect
+    buildFilter:
+      paths:
+        - idc-server-collect/**
     buildCommand: pip install -r requirements.txt
     startCommand: bash start.sh
     envVars:
@@ -56,9 +48,31 @@ services:
         value: "1"
 
   - type: web
+    name: gsp
+    env: python
+    rootDir: GSP
+    buildFilter:
+      paths:
+        - GSP/**
+    buildCommand: pip install -r requirements.txt
+    startCommand: bash start.sh
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gsp-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHONUNBUFFERED
+        value: "1"
+
+  - type: web
     name: kakao-skill-server
     env: node
     rootDir: kakao-skill-server
+    buildFilter:
+      paths:
+        - kakao-skill-server/**
     buildCommand: npm install
     startCommand: node server.js
     envVars:
@@ -75,6 +89,9 @@ services:
     name: nexon-inspection
     env: node
     rootDir: nexon
+    buildFilter:
+      paths:
+        - nexon/**
     buildCommand: npm install
     startCommand: node server.js
     envVars:
@@ -89,6 +106,9 @@ services:
     name: inspect01
     env: node
     rootDir: inspect01
+    buildFilter:
+      paths:
+        - inspect01/**
     buildCommand: npm install && npx prisma generate && npx prisma migrate deploy && npm run seed && npm run build
     startCommand: npm start
     envVars:
@@ -102,10 +122,6 @@ services:
         value: production
 
 databases:
-  - name: mgit-db
-    databaseName: mgit
-    user: mgit_user
-
   - name: dolbom_db_ulth
     databaseName: dolbom_db_ulth
     user: dolbom_db_ulth_user
@@ -113,6 +129,11 @@ databases:
   - name: idc-db
     databaseName: idc_collect
     user: idc_user
+    plan: free
+
+  - name: gsp-db
+    databaseName: gsp
+    user: gsp_user
     plan: free
 
   - name: inspect01-db

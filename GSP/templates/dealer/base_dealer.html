@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block sidebar_nav %}
+<div class="nav-section">대시보드</div>
+<a href="/dealer/dashboard" class="nav-link {% if request.url.path == '/dealer/dashboard' %}active{% endif %}">
+  <i class="bi bi-speedometer2"></i> 대시보드
+</a>
+<div class="nav-section">신청 관리</div>
+<a href="/dealer/applications" class="nav-link {% if '/dealer/applications' in request.url.path %}active{% endif %}">
+  <i class="bi bi-inbox"></i> 신청 목록
+</a>
+<div class="nav-section">고객사</div>
+<a href="/dealer/customers" class="nav-link {% if '/dealer/customers' in request.url.path %}active{% endif %}">
+  <i class="bi bi-building-fill"></i> 고객사 관리
+</a>
+<div class="nav-section">정산</div>
+<a href="/dealer/settlements" class="nav-link {% if '/dealer/settlements' in request.url.path %}active{% endif %}">
+  <i class="bi bi-cash-coin"></i> 정산 현황
+</a>
+{% endblock %}

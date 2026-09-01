@@ -1,0 +1,142 @@
+{% extends "customer/base_customer.html" %}
+{% block title %}신청 #{{ app.id }} 상세{% endblock %}
+{% block page_title %}<i class="bi bi-file-text me-2"></i>신청 #{{ app.id }}{% endblock %}
+{% block breadcrumb %}<a href="/customer/applications">신청 목록</a> / #{{ app.id }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-header fw-semibold small d-flex justify-content-between">
+        신청 정보
+        <span class="badge bg-{{ STATUS_COLOR.get(app.status.value,'secondary') }}">
+          {{ STATUS_LABEL.get(app.status.value, app.status.value) }}
+        </span>
+      </div>
+      <div class="card-body small">
+        <dl class="row mb-0">
+          <dt class="col-5 text-muted">IDC 센터</dt><dd class="col-7">{{ app.idc_center.name if app.idc_center else '-' }}</dd>
+          <dt class="col-5 text-muted">현장 담당자</dt><dd class="col-7">{{ app.contact_name or '-' }}</dd>
+          <dt class="col-5 text-muted">연락처</dt><dd class="col-7">{{ app.contact_phone or '-' }}</dd>
+          <dt class="col-5 text-muted">신청일</dt><dd class="col-7">{{ app.submitted_at.strftime('%Y.%m.%d') if app.submitted_at else '-' }}</dd>
+          <dt class="col-5 text-muted">서버 수량</dt><dd class="col-7 fw-bold">{{ app.assets|length }}대</dd>
+        </dl>
+        {% if app.notes %}<hr class="my-2"/><p class="small text-muted mb-0">{{ app.notes }}</p>{% endif %}
+      </div>
+    </div>
+
+    {% if app.schedule %}
+    <div class="card mb-3">
+      <div class="card-header fw-semibold small">배송일정</div>
+      <div class="card-body small">
+        <dl class="row mb-0">
+          <dt class="col-5 text-muted">일정</dt><dd class="col-7">{{ app.schedule.visit_date }} {{ app.schedule.visit_time }}</dd>
+          <dt class="col-5 text-muted">수거기사</dt><dd class="col-7">{{ app.schedule.collector_name or '-' }}</dd>
+          <dt class="col-5 text-muted">연락처</dt><dd class="col-7">{{ app.schedule.collector_phone or '-' }}</dd>
+        </dl>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if app.settlement %}
+    <div class="card mb-3">
+      <div class="card-header fw-semibold small">정산 정보</div>
+      <div class="card-body small">
+        <dl class="row mb-0">
+          <dt class="col-6 text-muted">지급 금액</dt>
+          <dd class="col-6 fw-bold text-success">{{ '{:,}'.format(app.settlement.customer_amount|int) }}원</dd>
+        </dl>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- 단가확정 시 승인/반려 -->
+    {% if has_estimated or app.status.value in ('quoted','approved','wiped','settled','closed') %}
+    <div class="d-grid mb-3">
+      <a href="/customer/applications/{{ app.id }}/quotation" target="_blank"
+         class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-file-earmark-text me-1"></i>견적서 출력
+      </a>
+    </div>
+    {% endif %}
+
+    {% if app.status.value == 'quoted' %}
+    <div class="card border-warning">
+      <div class="card-header bg-warning bg-opacity-25 fw-semibold small">
+        <i class="bi bi-exclamation-triangle me-1"></i>단가 확정 — 승인/반려 필요
+      </div>
+      <div class="card-body d-grid gap-2">
+        <form method="post" action="/customer/applications/{{ app.id }}/approve">
+          <button class="btn btn-success w-100 btn-sm">
+            <i class="bi bi-check-circle me-1"></i>승인
+          </button>
+        </form>
+        <button class="btn btn-outline-danger btn-sm w-100" data-bs-toggle="collapse" data-bs-target="#rejectForm">
+          <i class="bi bi-x-circle me-1"></i>반려
+        </button>
+        <div class="collapse" id="rejectForm">
+          <form method="post" action="/customer/applications/{{ app.id }}/reject">
+            <textarea name="reject_reason" class="form-control form-control-sm mb-2" rows="2" placeholder="반려 사유"></textarea>
+            <button class="btn btn-danger btn-sm w-100">반려 확정</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header fw-semibold small">서버 자산 목록 ({{ app.assets|length }}대)</div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          {% set confirmed_statuses = ('quoted','approved','wiped','settled','closed') %}
+          {% set show_estimated = has_estimated and app.status.value not in confirmed_statuses %}
+          {% set show_confirmed = app.status.value in confirmed_statuses %}
+          <thead>
+            <tr>
+              <th>#</th><th>제조사/모델</th><th>CPU</th><th>RAM / 저장장치</th>
+              <th>수량</th><th>등급</th>
+              {% if show_estimated %}<th class="text-end">예상단가</th>{% endif %}
+              {% if show_confirmed %}<th class="text-end">확정단가</th>{% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in app.assets %}
+            <tr>
+              <td class="text-muted">{{ loop.index }}</td>
+              <td>
+                <div class="fw-semibold">{{ a.manufacturer }} {{ a.model }}</div>
+                <small class="text-muted">{{ a.form_factor or '' }} / {{ a.asset_tag or '' }}</small>
+              </td>
+              <td class="small">{{ a.cpu_count }}×{{ a.cpu_model or '-' }}</td>
+              <td class="small">
+                <div>{{ a.ram_total_gb }}GB</div>
+                {% if a.storage_config %}<div class="text-muted"><i class="bi bi-hdd me-1"></i>{{ a.storage_config }}</div>{% endif %}
+              </td>
+              <td>{{ a.quantity }}</td>
+              <td>
+                <span class="badge {% if a.condition_grade == '상' %}bg-success{% elif a.condition_grade == '중' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                  {{ a.condition_grade }}
+                </span>
+              </td>
+              {% if show_estimated %}
+              <td class="text-end fw-bold text-primary">
+                {% set net = asset_net_prices[a.id]['estimated'] %}
+                {% if net > 0 %}{{ '{:,}'.format(net|int) }}원{% else %}-{% endif %}
+              </td>
+              {% endif %}
+              {% if show_confirmed %}
+              <td class="text-end fw-bold">{{ '{:,}'.format(asset_net_prices[a.id]['confirmed']|int) }}원</td>
+              {% endif %}
+            </tr>
+            {% else %}
+            <tr><td colspan="{{ 6 + (1 if show_estimated else 0) + (1 if show_confirmed else 0) }}" class="text-center text-muted py-3">자산 없음</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

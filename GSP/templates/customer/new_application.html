@@ -1,0 +1,497 @@
+{% extends "customer/base_customer.html" %}
+{% block title %}새 신청서{% endblock %}
+{% block page_title %}<i class="bi bi-plus-circle me-2"></i>서버 수거 신청{% endblock %}
+{% block breadcrumb %}<a href="/customer/applications">신청 목록</a> / 새 신청서{% endblock %}
+
+{% block content %}
+<form method="post" action="/customer/applications/new" id="appForm">
+  <div class="card mb-3">
+    <div class="card-header fw-semibold small">신청 기본 정보</div>
+    <div class="card-body row g-3">
+      <div class="col-md-4">
+        <label class="form-label small">현장 담당자</label>
+        <input type="text" name="contact_name" class="form-control form-control-sm"
+          value="{{ customer.manager_name if customer else '' }}" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small">연락처</label>
+        <input type="text" name="contact_phone" class="form-control form-control-sm"
+          value="{{ customer.manager_phone if customer else '' }}" />
+      </div>
+      <div class="col-md-5">
+        <label class="form-label small">IDC 센터</label>
+        <select name="idc_center_id" class="form-select form-select-sm">
+          <option value="">기본 센터 사용</option>
+          {% for c in centers %}
+          <option value="{{ c.id }}" {% if customer and customer.default_idc_center_id == c.id %}selected{% endif %}>
+            {{ c.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12">
+        <label class="form-label small">특이사항</label>
+        <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="반출 제한, 특수 보안 절차 등"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header fw-semibold small d-flex justify-content-between align-items-center">
+      서버 자산 목록
+      <button type="button" class="btn btn-sm btn-outline-primary" onclick="addRow()">
+        <i class="bi bi-plus me-1"></i>행 추가
+      </button>
+    </div>
+    <div class="table-responsive">
+      <table class="table mb-0" id="assetTable">
+        <thead>
+          <tr>
+            <th style="width:34px">#</th>
+            <th>제조사</th>
+            <th style="min-width:150px">모델명</th>
+            <th style="width:76px">폼팩터</th>
+            <th style="width:60px">CPU수</th>
+            <th>CPU모델</th>
+            <th style="width:120px">RAM 구성</th>
+            <th style="width:140px">스토리지 구성</th>
+            <th>S/N</th>
+            <th>자산번호</th>
+            <th>랙위치</th>
+            <th style="width:54px">수량</th>
+            <th style="width:54px">등급</th>
+            <th style="width:44px">파기</th>
+            <th style="width:100px;color:#1d7a3e">예상단가</th>
+            <th style="width:34px"></th>
+          </tr>
+        </thead>
+        <tbody id="assetRows"></tbody>
+        <tfoot id="estTotalRow" style="display:none">
+          <tr style="background:#f0faf0">
+            <td colspan="14" class="text-end fw-semibold pe-2" style="font-size:13px;color:#555">가견적 합계</td>
+            <td id="estTotalCell" style="font-size:14px;font-weight:700;color:#1d7a3e;white-space:nowrap">0원</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="card-footer bg-white py-2">
+      <small class="text-muted"><i class="bi bi-info-circle me-1"></i>모델명 입력 시 시세표에 등록된 모델이면 예상단가가 자동으로 표시됩니다. 실제 매입가는 수거 후 검수를 거쳐 확정됩니다.</small>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2 justify-content-end">
+    <a href="/customer/applications" class="btn btn-outline-secondary">취소</a>
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-send me-1"></i>신청서 제출
+    </button>
+  </div>
+</form>
+
+<!-- RAM 구성 모달 -->
+<div class="modal fade" id="ramModal" tabindex="-1">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title"><i class="bi bi-memory me-2"></i>RAM 구성 입력</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-2">서버에 장착된 DIMM 용량별로 행을 추가하세요.</p>
+        <table class="table table-sm mb-2">
+          <thead class="table-light">
+            <tr>
+              <th>DIMM 용량</th>
+              <th style="width:90px">수량 (개)</th>
+              <th style="width:34px"></th>
+            </tr>
+          </thead>
+          <tbody id="ramRowBody"></tbody>
+        </table>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addRamRow()">
+          <i class="bi bi-plus me-1"></i>DIMM 행 추가
+        </button>
+        <div class="mt-2 p-2 bg-light rounded small">
+          총 RAM: <strong><span id="ramTotal">0</span> GB</strong>
+        </div>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="confirmRam()">확인</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 스토리지 구성 모달 -->
+<div class="modal fade" id="storageModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title"><i class="bi bi-hdd-stack me-2"></i>저장장치 구성 입력</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-light border small py-2 mb-3">
+          <i class="bi bi-info-circle me-1 text-primary"></i>
+          <strong>인터페이스</strong>(SAS/SATA/NVMe)와 <strong>매체</strong>(HDD/SSD)를 구분하여 입력하세요.
+          SAS 2.4TB는 SAS HDD, NVMe는 항상 SSD입니다.
+        </div>
+        <table class="table table-sm mb-2">
+          <thead class="table-light">
+            <tr>
+              <th style="width:100px">인터페이스</th>
+              <th style="width:80px">매체</th>
+              <th style="width:90px">용량</th>
+              <th style="width:64px">단위</th>
+              <th style="width:64px">수량</th>
+              <th style="width:34px"></th>
+            </tr>
+          </thead>
+          <tbody id="storageRowBody"></tbody>
+        </table>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addStorageRow()">
+          <i class="bi bi-plus me-1"></i>드라이브 추가
+        </button>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">취소</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="confirmStorage()">확인</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let rowCount = 0;
+let activeRowIdx = null;
+
+// ─── 서버 행 추가 ───────────────────────────────────────
+function addRow() {
+  const tbody = document.getElementById('assetRows');
+  const i = rowCount++;
+  const tr = document.createElement('tr');
+  tr.id = `row_${i}`;
+  tr.innerHTML = `
+    <td class="text-muted small align-middle">${rowCount}</td>
+    <td><input type="text" name="manufacturer_${i}" class="form-control form-control-sm" placeholder="Dell" /></td>
+    <td style="position:relative">
+      <input type="text" name="model_${i}" id="model_${i}" class="form-control form-control-sm" placeholder="PowerEdge R740"
+             autocomplete="off" oninput="onModelInput(this,${i})" onblur="hideDropdown(${i})" />
+      <input type="hidden" name="unit_price_estimated_${i}" id="est_price_${i}" value="0" />
+      <div id="ac_drop_${i}" style="display:none;position:absolute;z-index:999;background:#fff;border:1px solid #dee2e6;border-radius:6px;width:260px;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15);top:100%;left:0"></div>
+    </td>
+    <td>
+      <select name="form_factor_${i}" class="form-select form-select-sm">
+        <option value="">-</option>
+        <option value="1U">1U</option><option value="2U">2U</option>
+        <option value="4U">4U</option><option value="타워">타워</option>
+        <option value="블레이드">블레이드</option>
+      </select>
+    </td>
+    <td><input type="number" name="cpu_count_${i}" class="form-control form-control-sm" value="2" min="1" /></td>
+    <td><input type="text" name="cpu_model_${i}" class="form-control form-control-sm" placeholder="Xeon Gold 6230" /></td>
+    <td>
+      <input type="hidden" name="ram_total_gb_${i}" id="ram_total_${i}" value="0" />
+      <input type="hidden" name="ram_config_${i}" id="ram_config_${i}" value="" />
+      <button type="button" class="btn btn-sm btn-outline-secondary w-100 text-start"
+        id="ram_btn_${i}" onclick="openRamModal(${i})">
+        <i class="bi bi-memory me-1 text-muted"></i><span id="ram_label_${i}" class="text-muted small">미입력</span>
+      </button>
+    </td>
+    <td>
+      <input type="hidden" name="storage_config_${i}" id="storage_config_${i}" value="" />
+      <button type="button" class="btn btn-sm btn-outline-secondary w-100 text-start"
+        id="storage_btn_${i}" onclick="openStorageModal(${i})">
+        <i class="bi bi-hdd me-1 text-muted"></i><span id="storage_label_${i}" class="text-muted small">미입력</span>
+      </button>
+    </td>
+    <td><input type="text" name="serial_number_${i}" class="form-control form-control-sm" placeholder="SN123456" /></td>
+    <td><input type="text" name="asset_tag_${i}" class="form-control form-control-sm" placeholder="자산번호" /></td>
+    <td><input type="text" name="rack_location_${i}" class="form-control form-control-sm" placeholder="A-01-U10" /></td>
+    <td><input type="number" name="quantity_${i}" class="form-control form-control-sm" value="1" min="1" oninput="updateEstCell(${i});updateEstTotal()" /></td>
+    <td>
+      <select name="condition_grade_${i}" class="form-select form-select-sm">
+        <option value="상">상</option><option value="중" selected>중</option><option value="하">하</option>
+      </select>
+    </td>
+    <td class="text-center align-middle">
+      <input type="checkbox" name="data_wipe_required_${i}" checked class="form-check-input" />
+    </td>
+    <td id="est_cell_${i}" style="font-size:12px;color:#1d7a3e;font-weight:600;white-space:nowrap">-</td>
+    <td>
+      <button type="button" class="btn btn-sm btn-outline-danger py-0" onclick="removeRow(this)">
+        <i class="bi bi-trash"></i>
+      </button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function removeRow(btn) {
+  btn.closest('tr').remove();
+  updateEstTotal();
+}
+
+// ─── 시세표 자동완성 (모델명 입력 시 예상단가 조회) ─────
+let _acTimer = null;
+
+function onModelInput(input, idx) {
+  clearTimeout(_acTimer);
+  const q = input.value.trim();
+  if (q.length < 1) { hideDropdown(idx); clearEstCell(idx); return; }
+
+  _acTimer = setTimeout(async () => {
+    const params = new URLSearchParams({ q });
+    try {
+      const res = await fetch(`/wm/api/price-refs?${params}`);
+      const data = await res.json();
+      renderDropdown(data, idx);
+    } catch (e) {}
+  }, 200);
+}
+
+function renderDropdown(items, idx) {
+  const drop = document.getElementById(`ac_drop_${idx}`);
+  if (!drop) return;
+  if (!items || items.length === 0) { drop.style.display = 'none'; return; }
+
+  drop.innerHTML = items.map(item => `
+    <div class="ac-item" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:12px"
+         onmousedown="selectPriceRef(event,${idx},${JSON.stringify(item).replace(/"/g,'&quot;')})">
+      <div class="fw-semibold">${item.manufacturer ? item.manufacturer + ' ' : ''}${item.model_display || item.model_code}</div>
+      <div class="text-muted" style="font-size:11px">${item.spec_summary || ''}</div>
+      <div style="color:#1d7a3e;font-weight:600;font-size:11px">예상단가 ${item.base_price.toLocaleString('ko-KR')}원</div>
+    </div>
+  `).join('');
+
+  drop.querySelectorAll('.ac-item').forEach(el => {
+    el.addEventListener('mouseover', () => el.style.background = '#f0f7ff');
+    el.addEventListener('mouseout',  () => el.style.background = '');
+  });
+  drop.style.display = 'block';
+}
+
+function selectPriceRef(event, idx, item) {
+  event.preventDefault();
+  const modelInput = document.getElementById(`model_${idx}`);
+  modelInput.value = item.model_display || item.model_code;
+
+  const row = modelInput.closest('tr');
+  const mfrInput = row ? row.querySelector(`[name="manufacturer_${idx}"]`) : null;
+  if (mfrInput && !mfrInput.value && item.manufacturer) mfrInput.value = item.manufacturer;
+
+  document.getElementById(`est_price_${idx}`).value = item.base_price;
+  hideDropdown(idx);
+  updateEstCell(idx);
+  updateEstTotal();
+}
+
+function updateEstCell(idx) {
+  const price = parseFloat(document.getElementById(`est_price_${idx}`)?.value || 0);
+  const qtyInput = document.querySelector(`input[name="quantity_${idx}"]`);
+  const qty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
+  const cell = document.getElementById(`est_cell_${idx}`);
+  if (!cell) return;
+  cell.textContent = price > 0 ? `${(price * qty).toLocaleString('ko-KR')}원` : '-';
+}
+
+function updateEstTotal() {
+  let total = 0;
+  document.querySelectorAll('[id^="est_price_"]').forEach(el => {
+    const idx = el.id.replace('est_price_', '');
+    const price = parseFloat(el.value || 0);
+    if (price <= 0) return;
+    const qtyInput = document.querySelector(`input[name="quantity_${idx}"]`);
+    const qty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
+    total += price * qty;
+  });
+  const totalRow = document.getElementById('estTotalRow');
+  const totalCell = document.getElementById('estTotalCell');
+  if (total > 0) {
+    totalRow.style.display = '';
+    totalCell.textContent = total.toLocaleString('ko-KR') + '원';
+  } else {
+    totalRow.style.display = 'none';
+  }
+}
+
+function hideDropdown(idx) {
+  const drop = document.getElementById(`ac_drop_${idx}`);
+  if (drop) drop.style.display = 'none';
+}
+
+function clearEstCell(idx) {
+  const cell = document.getElementById(`est_cell_${idx}`);
+  if (cell) cell.textContent = '-';
+  const est = document.getElementById(`est_price_${idx}`);
+  if (est) est.value = 0;
+  updateEstTotal();
+}
+
+// ─── RAM 모달 ───────────────────────────────────────────
+const RAM_SIZES = [8, 16, 32, 64, 128, 256];
+
+function openRamModal(idx) {
+  activeRowIdx = idx;
+  const body = document.getElementById('ramRowBody');
+  body.innerHTML = '';
+  const existing = document.getElementById(`ram_config_${idx}`).value;
+  if (existing) {
+    existing.split(',').forEach(part => {
+      const m = part.trim().match(/^(\d+)GB×(\d+)$/);
+      if (m) addRamRow(parseInt(m[1]), parseInt(m[2]));
+      else addRamRow();
+    });
+  } else {
+    addRamRow();
+  }
+  updateRamTotal();
+  new bootstrap.Modal(document.getElementById('ramModal')).show();
+}
+
+function addRamRow(gb = 32, qty = 1) {
+  const body = document.getElementById('ramRowBody');
+  const tr = document.createElement('tr');
+  const opts = RAM_SIZES.map(s => `<option value="${s}"${s===gb?' selected':''}>${s}GB</option>`).join('');
+  tr.innerHTML = `
+    <td>
+      <select class="form-select form-select-sm ram-gb" onchange="updateRamTotal()">
+        ${opts}
+      </select>
+    </td>
+    <td><input type="number" class="form-control form-control-sm ram-qty" value="${qty}" min="1" max="64" oninput="updateRamTotal()" /></td>
+    <td><button type="button" class="btn btn-sm btn-outline-danger py-0" onclick="this.closest('tr').remove(); updateRamTotal()"><i class="bi bi-x"></i></button></td>
+  `;
+  body.appendChild(tr);
+}
+
+function updateRamTotal() {
+  let total = 0;
+  document.querySelectorAll('#ramRowBody tr').forEach(tr => {
+    const gb = parseInt(tr.querySelector('.ram-gb').value || 0);
+    const qty = parseInt(tr.querySelector('.ram-qty').value || 0);
+    total += gb * qty;
+  });
+  document.getElementById('ramTotal').textContent = total;
+}
+
+function confirmRam() {
+  const parts = [];
+  let total = 0;
+  document.querySelectorAll('#ramRowBody tr').forEach(tr => {
+    const gb = parseInt(tr.querySelector('.ram-gb').value || 0);
+    const qty = parseInt(tr.querySelector('.ram-qty').value || 0);
+    if (gb > 0 && qty > 0) {
+      parts.push(`${gb}GB×${qty}`);
+      total += gb * qty;
+    }
+  });
+  const config = parts.join(', ');
+  document.getElementById(`ram_total_${activeRowIdx}`).value = total;
+  document.getElementById(`ram_config_${activeRowIdx}`).value = config;
+  document.getElementById(`ram_label_${activeRowIdx}`).textContent = config ? `${config} (${total}GB)` : '미입력';
+  document.getElementById(`ram_label_${activeRowIdx}`).classList.toggle('text-muted', !config);
+  bootstrap.Modal.getInstance(document.getElementById('ramModal')).hide();
+}
+
+// ─── 스토리지 모달 ─────────────────────────────────────
+// 인터페이스(SAS/SATA/NVMe) + 매체(HDD/SSD) 분리
+// config 형식: "2.4TB SAS HDD×4, 960GB SATA SSD×2, 3.84TB NVMe SSD×1"
+function openStorageModal(idx) {
+  activeRowIdx = idx;
+  const body = document.getElementById('storageRowBody');
+  body.innerHTML = '';
+  const existing = document.getElementById(`storage_config_${idx}`).value;
+  if (existing) {
+    existing.split(',').forEach(part => {
+      // 새 형식: "2.4TB SAS HDD×4"
+      const m = part.trim().match(/^([\d.]+)(GB|TB)\s+(SAS|SATA|NVMe)\s+(HDD|SSD)×(\d+)$/);
+      if (m) addStorageRow(m[3], m[4], m[1], m[2], parseInt(m[5]));
+      else {
+        // 구 형식 호환: "2TB HDD×3"
+        const old = part.trim().match(/^([\d.]+)(GB|TB)\s+(HDD|SSD|NVMe)×(\d+)$/);
+        if (old) {
+          const iface = old[3] === 'NVMe' ? 'NVMe' : 'SAS';
+          const media = old[3] === 'HDD' ? 'HDD' : 'SSD';
+          addStorageRow(iface, media, old[1], old[2], parseInt(old[4]));
+        } else addStorageRow();
+      }
+    });
+  } else {
+    addStorageRow();
+  }
+  new bootstrap.Modal(document.getElementById('storageModal')).show();
+}
+
+function addStorageRow(iface = 'SAS', media = 'HDD', cap = '', unit = 'TB', qty = 1) {
+  const body = document.getElementById('storageRowBody');
+  const tr = document.createElement('tr');
+  const ifaceOpts = ['SAS','SATA','NVMe'].map(v =>
+    `<option value="${v}"${v===iface?' selected':''}>${v}</option>`).join('');
+  const mediaOpts = ['HDD','SSD'].map(v =>
+    `<option value="${v}"${v===media?' selected':''}>${v}</option>`).join('');
+  tr.innerHTML = `
+    <td>
+      <select class="form-select form-select-sm st-iface" onchange="onIfaceChange(this)">
+        ${ifaceOpts}
+      </select>
+    </td>
+    <td>
+      <select class="form-select form-select-sm st-media">
+        ${mediaOpts}
+      </select>
+    </td>
+    <td><input type="number" class="form-control form-control-sm st-cap" value="${cap}" min="0.1" step="0.1" placeholder="예: 2.4" /></td>
+    <td>
+      <select class="form-select form-select-sm st-unit">
+        <option value="GB"${unit==='GB'?' selected':''}>GB</option>
+        <option value="TB"${unit==='TB'?' selected':''}>TB</option>
+      </select>
+    </td>
+    <td><input type="number" class="form-control form-control-sm st-qty" value="${qty}" min="1" /></td>
+    <td><button type="button" class="btn btn-sm btn-outline-danger py-0" onclick="this.closest('tr').remove()"><i class="bi bi-x"></i></button></td>
+  `;
+  body.appendChild(tr);
+  // NVMe는 항상 SSD
+  if (iface === 'NVMe') {
+    const sel = tr.querySelector('.st-media');
+    sel.value = 'SSD';
+    sel.disabled = true;
+  }
+}
+
+function onIfaceChange(sel) {
+  const tr = sel.closest('tr');
+  const mediaSel = tr.querySelector('.st-media');
+  if (sel.value === 'NVMe') {
+    mediaSel.value = 'SSD';
+    mediaSel.disabled = true;
+  } else {
+    mediaSel.disabled = false;
+  }
+}
+
+function confirmStorage() {
+  const parts = [];
+  document.querySelectorAll('#storageRowBody tr').forEach(tr => {
+    const iface = tr.querySelector('.st-iface').value;
+    const media = tr.querySelector('.st-media').value;
+    const cap   = tr.querySelector('.st-cap').value;
+    const unit  = tr.querySelector('.st-unit').value;
+    const qty   = parseInt(tr.querySelector('.st-qty').value || 0);
+    if (cap && qty > 0) parts.push(`${cap}${unit} ${iface} ${media}×${qty}`);
+  });
+  const config = parts.join(', ');
+  document.getElementById(`storage_config_${activeRowIdx}`).value = config;
+  document.getElementById(`storage_label_${activeRowIdx}`).textContent = config || '미입력';
+  document.getElementById(`storage_label_${activeRowIdx}`).classList.toggle('text-muted', !config);
+  bootstrap.Modal.getInstance(document.getElementById('storageModal')).hide();
+}
+
+// 첫 행 자동 추가
+addRow();
+</script>
+{% endblock %}

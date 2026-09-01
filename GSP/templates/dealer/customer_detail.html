@@ -1,0 +1,214 @@
+{% extends "dealer/base_dealer.html" %}
+{% block title %}{{ customer.name }} 상세{% endblock %}
+{% block page_title %}<i class="bi bi-building-fill me-2"></i>{{ customer.name }}{% endblock %}
+{% block breadcrumb %}<a href="/dealer/customers">고객사 목록</a> / {{ customer.name }}{% endblock %}
+
+{% block content %}
+{% set q_error   = request.query_params.get('error', '') %}
+{% set q_success = request.query_params.get('success', '') %}
+
+{% if q_success == 'edited' %}
+<div class="alert alert-success py-2 small mb-3"><i class="bi bi-check-circle me-1"></i>고객사 정보가 수정되었습니다.</div>
+{% elif q_success == '1' %}
+<div class="alert alert-success py-2 small mb-3"><i class="bi bi-check-circle me-1"></i>계정이 생성되었습니다.</div>
+{% endif %}
+
+<div class="row g-3">
+  <!-- 왼쪽: 고객사 정보 -->
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header fw-semibold small d-flex justify-content-between align-items-center">
+        <span>고객사 정보</span>
+        {% if session.role == 'dealer_admin' %}
+        <div class="d-flex gap-1">
+          <button class="btn btn-outline-secondary btn-sm py-0 px-2" type="button"
+            data-bs-toggle="collapse" data-bs-target="#editCustomerForm" title="정보 수정">
+            <i class="bi bi-pencil"></i> 수정
+          </button>
+          <form id="delCustomerForm" method="post" action="/dealer/customers/{{ customer.id }}/delete" style="display:none"></form>
+          <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2"
+            onclick="if(confirm('{{ customer.name }} 고객사를 삭제하시겠습니까?\n신청 이력이 있으면 비활성화됩니다.')) document.getElementById('delCustomerForm').submit()">
+            <i class="bi bi-trash"></i> 삭제
+          </button>
+        </div>
+        {% endif %}
+      </div>
+      <div class="card-body small">
+        <dl class="row mb-0">
+          <dt class="col-5 text-muted">고객사명</dt><dd class="col-7">{{ customer.name }}</dd>
+          <dt class="col-5 text-muted">고객코드</dt><dd class="col-7"><code>{{ customer.customer_code }}</code></dd>
+          <dt class="col-5 text-muted">사업자번호</dt><dd class="col-7">{{ customer.business_no or '-' }}</dd>
+          <dt class="col-5 text-muted">담당자</dt><dd class="col-7">{{ customer.manager_name or '-' }}</dd>
+          <dt class="col-5 text-muted">연락처</dt><dd class="col-7">{{ customer.manager_phone or '-' }}</dd>
+          <dt class="col-5 text-muted">이메일</dt><dd class="col-7">{{ customer.manager_email or '-' }}</dd>
+          <dt class="col-5 text-muted">기본 IDC</dt><dd class="col-7">{{ customer.default_idc.name if customer.default_idc else '-' }}</dd>
+        </dl>
+      </div>
+
+      {% if session.role == 'dealer_admin' %}
+      <div class="collapse{% if q_success == 'edited' %} show{% endif %}" id="editCustomerForm">
+        <div class="card-body border-top bg-light py-2">
+          <p class="small text-muted mb-2"><i class="bi bi-pencil me-1"></i>고객사 정보 수정</p>
+          <form method="post" action="/dealer/customers/{{ customer.id }}/edit" class="row g-2">
+            <div class="col-12">
+              <label class="form-label form-label-sm text-muted mb-0">고객사명</label>
+              <input type="text" name="name" class="form-control form-control-sm" value="{{ customer.name }}" required />
+            </div>
+            <div class="col-12">
+              <label class="form-label form-label-sm text-muted mb-0">사업자번호</label>
+              <input type="text" name="business_no" class="form-control form-control-sm" value="{{ customer.business_no }}" />
+            </div>
+            <div class="col-12">
+              <label class="form-label form-label-sm text-muted mb-0">담당자명</label>
+              <input type="text" name="manager_name" class="form-control form-control-sm" value="{{ customer.manager_name }}" />
+            </div>
+            <div class="col-12">
+              <label class="form-label form-label-sm text-muted mb-0">연락처</label>
+              <input type="text" name="manager_phone" class="form-control form-control-sm" value="{{ customer.manager_phone }}" />
+            </div>
+            <div class="col-12">
+              <label class="form-label form-label-sm text-muted mb-0">이메일</label>
+              <input type="text" name="manager_email" class="form-control form-control-sm" value="{{ customer.manager_email }}" />
+            </div>
+            <div class="col-12">
+              <label class="form-label form-label-sm text-muted mb-0">기본 IDC</label>
+              <select name="default_idc_center_id" class="form-select form-select-sm">
+                <option value="">선택 안함</option>
+                {% for c in centers %}
+                <option value="{{ c.id }}" {% if customer.default_idc_center_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12">
+              <button class="btn btn-primary btn-sm w-100">저장</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 오른쪽: 계정 관리 + 신청 이력 -->
+  <div class="col-md-8">
+
+    <!-- 계정 관리 카드 -->
+    <div class="card mb-3">
+      <div class="card-header fw-semibold small d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-people me-1"></i>계정 관리 ({{ users|length }}개)</span>
+        {% if session.role == 'dealer_admin' %}
+        <button class="btn btn-success btn-sm py-0 px-2" data-bs-toggle="collapse" data-bs-target="#newUserForm">
+          <i class="bi bi-person-plus me-1"></i>계정 추가
+        </button>
+        {% endif %}
+      </div>
+
+      {% if session.role == 'dealer_admin' %}
+      <div class="collapse{% if q_error == 'duplicate' or q_error == 'required' %} show{% endif %}" id="newUserForm">
+        <div class="card-body border-bottom bg-light py-2">
+          {% if q_error == 'duplicate' %}
+          <div class="alert alert-danger py-1 px-2 small mb-2">이미 사용 중인 아이디입니다. 다른 아이디를 입력해주세요.</div>
+          {% elif q_error == 'required' %}
+          <div class="alert alert-danger py-1 px-2 small mb-2">아이디, 비밀번호, 이름은 필수 항목입니다.</div>
+          {% endif %}
+          <form method="post" action="/dealer/customers/{{ customer.id }}/users" class="row g-2 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label form-label-sm text-muted mb-0">아이디</label>
+              <input type="text" name="login_id" class="form-control form-control-sm" placeholder="영문/숫자" required autocomplete="off" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label form-label-sm text-muted mb-0">비밀번호</label>
+              <input type="password" name="password" class="form-control form-control-sm" placeholder="8자 이상 권장" required autocomplete="new-password" />
+            </div>
+            <div class="col-md-2">
+              <label class="form-label form-label-sm text-muted mb-0">이름</label>
+              <input type="text" name="name" class="form-control form-control-sm" placeholder="담당자명" required />
+            </div>
+            <div class="col-md-2">
+              <label class="form-label form-label-sm text-muted mb-0">역할</label>
+              <select name="role" class="form-select form-select-sm">
+                <option value="customer_admin">관리자</option>
+                <option value="customer_staff">직원</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-primary btn-sm w-100 mt-3">생성</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr><th>이름</th><th>아이디</th><th>역할</th><th>상태</th>{% if session.role == 'dealer_admin' %}<th></th>{% endif %}</tr>
+          </thead>
+          <tbody>
+            {% for usr in users %}
+            <tr>
+              <td>{{ usr.name }}</td>
+              <td><code>{{ usr.login_id }}</code></td>
+              <td><span class="badge bg-light text-dark border">{{ ROLE_LABEL.get(usr.role.value, '') }}</span></td>
+              <td>
+                {% if usr.is_active %}
+                <span class="badge bg-success">활성</span>
+                {% else %}
+                <span class="badge bg-secondary">비활성</span>
+                {% endif %}
+              </td>
+              {% if session.role == 'dealer_admin' %}
+              <td class="d-flex gap-1">
+                <form method="post" action="/dealer/customers/{{ customer.id }}/users/{{ usr.id }}/toggle">
+                  <button class="btn btn-sm py-0 {% if usr.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                    {% if usr.is_active %}비활성화{% else %}활성화{% endif %}
+                  </button>
+                </form>
+              </td>
+              {% endif %}
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="{{ 5 if session.role == 'dealer_admin' else 4 }}" class="text-center text-muted py-3">
+                등록된 계정이 없습니다.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 신청 이력 카드 -->
+    <div class="card">
+      <div class="card-header fw-semibold small">신청 이력 ({{ applications|length }}건)</div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr><th>번호</th><th>IDC센터</th><th>상태</th><th>자산수</th><th>신청일</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for app in applications %}
+            <tr>
+              <td>#{{ app.id }}</td>
+              <td>{{ app.idc_center.name if app.idc_center else '-' }}</td>
+              <td>
+                <span class="badge bg-{{ STATUS_COLOR.get(app.status.value,'secondary') }} badge-status">
+                  {{ STATUS_LABEL.get(app.status.value, app.status.value) }}
+                </span>
+              </td>
+              <td>{{ app.assets|length }}대</td>
+              <td class="text-muted">{{ app.created_at.strftime('%Y.%m.%d') }}</td>
+              <td><a href="/dealer/applications/{{ app.id }}" class="btn btn-sm btn-outline-primary py-0">상세</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center text-muted py-3">신청 이력 없음</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

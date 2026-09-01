@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}로그인 — 월드와이드메모리{% endblock %}
+
+{% block full_content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center position-relative overflow-hidden"
+     style="background:linear-gradient(145deg,#04090f 0%,#081525 40%,#0a1e35 70%,#060e1c 100%);">
+
+  <!-- ══ 배경 레이어 ══ -->
+  <div style="position:absolute;inset:0;pointer-events:none;overflow:hidden;">
+
+    <!-- 격자 패턴 -->
+    <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:0.035" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="grid" width="52" height="52" patternUnits="userSpaceOnUse">
+          <path d="M52 0L0 0 0 52" fill="none" stroke="#7eb8e8" stroke-width="0.5"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grid)"/>
+    </svg>
+
+    <!-- 중앙 글로우 -->
+    <div style="position:absolute;width:800px;height:500px;top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      background:radial-gradient(ellipse,rgba(29,78,216,0.07) 0%,transparent 65%);"></div>
+
+    <!-- ── 왼쪽: WORLD MEMORY 워터마크 ── -->
+    <div class="d-none d-xl-flex flex-column align-items-center justify-content-center"
+         style="position:absolute;left:0;top:0;bottom:0;width:calc(50% - 230px);
+         opacity:0.07;">
+      <!-- WD 로고 SVG (대형 워터마크) -->
+      <svg viewBox="0 0 100 60" style="width:200px;" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="wdBg" x1="50" y1="0" x2="50" y2="60" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#93d4f0"/>
+            <stop offset="50%" stop-color="#60a5d8"/>
+            <stop offset="100%" stop-color="#dbeafe"/>
+          </linearGradient>
+        </defs>
+        <!-- W 자형 -->
+        <path d="M2 3 L13 3 L22 38 L31 16 L40 38 L49 3 L60 3 L43 57 L31 27 L19 57 Z" fill="url(#wdBg)"/>
+        <!-- D 자형 -->
+        <path d="M63 3 L77 3 Q97 3 97 30 Q97 57 77 57 L63 57 L63 47 L75 47 Q84 47 84 30 Q84 13 75 13 L63 13 Z" fill="url(#wdBg)"/>
+      </svg>
+      <div style="color:#b8d8f0;font-size:0.75rem;letter-spacing:0.45em;font-weight:700;
+        margin-top:18px;white-space:nowrap;">WORLD MEMORY</div>
+      <div style="color:#8ab4d0;font-size:0.62rem;letter-spacing:0.2em;margin-top:5px;">
+        서버 매입 전문
+      </div>
+      <!-- 우측 연결 선 -->
+      <div style="width:1px;height:60px;margin-top:24px;
+        background:linear-gradient(to bottom,rgba(147,212,240,0.3),transparent);"></div>
+    </div>
+
+    <!-- ── 오른쪽: 리뉴올피씨 워터마크 ── -->
+    <div class="d-none d-xl-flex flex-column align-items-center justify-content-center"
+         style="position:absolute;right:0;top:0;bottom:0;width:calc(50% - 230px);
+         opacity:0.07;">
+      <!-- 리뉴올피씨 아이콘 SVG -->
+      <svg viewBox="0 0 80 80" style="width:130px;" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- 순환 원호 -->
+        <path d="M40 10 A30 30 0 1 1 12 55" stroke="#a7f3d0" stroke-width="5"
+          stroke-linecap="round" fill="none"/>
+        <!-- 화살표 머리 (좌하단) -->
+        <polyline points="20,67 10,55 22,50" stroke="#a7f3d0" stroke-width="5"
+          stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <!-- PC 모니터 아이콘 (중앙) -->
+        <rect x="24" y="28" width="32" height="22" rx="3" stroke="#a7f3d0" stroke-width="3.5" fill="none"/>
+        <line x1="40" y1="50" x2="40" y2="56" stroke="#a7f3d0" stroke-width="3" stroke-linecap="round"/>
+        <line x1="32" y1="56" x2="48" y2="56" stroke="#a7f3d0" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <div style="color:#9de8c8;font-size:0.85rem;font-weight:700;
+        letter-spacing:0.12em;margin-top:18px;">리뉴올피씨</div>
+      <div style="color:#6ecfaa;font-size:0.62rem;letter-spacing:0.2em;margin-top:5px;">
+        리퍼PC 전문 판매
+      </div>
+      <!-- 좌측 연결 선 -->
+      <div style="width:1px;height:60px;margin-top:24px;
+        background:linear-gradient(to bottom,rgba(110,231,183,0.3),transparent);"></div>
+    </div>
+
+    <!-- 브랜드 연결 수평선 (배경 중간) -->
+    <div class="d-none d-xl-block" style="position:absolute;top:50%;left:0;right:0;height:1px;
+      background:linear-gradient(to right,
+        transparent 0%,
+        rgba(147,212,240,0.08) 25%,
+        rgba(255,255,255,0.04) 50%,
+        rgba(110,231,183,0.08) 75%,
+        transparent 100%);
+      transform:translateY(-50%);"></div>
+
+    <!-- 장식 점들 -->
+    <div style="position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(96,165,250,0.35);top:20%;left:15%;"></div>
+    <div style="position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(56,189,248,0.3);top:35%;right:18%;"></div>
+    <div style="position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(110,231,183,0.3);bottom:25%;right:14%;"></div>
+    <div style="position:absolute;width:2px;height:2px;border-radius:50%;background:rgba(96,165,250,0.25);bottom:30%;left:20%;"></div>
+  </div>
+
+  <!-- ══ 로그인 카드 ══ -->
+  <div class="position-relative" style="z-index:1;width:100%;max-width:420px;padding:0 16px;">
+    <div class="card border-0" style="border-radius:22px;overflow:hidden;
+      box-shadow:0 28px 72px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.07);">
+
+      <!-- 브랜드 헤더 -->
+      <div class="text-center pt-5 pb-4 px-4"
+           style="background:linear-gradient(175deg,#0b1d38 0%,#0f2d52 100%);
+           border-bottom:1px solid rgba(255,255,255,0.07);">
+
+        <!-- WD 로고 (카드용 컬러 버전) -->
+        <div class="mx-auto mb-3" style="line-height:0;">
+          <svg viewBox="0 0 100 60" style="width:88px;height:53px;" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="wdCard" x1="50" y1="0" x2="50" y2="60" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#64c8ec"/>
+                <stop offset="45%" stop-color="#1a72c4"/>
+                <stop offset="100%" stop-color="#0c2252"/>
+              </linearGradient>
+              <linearGradient id="wdCardD" x1="80" y1="0" x2="80" y2="60" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#52bce8"/>
+                <stop offset="50%" stop-color="#1560ac"/>
+                <stop offset="100%" stop-color="#0a1e48"/>
+              </linearGradient>
+            </defs>
+            <!-- W 자형 -->
+            <path d="M2 3 L13 3 L22 38 L31 16 L40 38 L49 3 L60 3 L43 57 L31 27 L19 57 Z" fill="url(#wdCard)"/>
+            <!-- D 자형 -->
+            <path d="M63 3 L77 3 Q97 3 97 30 Q97 57 77 57 L63 57 L63 47 L75 47 Q84 47 84 30 Q84 13 75 13 L63 13 Z" fill="url(#wdCardD)"/>
+          </svg>
+        </div>
+
+        <!-- 회사명 -->
+        <h5 class="fw-bold mb-1" style="color:#eef4ff;letter-spacing:-0.2px;font-size:1.15rem;">
+          월드와이드메모리
+        </h5>
+        <p style="color:rgba(148,185,220,0.6);font-size:0.73rem;letter-spacing:0.35px;margin:0 0 16px;">
+          WorldWideMemory Co., Ltd.
+        </p>
+
+        <!-- 두 브랜드 배지 -->
+        <div class="d-flex gap-2 justify-content-center flex-wrap">
+          <span style="background:rgba(29,78,216,0.22);color:#93c5fd;font-size:0.67rem;
+            padding:3px 11px;border-radius:20px;border:1px solid rgba(147,197,253,0.2);
+            white-space:nowrap;">
+            <i class="bi bi-arrow-down-circle me-1" style="font-size:0.62rem;"></i>매입 · WORLD MEMORY
+          </span>
+          <span style="background:rgba(5,150,105,0.18);color:#6ee7b7;font-size:0.67rem;
+            padding:3px 11px;border-radius:20px;border:1px solid rgba(110,231,183,0.2);
+            white-space:nowrap;">
+            <i class="bi bi-arrow-repeat me-1" style="font-size:0.62rem;"></i>판매 · 리뉴올피씨
+          </span>
+        </div>
+      </div>
+
+      <!-- 로그인 폼 -->
+      <div class="card-body p-4" style="background:#ffffff;">
+
+        {% if error %}
+        <div class="alert py-2 small mb-3 d-flex align-items-center gap-2"
+          style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:10px;">
+          <i class="bi bi-exclamation-circle-fill"></i><span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <form method="post" action="/login">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold mb-1" style="color:#475569;">아이디</label>
+            <div class="input-group">
+              <span class="input-group-text border-end-0"
+                style="background:#f8fafc;border-color:#e2e8f0;">
+                <i class="bi bi-person" style="color:#94a3b8;"></i>
+              </span>
+              <input type="text" name="login_id"
+                class="form-control border-start-0 ps-1"
+                style="background:#f8fafc;border-color:#e2e8f0;box-shadow:none;"
+                placeholder="아이디를 입력하세요" required autofocus />
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label small fw-semibold mb-1" style="color:#475569;">비밀번호</label>
+            <div class="input-group">
+              <span class="input-group-text border-end-0"
+                style="background:#f8fafc;border-color:#e2e8f0;">
+                <i class="bi bi-lock" style="color:#94a3b8;"></i>
+              </span>
+              <input type="password" name="password"
+                class="form-control border-start-0 ps-1"
+                style="background:#f8fafc;border-color:#e2e8f0;box-shadow:none;"
+                placeholder="비밀번호를 입력하세요" required />
+            </div>
+          </div>
+          <button class="btn w-100 fw-semibold text-white" type="submit"
+            style="background:linear-gradient(135deg,#1d4ed8 0%,#0891b2 100%);
+            border:none;padding:11px;border-radius:10px;letter-spacing:0.2px;
+            box-shadow:0 4px 18px rgba(29,78,216,0.35);font-size:0.93rem;">
+            <i class="bi bi-box-arrow-in-right me-2"></i>로그인
+          </button>
+        </form>
+
+        <div class="d-flex align-items-center gap-2 my-3">
+          <div style="flex:1;height:1px;background:#e2e8f0;"></div>
+          <span style="color:#cbd5e1;font-size:0.68rem;letter-spacing:0.2px;">서비스 안내</span>
+          <div style="flex:1;height:1px;background:#e2e8f0;"></div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <a href="/intro/dealer" class="btn btn-sm flex-fill"
+            style="border:1px solid #e2e8f0;color:#64748b;border-radius:8px;
+            font-size:0.77rem;background:#f8fafc;padding:7px;">
+            <i class="bi bi-building me-1" style="color:#94a3b8;"></i>호스팅사 안내
+          </a>
+          <a href="/intro/customer" class="btn btn-sm flex-fill"
+            style="border:1px solid #e2e8f0;color:#64748b;border-radius:8px;
+            font-size:0.77rem;background:#f8fafc;padding:7px;">
+            <i class="bi bi-server me-1" style="color:#94a3b8;"></i>기업 안내
+          </a>
+        </div>
+        <a href="/guide" class="btn btn-sm w-100 mt-2"
+          style="border:1px solid rgba(249,115,22,0.35);color:#ea580c;border-radius:8px;
+          font-size:0.77rem;background:rgba(249,115,22,0.06);padding:7px;">
+          <i class="bi bi-signpost-split me-1" style="color:#ea580c;"></i>이용 가이드 — 등록부터 정산까지 한눈에 보기
+        </a>
+        <a href="/pricing-standard" class="btn btn-sm w-100 mt-2"
+          style="border:1px solid #e2e8f0;color:#64748b;border-radius:8px;
+          font-size:0.77rem;background:#f8fafc;padding:7px;">
+          <i class="bi bi-tag me-1" style="color:#94a3b8;"></i>가격 산정 기준 안내
+        </a>
+      </div>
+    </div>
+
+    <p class="text-center mt-4 mb-0"
+       style="color:rgba(255,255,255,0.18);font-size:0.67rem;letter-spacing:0.3px;">
+      © 2025 WorldWideMemory Co., Ltd. All rights reserved.
+    </p>
+  </div>
+</div>
+{% endblock %}

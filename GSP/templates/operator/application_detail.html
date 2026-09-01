@@ -1,0 +1,81 @@
+{% extends "operator/base_operator.html" %}
+{% block title %}신청 #{{ app.id }} 상세{% endblock %}
+{% block page_title %}<i class="bi bi-file-text me-2"></i>신청 #{{ app.id }}{% endblock %}
+{% block breadcrumb %}<a href="/operator/applications">신청 목록</a> / #{{ app.id }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-header fw-semibold small d-flex justify-content-between">
+        신청 정보
+        <span class="badge bg-{{ STATUS_COLOR.get(app.status.value,'secondary') }}">
+          {{ STATUS_LABEL.get(app.status.value, app.status.value) }}
+        </span>
+      </div>
+      <div class="card-body small">
+        <dl class="row mb-0">
+          <dt class="col-5 text-muted">딜러</dt><dd class="col-7">{{ app.dealer.name if app.dealer else '-' }}</dd>
+          <dt class="col-5 text-muted">고객사</dt><dd class="col-7">{{ app.customer.name if app.customer else '-' }}</dd>
+          <dt class="col-5 text-muted">IDC 센터</dt><dd class="col-7">{{ app.idc_center.name if app.idc_center else '-' }}</dd>
+          <dt class="col-5 text-muted">신청일</dt><dd class="col-7">{{ app.submitted_at.strftime('%Y.%m.%d') if app.submitted_at else '-' }}</dd>
+          <dt class="col-5 text-muted">서버수량</dt><dd class="col-7 fw-bold">{{ app.assets|length }}대</dd>
+        </dl>
+      </div>
+    </div>
+
+    {% if app.settlement %}
+    <div class="card">
+      <div class="card-header fw-semibold small">정산 정보</div>
+      <div class="card-body small">
+        <dl class="row mb-0">
+          <dt class="col-6 text-muted">매입 합계</dt>
+          <dd class="col-6 fw-bold">{{ '{:,}'.format(app.settlement.total_amount|int) }}원</dd>
+          <dt class="col-6 text-muted">운영사 수수료</dt>
+          <dd class="col-6">{{ '{:,}'.format(app.settlement.operator_fee_amount|int) }}원</dd>
+          <dt class="col-6 text-muted">딜러 수수료</dt>
+          <dd class="col-6">{{ '{:,}'.format(app.settlement.dealer_fee_amount|int) }}원</dd>
+          <dt class="col-6 text-muted">고객 수령액</dt>
+          <dd class="col-6 fw-bold text-success">{{ '{:,}'.format(app.settlement.customer_amount|int) }}원</dd>
+        </dl>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header fw-semibold small">서버 자산 목록 ({{ app.assets|length }}대)</div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr><th>#</th><th>제조사/모델</th><th>CPU</th><th>RAM</th><th>S/N</th><th>수량</th><th>등급</th></tr>
+          </thead>
+          <tbody>
+            {% for a in app.assets %}
+            <tr>
+              <td class="text-muted">{{ loop.index }}</td>
+              <td>
+                <div class="fw-semibold">{{ a.manufacturer }} {{ a.model }}</div>
+                <small class="text-muted">{{ a.form_factor or '' }}</small>
+              </td>
+              <td class="small">{{ a.cpu_count }}×{{ a.cpu_model or '-' }}</td>
+              <td class="small">{{ a.ram_total_gb }}GB</td>
+              <td class="small text-muted">{{ a.serial_number or '-' }}</td>
+              <td>{{ a.quantity }}</td>
+              <td>
+                <span class="badge {% if a.condition_grade == '상' %}bg-success{% elif a.condition_grade == '중' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                  {{ a.condition_grade }}
+                </span>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" class="text-center text-muted py-3">자산 없음</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
