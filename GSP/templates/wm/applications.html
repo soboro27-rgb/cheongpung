@@ -3,6 +3,11 @@
 {% block page_title %}<i class="bi bi-inbox me-2"></i>전체 신청 목록{% endblock %}
 
 {% block content %}
+{% if request.query_params.get('deleted') == 'ok' %}
+<div class="alert alert-success py-2 small d-flex align-items-center">
+  <i class="bi bi-check-circle me-2"></i>신청서가 삭제되었습니다.
+</div>
+{% endif %}
 <div class="card mb-3">
   <div class="card-body py-2">
     <form method="get" action="/wm/applications" class="row g-2 align-items-end">

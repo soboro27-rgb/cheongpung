@@ -275,6 +275,25 @@
         </a>
         {% endif %}
 
+        {% if session.role == 'super_admin' %}
+        <hr class="my-2"/>
+        <button type="button" class="btn btn-outline-danger btn-sm w-100"
+                data-bs-toggle="collapse" data-bs-target="#wmDeleteForm">
+          <i class="bi bi-trash me-1"></i>신청서 삭제
+        </button>
+        <div class="collapse" id="wmDeleteForm">
+          <div class="border border-danger rounded p-2 mt-2 small">
+            <p class="text-danger mb-2">신청서·서버 자산·일정·정산 기록이 모두 삭제됩니다. 되돌릴 수 없습니다.</p>
+            <form method="post" action="/wm/applications/{{ app.id }}/delete">
+              <button class="btn btn-danger btn-sm w-100"
+                      onclick="return confirm('신청 #{{ app.id }} 을(를) 완전히 삭제할까요?');">
+                <i class="bi bi-trash me-1"></i>삭제 확정
+              </button>
+            </form>
+          </div>
+        </div>
+        {% endif %}
+
       </div>
     </div>
   </div>

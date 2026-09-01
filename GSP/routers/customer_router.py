@@ -206,6 +206,26 @@ def app_detail(request: Request, app_id: int, db: Session = Depends(get_db)):
     })
 
 
+@router.post("/applications/{app_id}/delete")
+def delete_application(request: Request, app_id: int, db: Session = Depends(get_db)):
+    """신청서 삭제 — 수거 전(신청접수/접수확인/반려) 단계에서만 고객이 직접 삭제 가능"""
+    u, redir = _check(request)
+    if redir: return redir
+    customer_id = u["customer_id"]
+    app = db.query(models.Application).filter(
+        models.Application.id == app_id,
+        models.Application.customer_id == customer_id,
+    ).first()
+    if not app:
+        return RedirectResponse("/customer/applications", status_code=302)
+    if app.status not in (AppStatus.REQUESTED, AppStatus.RECEIVED, AppStatus.REJECTED):
+        # 수거가 진행된 건은 고객이 임의 삭제 불가
+        return RedirectResponse(f"/customer/applications/{app_id}?error=locked", status_code=302)
+    db.delete(app)  # assets/schedule/settlement 은 모델 cascade 로 함께 삭제
+    db.commit()
+    return RedirectResponse("/customer/applications?deleted=ok", status_code=302)
+
+
 @router.post("/applications/{app_id}/approve")
 def approve_quote(request: Request, app_id: int, db: Session = Depends(get_db)):
     """단가확정(QUOTED) 상태에서 고객이 승인"""

@@ -4,6 +4,11 @@
 {% block breadcrumb %}<a href="/customer/applications">신청 목록</a> / #{{ app.id }}{% endblock %}
 
 {% block content %}
+{% if request.query_params.get('error') == 'locked' %}
+<div class="alert alert-warning py-2 small d-flex align-items-center">
+  <i class="bi bi-lock me-2"></i>수거가 진행된 신청서는 삭제할 수 없습니다. 매입사에 문의하세요.
+</div>
+{% endif %}
 <div class="row g-3">
   <div class="col-md-4">
     <div class="card mb-3">
@@ -79,6 +84,28 @@
             <textarea name="reject_reason" class="form-control form-control-sm mb-2" rows="2" placeholder="반려 사유"></textarea>
             <button class="btn btn-danger btn-sm w-100">반려 확정</button>
           </form>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if app.status.value in ('requested','received','rejected') %}
+    <div class="d-grid mt-3">
+      <button type="button" class="btn btn-outline-danger btn-sm"
+              data-bs-toggle="collapse" data-bs-target="#deleteForm">
+        <i class="bi bi-trash me-1"></i>신청서 삭제
+      </button>
+      <div class="collapse" id="deleteForm">
+        <div class="card border-danger mt-2">
+          <div class="card-body small">
+            <p class="text-danger mb-2">이 신청서와 등록된 서버 자산 정보가 모두 삭제됩니다. 되돌릴 수 없습니다.</p>
+            <form method="post" action="/customer/applications/{{ app.id }}/delete">
+              <button class="btn btn-danger btn-sm w-100"
+                      onclick="return confirm('신청 #{{ app.id }} 을(를) 삭제할까요?');">
+                <i class="bi bi-trash me-1"></i>삭제 확정
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>

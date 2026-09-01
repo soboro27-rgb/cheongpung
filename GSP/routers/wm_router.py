@@ -790,6 +790,18 @@ def close_app(request: Request, app_id: int, db: Session = Depends(get_db)):
     return RedirectResponse(f"/wm/applications/{app_id}", status_code=302)
 
 
+@router.post("/applications/{app_id}/delete")
+def delete_app(request: Request, app_id: int, db: Session = Depends(get_db)):
+    """신청서 완전 삭제 (슈퍼관리자 전용, 테스트/오등록 정리용)"""
+    u, redir = _check_super(request)
+    if redir: return redir
+    app = db.query(models.Application).filter(models.Application.id == app_id).first()
+    if app:
+        db.delete(app)  # assets/schedule/settlement 은 모델 cascade 로 함께 삭제
+        db.commit()
+    return RedirectResponse("/wm/applications?deleted=ok", status_code=302)
+
+
 # ─── Phase 3: 데이터 파기 기록 + 인증서 ───────────────
 
 @router.post("/applications/{app_id}/wipe-detail")
