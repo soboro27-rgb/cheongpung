@@ -86,23 +86,6 @@ services:
         sync: false
 
   - type: web
-    name: nexon-inspection
-    env: node
-    rootDir: nexon
-    buildFilter:
-      paths:
-        - nexon/**
-    buildCommand: npm install
-    startCommand: node server.js
-    envVars:
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_KEY
-        sync: false
-      - key: SESSION_SECRET
-        sync: false
-
-  - type: web
     name: inspect01
     env: node
     rootDir: inspect01

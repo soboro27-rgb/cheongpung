@@ -21,10 +21,9 @@
 | **GSP (Great Server Plan)** | `GSP` | https://gsp-i0fi.onrender.com (Render 서비스 `gsp` + DB `gsp-db`, 수동 생성, Root Dir `GSP`) | ✅ 배포 완료 (2026-09-01). idc-server-collect 기반, GSP 브랜딩 교체 완료. IDC 센터 문구·법인정보(견적서)는 유지 | GSP, Great Server Plan |
 | **whcheck** | `onpre/whcheck` | 미배포 (로컬만) | 알림톡 배송주소 검증 완료, 실제 Solapi 연동·배포 전 | 배송주소, 주소확인, 알림톡 |
 | **estimate** | `onpre/estimate` | - (로컬 CLI) | 입찰단가 산출 리뉴얼 기획 중. 기초단가 DB 구축이 선행과제 | 입찰, 단가산출, 낙찰 |
-| **nexon-inspection** | `nexon` | Render 배포 (블루프린트 서비스명 `nexon-inspection`) | Express+Supabase 검수 관련 서비스 — 실사용 범위 재확인 필요 | 넥슨, 검수 (확인 필요) |
 | **kakao-skill-server** | `kakao-skill-server` | kakao-skill-server-0ec6.onrender.com | ✅ 완성. 코레테일 카톡채널 "반초" 챗봇(폴백 블록 → 스킬데이터) 연결 완료, 실제 문의→자동응답+SMS알림 동작 확인 (2026-07-07) | (라우팅 로직 자체가 키워드 매칭 엔진, routing.json 수정으로 확장) |
 
-**경로 규칙**: 웹에 배포되는 프로젝트는 repo 루트에 직접 위치 (`dolbom-it`, `inspect01`, `idc-server-collect`, `it-asset-platform`, `mgit-platform`, `nexon`). `onpre/` 폴더는 노트북에서 로컬 실행만 하는 것들 전용 — 2026-07-07에 dolbom-it, inspect01을 onpre에서 루트로 이동하고 `render.yaml`의 `rootDir`도 함께 수정함.
+**경로 규칙**: 웹에 배포되는 프로젝트는 repo 루트에 직접 위치 (`dolbom-it`, `inspect01`, `idc-server-collect`, `it-asset-platform`, `mgit-platform`). `onpre/` 폴더는 노트북에서 로컬 실행만 하는 것들 전용 — 2026-07-07에 dolbom-it, inspect01을 onpre에서 루트로 이동하고 `render.yaml`의 `rootDir`도 함께 수정함.
 
 ## onpre 폴더 (로컬 전용, 웹배포 아님)
 
@@ -43,12 +42,11 @@
 
 ## 미분류 / 문서 자산 (관제 대상 아님)
 
-`Rproject`, `ws300P`, `donghee`, `stock` — 제안서·이미지 등 정적 자산 폴더.
+`ws300P`, `donghee`, `stock` — 제안서·이미지 등 정적 자산 폴더.
 
 ---
 
 ## 다음 단계 (카카오 채널 연동 전 확인 필요)
 
-1. **nexon-inspection 실사용 여부 확인** — inspect01과 무슨 관계인지
-2. **GPU/wwm-ai-platform, HL_Rubber, carbon-reduction 용도 확인** — 배포 여부에 따라 표 승격 또는 정리
-3. 이 허브를 기반으로 "카톡 문의 → 키워드 매칭 → 관련 프로젝트 컨텍스트 로드" 자동화는 카카오톡 채널 API 연동(2단계) 이후 진행
+1. **GPU/wwm-ai-platform, HL_Rubber, carbon-reduction 용도 확인** — 배포 여부에 따라 표 승격 또는 정리
+2. 이 허브를 기반으로 "카톡 문의 → 키워드 매칭 → 관련 프로젝트 컨텍스트 로드" 자동화는 카카오톡 채널 API 연동(2단계) 이후 진행
