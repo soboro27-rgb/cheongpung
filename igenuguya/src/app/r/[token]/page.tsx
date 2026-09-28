@@ -47,6 +47,22 @@ export default function RecipientPage() {
     </div>
   );
 
+  const AppIntro = () => (
+    <div className="mt-6 pt-4 border-t border-gray-100 text-center">
+      <p className="text-xs text-gray-400 leading-relaxed">
+        나도 오래된 연락처를 정리하고 싶다면?
+        <br />
+        '이게누구야'는 누구나 쓸 수 있는 서비스예요.
+      </p>
+      <a
+        href="intoss://igenuguya-miniapp"
+        className="inline-block mt-2 text-xs text-blue-500 font-semibold"
+      >
+        이게누구야 열어보기 →
+      </a>
+    </div>
+  );
+
   if (state === "loading") return <Box><p className="text-center text-gray-400">로딩 중...</p></Box>;
 
   if (state === "error") return (
@@ -57,6 +73,7 @@ export default function RecipientPage() {
     <Box>
       <h2 className="font-bold text-lg mb-2 text-center">이미 응답 완료</h2>
       <p className="text-gray-500 text-sm text-center">소중한 답변 감사합니다.</p>
+      <AppIntro />
     </Box>
   );
 
@@ -67,6 +84,7 @@ export default function RecipientPage() {
         <h2 className="font-bold text-xl mb-2">답변이 전달되었어요</h2>
         <p className="text-gray-500 text-sm">소중한 답변 감사합니다.</p>
       </div>
+      <AppIntro />
     </Box>
   );
 
