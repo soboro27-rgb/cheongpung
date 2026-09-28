@@ -19,7 +19,21 @@ model User {
   refreshToken   String?
   tokenExpiresAt DateTime?
   createdAt      DateTime @default(now())
+  credits        Int       @default(0) // 유료 발송권 잔액 (IAP로 충전)
+  freeSentCount  Int       @default(0) // 오늘 무료 한도로 이미 보낸 건수
+  freeSentDate   DateTime? // freeSentCount가 리셋된 날짜 (자정 기준 비교)
   batches        Batch[]
+  purchases      Purchase[]
+}
+
+model Purchase {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  productId    String
+  credits      Int
+  verified     Boolean  @default(false) // 서버 영수증 검증 여부 (아직 미구현 — 항상 false)
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
 }
 
 model Batch {

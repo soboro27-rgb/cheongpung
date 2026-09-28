@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { getMobileUserId, json, preflight } from "@/lib/mobile";
 import { buildMessageWithLink, normalizePhone, sendSms } from "@/lib/sms";
+import { checkCredits, consumeCredits, FREE_DAILY_LIMIT } from "@/lib/credits";
 
 export const OPTIONS = preflight;
 
@@ -13,12 +14,19 @@ export async function GET(req: NextRequest) {
   const userId = await getMobileUserId(req);
   if (!userId) return json(req, { error: "로그인이 필요합니다." }, 401);
 
+  const user = await prisma.user.findUnique({ where: { id: userId } });
   const batches = await prisma.batch.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
     include: { contacts: true },
   });
+  const account = user ? checkCredits(user, 0) : null;
   return json(req, {
+    account: account && {
+      freeRemaining: account.freeRemaining,
+      freeDailyLimit: FREE_DAILY_LIMIT,
+      credits: account.creditsAvailable,
+    },
     batches: batches.map((b) => ({
       id: b.id,
       createdAt: b.createdAt.toISOString(),
@@ -65,6 +73,22 @@ export async function POST(req: NextRequest) {
     return json(req, { error: `하루에 ${DAILY_LIMIT}명까지 보낼 수 있어요. 내일 다시 시도해 주세요.` }, 429);
   }
 
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+  const credit = checkCredits(user, targets.length);
+  if (!credit.ok) {
+    return json(
+      req,
+      {
+        error: `무료 한도(${credit.freeRemaining}명)를 넘어서 발송권이 ${credit.creditsNeeded}건 더 필요해요. 보유 발송권: ${credit.creditsAvailable}건.`,
+        code: "INSUFFICIENT_CREDITS",
+        freeRemaining: credit.freeRemaining,
+        creditsAvailable: credit.creditsAvailable,
+        creditsNeeded: credit.creditsNeeded,
+      },
+      402,
+    );
+  }
+
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? req.nextUrl.origin;
   const batch = await prisma.batch.create({
     data: {
@@ -76,6 +100,7 @@ export async function POST(req: NextRequest) {
     },
     include: { contacts: true },
   });
+  await consumeCredits(userId, targets.length);
 
   let failedCount = 0;
   for (const c of batch.contacts) {
