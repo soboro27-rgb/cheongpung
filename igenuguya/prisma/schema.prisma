@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ContactStatus: PENDING | SENT | KEEP | RELEASE | FAILED | EXPIRED
+
+model User {
+  id             Int      @id @default(autoincrement())
+  kakaoId        String?  @unique
+  anonKey        String?  @unique // 앱인토스 getAnonymousKey hash (미니앱 사용자)
+  nickname       String
+  thumbnailUrl   String?
+  accessToken    String?
+  refreshToken   String?
+  tokenExpiresAt DateTime?
+  createdAt      DateTime @default(now())
+  batches        Batch[]
+}
+
+model Batch {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  messageText String
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id])
+  contacts    Contact[]
+}
+
+model Contact {
+  id          Int       @id @default(autoincrement())
+  batchId     Int
+  kakaoUuid   String?
+  phone       String? // SMS 발송용 (앱인토스 미니앱 경로)
+  nickname    String
+  status      String    @default("PENDING")
+  replyMessage String?  // 받는 분이 '메시지 남기기'로 남긴 답장 (KEEP일 때만)
+  token       String    @unique
+  sentAt      DateTime?
+  reminderSentAt DateTime?
+  respondedAt DateTime?
+  createdAt   DateTime  @default(now())
+  batch       Batch     @relation(fields: [batchId], references: [id])
+  sendLogs    SendLog[]
+}
+
+model SendLog {
+  id            Int      @id @default(autoincrement())
+  contactId     Int
+  provider      String   @default("kakao-friend-message") // kakao-friend-message | sms
+  providerMsgId String?
+  status        String
+  errorCode     String?
+  createdAt     DateTime @default(now())
+  contact       Contact  @relation(fields: [contactId], references: [id])
+}
