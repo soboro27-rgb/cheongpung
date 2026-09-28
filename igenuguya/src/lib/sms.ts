@@ -22,6 +22,7 @@ export interface SmsResult {
   ok: boolean;
   providerMsgId?: string;
   errorCode?: string;
+  errorDetail?: string;
 }
 
 export async function sendSms(to: string, text: string): Promise<SmsResult> {
@@ -33,7 +34,18 @@ export async function sendSms(to: string, text: string): Promise<SmsResult> {
   const apiKey = process.env.SOLAPI_API_KEY;
   const apiSecret = process.env.SOLAPI_API_SECRET;
   const from = process.env.SOLAPI_SENDER;
-  if (!apiKey || !apiSecret || !from) return { ok: false, errorCode: "SMS_NOT_CONFIGURED" };
+  if (!apiKey || !apiSecret || !from) {
+    console.error(
+      `[sms] SMS_NOT_CONFIGURED (missing: ${[
+        !apiKey && "SOLAPI_API_KEY",
+        !apiSecret && "SOLAPI_API_SECRET",
+        !from && "SOLAPI_SENDER",
+      ]
+        .filter(Boolean)
+        .join(", ")})`
+    );
+    return { ok: false, errorCode: "SMS_NOT_CONFIGURED" };
+  }
 
   const date = new Date().toISOString();
   const salt = randomUUID().replace(/-/g, "");
@@ -48,11 +60,15 @@ export async function sendSms(to: string, text: string): Promise<SmsResult> {
       },
       body: JSON.stringify({ message: { to, from, text } }),
     });
-    const data = (await res.json()) as { messageId?: string; errorCode?: string };
+    const data = (await res.json()) as { messageId?: string; errorCode?: string; errorMessage?: string };
+    if (!res.ok) {
+      console.error(`[sms] send failed HTTP ${res.status}:`, JSON.stringify(data));
+    }
     return res.ok
       ? { ok: true, providerMsgId: data.messageId }
-      : { ok: false, errorCode: data.errorCode ?? `HTTP_${res.status}` };
+      : { ok: false, errorCode: data.errorCode ?? `HTTP_${res.status}`, errorDetail: data.errorMessage };
   } catch (e) {
+    console.error("[sms] send threw:", e);
     return { ok: false, errorCode: String(e) };
   }
 }
