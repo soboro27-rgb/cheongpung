@@ -1,13 +1,20 @@
 import { useEffect, useState } from "react";
-import { api, type BatchSummary } from "../api";
+import { api, type Account, type BatchSummary } from "../api";
 import { go } from "../useHashRoute";
 
 export default function Home() {
   const [batches, setBatches] = useState<BatchSummary[] | null>(null);
+  const [account, setAccount] = useState<Account | null>(null);
   const [err, setErr] = useState("");
 
   useEffect(() => {
-    api.listBatches().then(setBatches).catch((e: Error) => setErr(e.message));
+    api
+      .listBatches()
+      .then((r) => {
+        setBatches(r.batches);
+        setAccount(r.account ?? null);
+      })
+      .catch((e: Error) => setErr(e.message));
   }, []);
 
   return (
@@ -32,6 +39,12 @@ export default function Home() {
           <li>"관계는 숫자가 아니라 깊이가 중요하다" — 한 심리학 교수의 말이에요.</li>
         </ul>
       </details>
+
+      {account && (
+        <p className="note">
+          오늘 무료 {account.freeRemaining}/{account.freeDailyLimit}건 남음 · 보유 발송권 {account.credits}건
+        </p>
+      )}
 
       <h2 className="section-title">지난 확인 요청</h2>
       {err && <p className="error">{err}</p>}

@@ -56,3 +56,48 @@
 6. 미니앱 `.env.local`의 `VITE_API_BASE`를 배포 도메인으로 바꾸고 `npm run build` 재실행 → 콘솔에 새 번들 업로드
 
 **미완료**: 위 1~2번은 Render 대시보드 작업이라 팔렌시아님이 직접 해야 함. Solapi 가입도 마찬가지(사업자 인증 필요).
+
+## 2026-09-28 — 실제 Render 배포 성공 + 미니앱 연결
+
+**한 것**:
+- 지금까지 igenuguya/igenuguya-miniapp 코드가 로컬에만 있고 GitHub(cheongpung)에 커밋된 적이 없어서, Render가 "Root directory igenuguya does not exist" 오류를 냈던 걸 발견 → git add/commit/push 완료 (커밋 c2def17).
+- Render에 Postgres(`igenuguya-db`) + 웹서비스(`igenuguya`) 생성. DATABASE_URL을 내부 연결 문자열로 설정. `schema.prisma` datasource provider sqlite→postgresql 변경, 로컬에서 실제 Postgres에 `prisma db push` 성공 확인.
+- 서비스 화면에 "Python 3" 배지가 떠서 런타임 오설정 의심했으나, 실제 배포는 정상 성공(그린 체크) — 배지는 무시해도 됨.
+- 배포된 `https://igenuguya.onrender.com`에서 `/api/m/session` 실제 동작 확인(진짜 DB 연결 성공).
+- 미니앱 `VITE_API_BASE`를 로컬(localhost:3000) → 실제 배포 주소로 변경, 버전 20260928-8 빌드·업로드·테스트푸시.
+
+**현재 상태**: 미니앱이 실제 배포된 백엔드에 연결된 상태. MOCK_SMS=true라 문자는 아직 실발송 안 됨.
+
+**미완료**: Solapi 가입 + 발신번호 등록 후 Render 환경변수(SOLAPI_*, MOCK_SMS=false) 반영, 앱인토스 워크스페이스 약관(채널톡 문의 답변 대기), 최신 번들 실제 검토 요청.
+
+## 2026-09-28 — 검토 요청 제출
+
+버전 20260928-8(실제 Render 백엔드 연결본)을 실제 폰 테스트 후 `bundle_submit_review`로 검토 요청 제출. `reviewStatus: REVIEWING`. 승인되면 콘솔 웹 "앱 출시"에서 출시하기 → 그때 워크스페이스 약관 동의 화면이 뜰 예정(채널톡 안내 기준).
+
+## 2026-09-28 — 실제 문자 발송 성공 (Solapi 실연동 완료)
+
+Render 환경변수에 `SOLAPI_SENDE`(R 누락 오타)로 저장돼있던 걸 발견해서 `SOLAPI_SENDER`로 수정 → 재배포 후 실서버에서 실제 SMS 발송 성공 확인(사용자 본인 폰 수신 확인). `MOCK_SMS=false`로 정식 전환 완료.
+
+**이제 실제로 동작하는 것**: 미니앱(토스 라이브 출시) → 실제 백엔드(Render+Postgres) → 실제 SMS(Solapi) 전체 파이프라인 확인됨.
+
+**남은 항목**: 로고 정식 디자인, IAP 발송권 충전 구조, 개인정보 보유기간(1년) 자동삭제 배치, getAnonymousKey mTLS 검증. 급하지 않음 — 필요할 때 다시 요청.
+
+## 2026-09-28 — 무료 한도 + IAP 발송권 크레딧 시스템 (백엔드)
+
+**계기**: Solapi 잔액이 예상보다 빨리 줄어드는 걸 보고("50000원 중 5000원 벌써 사용") 무료 한도+유료 충전 구조를 실제로 도입하기로 함. (5000원 차감의 정확한 원인은 발송 내역만으로 설명 안 돼서 미해결 — 사용자가 솔라피 대시보드에서 충전/사용 내역 직접 확인 필요.)
+
+**백엔드 구현**:
+- `User.credits`(유료 발송권 잔액), `freeSentCount`/`freeSentDate`(일일 무료 한도 추적), `Purchase` 모델 추가. 실제 Postgres(운영 DB)에 반영 완료.
+- `src/lib/credits.ts`: 하루 무료 한도(`FREE_DAILY_LIMIT`, 기본 3명) 계산 + 소비 로직.
+- `POST /api/m/batches`: 무료 한도 초과분은 credits에서 차감, 부족하면 402 `INSUFFICIENT_CREDITS` 에러(무료 남은 수/필요 크레딧/보유 크레딧 포함) 반환.
+- `GET /api/m/batches`: 응답에 `account: {freeRemaining, freeDailyLimit, credits}` 추가.
+- 앱인토스 콘솔에 IAP 상품 **"발송권 10건" 1,000원** 등록 완료(승인됨, `postInspectionStatus: INACTIVE` — 아직 비공개). productId: `ait.0000078387.6c3bc475.f0886f6c5d.0573601637`.
+- `POST /api/m/iap/redeem`: `MOCK_IAP=true`일 때만 동작하는 임시 충전 엔드포인트(로컬 테스트용). 실제 서버 영수증 검증(앱인토스 mTLS 연동)은 아직 구현 안 됨 — `MOCK_IAP` 미설정 시 501 반환해 무검증 크레딧 지급을 막음.
+- 로컬에서 전체 흐름(한도초과 거절→mock 충전→재시도 성공→잔액 반영) curl로 검증 완료. 커밋 eb1c55a로 푸시, Render 자동배포 확인 완료(실운영 DB에 `account` 필드 정상 응답).
+- 테스트 중 생성된 더미 유저/배치는 운영 DB에서 정리함.
+
+**미완료 (다음 단계)**:
+1. 미니앱 UI: 홈/문구작성 화면에 "무료 N건 중 M건 남음 · 보유 발송권 K건" 표시, 부족 시 충전 유도 화면
+2. 미니앱에서 실제 앱인토스 IAP 결제 호출(`IAP` SDK)로 "발송권 10건" 상품 구매 트리거
+3. 백엔드 서버 영수증 검증 — 앱인토스 mTLS 클라이언트 인증서 발급·연동 필요(이전부터 미룬 getAnonymousKey 검증과 같은 카테고리 작업)
+4. 검증 완료되면 IAP 상품 `postInspectionStatus`를 ACTIVE로 전환(`iap_product_change_status`)

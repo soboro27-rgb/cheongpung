@@ -223,6 +223,24 @@ textarea.message {
   white-space: pre-wrap;
 }
 
+.paywall {
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  border-radius: 14px;
+  background: var(--color-bg-canvas);
+}
+
+.paywall-title {
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-subtitle);
+  font-weight: 700;
+  color: var(--color-text-strong);
+}
+
+.paywall .btn {
+  margin-top: var(--space-3);
+}
+
 .intro {
   margin-top: var(--space-4);
 }
