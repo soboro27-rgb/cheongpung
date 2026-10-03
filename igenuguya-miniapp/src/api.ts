@@ -64,6 +64,23 @@ export interface BatchDetail {
   contacts: { id: number; name: string; status: string; reminderSent: boolean; replyMessage: string | null }[];
 }
 
+export interface ContactSummary {
+  total: number;
+  keep: number;
+  release: number;
+  pending: number;
+  failed: number;
+}
+
+export interface ContactRow {
+  id: number;
+  batchId: number;
+  name: string;
+  status: string;
+  replyMessage: string | null;
+  sentAt: string;
+}
+
 export interface Account {
   freeRemaining: number;
   freeDailyLimit: number;
@@ -81,6 +98,7 @@ export const api = {
       account: r.account,
     })),
   getBatch: (id: number) => request<BatchDetail>(`/batches/${id}`),
+  getAllContacts: () => request<{ summary: ContactSummary; contacts: ContactRow[] }>("/contacts"),
   createBatch: (messageText: string, contacts: { name: string; phone: string }[]) =>
     request<{ batchId: number; total: number; failedCount: number }>("/batches", {
       method: "POST",

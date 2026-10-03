@@ -7,6 +7,7 @@ import Home from "./screens/Home";
 import Pick, { type Person } from "./screens/Pick";
 import Compose from "./screens/Compose";
 import Detail from "./screens/Detail";
+import Dashboard from "./screens/Dashboard";
 
 function App() {
   const route = useHashRoute();
@@ -39,6 +40,8 @@ function App() {
     );
   } else if (route.startsWith("/batch/")) {
     screen = <Detail id={Number(route.slice("/batch/".length))} />;
+  } else if (route === "/dashboard") {
+    screen = <Dashboard />;
   } else {
     screen = <Home />;
   }

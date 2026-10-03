@@ -5,7 +5,7 @@ import { replace } from "../useHashRoute";
 import type { Person } from "./Pick";
 
 const DEFAULT_MESSAGE =
-  "안녕하세요, 저장된 연락처 정리를 도와드리는 '이게누구야'입니다. 지금 연락드린 고객님과 여전히 인연을 이어가고 싶으신지 제가 대신 여쭤보고 있어요. 불필요한 관계시라면 정리해 드리고, 오랜만에 반가운 연락이시면 메시지를 남겨주셔도 됩니다.";
+  "안녕하세요, 오래된 연락처를 정리해 드리는 '이게누구야'입니다. 저장해두신 연락처 중 계속 연락하고 싶은 분들을 다시 한번 확인해 드리고 있어요. 여전히 반가운 분이시라면 답장 한 줄 남겨주시고, 편하게 정리해 주셔도 괜찮으시면 아래 링크에서 알려주세요.";
 
 export default function Compose({
   selected,
@@ -50,7 +50,7 @@ export default function Compose({
         processProductGrant: () => true,
       },
       onEvent: async (event) => {
-        cleanup();
+        cleanup?.();
         try {
           await api.redeemCredits(event.data.orderId, CREDIT_PACK_SKU);
           setNeedsCredits(null);
@@ -62,10 +62,15 @@ export default function Compose({
         }
       },
       onError: () => {
-        cleanup();
+        cleanup?.();
         setPurchasing(false);
       },
     });
+    // 구형 토스 앱(인앱결제 미지원 버전)에서는 결제창 없이 undefined만 돌아온다.
+    if (!cleanup) {
+      setErr("토스 앱 버전이 오래되어 인앱결제를 열 수 없어요. 토스 앱을 최신 버전으로 업데이트한 뒤 다시 시도해 주세요.");
+      setPurchasing(false);
+    }
   }
 
   return (

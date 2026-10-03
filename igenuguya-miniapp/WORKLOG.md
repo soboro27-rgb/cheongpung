@@ -101,3 +101,24 @@ Render 환경변수에 `SOLAPI_SENDE`(R 누락 오타)로 저장돼있던 걸 �
 2. 미니앱에서 실제 앱인토스 IAP 결제 호출(`IAP` SDK)로 "발송권 10건" 상품 구매 트리거
 3. 백엔드 서버 영수증 검증 — 앱인토스 mTLS 클라이언트 인증서 발급·연동 필요(이전부터 미룬 getAnonymousKey 검증과 같은 카테고리 작업)
 4. 검증 완료되면 IAP 상품 `postInspectionStatus`를 ACTIVE로 전환(`iap_product_change_status`)
+
+## 2026-09-28 (계속) — IAP 구매 플로우 연결, 프로덕션 배포 확인
+
+**미니앱**: 홈 화면에 "오늘 무료 N/3건 남음 · 보유 발송권 K건" 표시. 문구 작성 화면에서 402 INSUFFICIENT_CREDITS 응답을 받으면 "발송권 10건 충전하기(1,000원)" 버튼이 뜨고, 누르면 `IAP.createOneTimePurchaseOrder`로 실제 토스 결제창이 뜸(processProductGrant는 즉시 true 반환 — 공식 권장 패턴). 결제 성공(onEvent) 시 서버에 orderId+sku를 보내 확인 요청 → 크레딧 지급 → 원래 발송 자동 재시도. 버전 20260928-9로 빌드·업로드·테스트푸시 완료.
+
+**서버**: `src/lib/tossOrder.ts` 추가 — mTLS 인증서(`TOSS_MTLS_CERT`/`TOSS_MTLS_KEY`)가 설정되면 앱인토스 주문 상태 조회 API(`/api-partner/v1/apps-in-toss/order/get-order-status`)로 실제 검증하도록 구현. 아직 인증서 발급 전이라 `MOCK_IAP=true`일 때만 무검증 지급하는 경로로 동작 중. 커밋 b7a7efd 푸시, Render 자동배포 확인(`/api/m/iap/redeem`가 실서버에서 401로 정상 응답 — 라우트 배포 확인됨).
+
+**중요**: 콘솔의 IAP 상품("발송권 10건")은 아직 **INACTIVE**로 유지 중 — mTLS 인증서 발급·연동 전까지는 활성화하지 않을 것. 활성화하면 실제 결제가 가능해지는데, processProductGrant가 즉시 true를 반환하는 구조라 검증 없이 활성화하면 결제만 받고 크레딧 지급이 안 되는 상황이 생길 수 있음.
+
+**다음 (팔렌시아 = 데이브 님 액션 필요)**:
+1. 앱인토스 콘솔 웹 "mTLS 인증서" 메뉴에서 인증서 발급
+2. 발급받은 cert/key를 Render 환경변수(`TOSS_MTLS_CERT`, `TOSS_MTLS_KEY`, PEM 텍스트 그대로)에 등록
+3. 실제 결제로 검증 테스트 → 문제 없으면 `iap_product_change_status`로 상품 ACTIVE 전환
+
+## 2026-09-28 (계속) — mTLS 인증서 연동 완료, 실검증 성공
+
+앱인토스 콘솔에서 mTLS 인증서 발급(CN: igenuguya-miniapp, 유효기간 2026-09-28~2027-10-23) → Render 환경변수(`TOSS_MTLS_CERT`, `TOSS_MTLS_KEY`)에 등록 → 실서버에서 가짜 주문번호로 `/api/m/iap/redeem` 호출해 실제 앱인토스 주문 상태 조회 API(`/api-partner/v1/apps-in-toss/order/get-order-status`)까지 mTLS로 정상 연결되는 것 확인(응답: 상품 불일치 — 연결 자체는 성공, 가짜 주문이라 정상 거절됨).
+
+인증서 파일(`이게누구야_private.key`, `이게누구야_public.crt`)은 `igenuguya/` 폴더에 저장돼 있었는데 `.gitignore`에 `*.key`/`*.crt`/`*.pem`이 없어서 깃에 올라갈 뻔한 걸 발견 → 즉시 추가해서 막음.
+
+**남은 건 딱 하나**: `iap_product_change_status`로 "발송권 10건" 상품을 ACTIVE로 전환하면 실제 판매 시작. 사용자 확인 후 진행 예정.
