@@ -104,11 +104,14 @@ export async function POST(req: NextRequest) {
 
   let failedCount = 0;
   for (const c of batch.contacts) {
-    const r = await sendSms(c.phone!, buildMessageWithLink(text, `${base}/r/${c.token}`));
+    const r = await sendSms(c.phone!, buildMessageWithLink(text, `${base}/r/${c.token}`), {
+      token: c.token,
+      body: text,
+    });
     await prisma.sendLog.create({
       data: {
         contactId: c.id,
-        provider: "sms",
+        provider: process.env.KAKAO_PF_ID && process.env.KAKAO_TEMPLATE_ID ? "alimtalk" : "sms",
         providerMsgId: r.providerMsgId,
         errorCode: r.errorCode,
         status: r.ok ? "SENT" : "FAILED",

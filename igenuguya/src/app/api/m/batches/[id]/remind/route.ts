@@ -20,11 +20,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? req.nextUrl.origin;
   let failedCount = 0;
   for (const c of targets) {
-    const r = await sendSms(c.phone!, buildMessageWithLink(`[리마인드] ${batch.messageText}`, `${base}/r/${c.token}`));
+    const remindText = `[리마인드] ${batch.messageText}`;
+    const r = await sendSms(c.phone!, buildMessageWithLink(remindText, `${base}/r/${c.token}`), {
+      token: c.token,
+      body: remindText,
+    });
     await prisma.sendLog.create({
       data: {
         contactId: c.id,
-        provider: "sms",
+        provider: process.env.KAKAO_PF_ID && process.env.KAKAO_TEMPLATE_ID ? "alimtalk" : "sms",
         providerMsgId: r.providerMsgId,
         errorCode: r.errorCode,
         status: r.ok ? "REMINDER_SENT" : "REMINDER_FAILED",

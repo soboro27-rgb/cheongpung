@@ -54,3 +54,11 @@
 - 콘솔 `miniapp_create`(앱 이름 igenuguya-miniapp, 비게임 카테고리), 개인정보처리방침(제3자 연락처 처리 명시), 심사 대응
 - getAnonymousKey hash를 서버에서 검증하지 않음 → 앱인토스 식별키 검증 API(mTLS) 연동
 - 광고성 오인/스팸 신고 리스크 검토(제3자에게 발송하는 서비스라 검수 쟁점 가능)
+
+
+## 2026-10-12 카카오 알림톡 추가
+- 요청: 문자 외에 카톡으로도, "이게누구야"가 대신 보내는 메시지처럼 보이게 (SMS는 유지)
+- 이유: 받는 사람 카톡에 채널 이름으로 뜨면 스팸 오해가 줄고 신뢰가 높음
+- 구현: lib/sms.ts sendSms에 kakaoOptions(알림톡) 추가. KAKAO_PF_ID+KAKAO_TEMPLATE_ID 있으면 알림톡, 실패 시 Solapi가 SMS 자동 대체발송. 없으면 기존 SMS.
+- 템플릿 변수: #{본문}, #{토큰} / 버튼 웹링크: https://igenuguya.onrender.com/r/#{토큰}
+- 남은 일(사람이 해야 함): 카카오톡 채널 개설 → Solapi에 채널 연동(pfId) → 알림톡 템플릿 심사 → Render env에 KAKAO_PF_ID, KAKAO_TEMPLATE_ID 추가
