@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>오갱끼데스까</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&family=Black+Han+Sans&display=swap">
+<style>
+/* Layout: 상단 현황판(본사·녹색·셔틀 3칸) → 내 체크인 → 관리 → 오늘 명단. 탭으로 직원·차량 / 프로세스 전환 */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --line:#d9dee7; --fg:#18202c; --muted:#5d6878;
+  --sign:#1450b4; --sign-ink:#ffffff; --green:#17804a; --green-soft:#e3f3ea;
+  --warn:#b45d00; --warn-soft:#fdf0de; --bad:#b4232c; --bad-soft:#fbe5e6; --sign-soft:#e4ecfa;
+  --f-display:"Black Han Sans","IBM Plex Sans KR",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans KR","Malgun Gothic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f141c; --surface:#171e29; --line:#2b3545; --fg:#e7ecf3; --muted:#9aa6b8;
+  --sign:#4f8ef0; --sign-ink:#0b1220; --green:#43c07f; --green-soft:#16301f;
+  --warn:#f0a443; --warn-soft:#33240f; --bad:#f06a72; --bad-soft:#3a1a1d; --sign-soft:#18284a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f141c; --surface:#171e29; --line:#2b3545; --fg:#e7ecf3; --muted:#9aa6b8;
+  --sign:#4f8ef0; --sign-ink:#0b1220; --green:#43c07f; --green-soft:#16301f;
+  --warn:#f0a443; --warn-soft:#33240f; --bad:#f06a72; --bad-soft:#3a1a1d; --sign-soft:#18284a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px}
+.p-sign{width:44px;height:44px;border-radius:8px;background:var(--sign);color:var(--sign-ink);font-family:var(--f-display);font-size:30px;display:grid;place-items:center;flex:none}
+header h1{margin:0;font-size:20px;font-weight:700;text-wrap:balance}
+header .sub{color:var(--muted);font-size:13px}
+.clock{margin-left:auto;font-family:var(--f-mono);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.clock small{display:block;font-size:12px;color:var(--muted);font-weight:500;text-align:right}
+nav{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav button{font:inherit;font-weight:500;background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;color:var(--muted);cursor:pointer;white-space:nowrap}
+nav button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--sign)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--sign);outline-offset:2px}
+.banner{padding:10px 14px;border-radius:8px;background:var(--warn-soft);color:var(--warn);font-size:14px}
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.board{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.board{grid-template-columns:1fr}}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.tile .lab{font-size:12px;letter-spacing:.04em;color:var(--muted);font-weight:500}
+.tile .big{font-family:var(--f-display);font-size:38px;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile .big small{font-family:var(--f-body);font-size:15px;color:var(--muted);font-weight:500;margin-left:4px}
+.tile .note{font-size:13px;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px}
+.chip.ok{background:var(--green-soft);color:var(--green)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.info{background:var(--sign-soft);color:var(--sign)}
+.meter{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--sign)}
+.meter.full i{background:var(--bad)}
+section.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+section.card h2{margin:0;font-size:16px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.grow{flex:1 1 220px;min-width:0}
+input,select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+textarea{min-height:120px;font-family:var(--f-mono);font-size:13px}
+.btn{font:inherit;font-weight:700;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:10px 16px;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.hq{background:var(--sign);border-color:var(--sign);color:var(--sign-ink)}
+.btn.green{background:var(--green);border-color:var(--green);color:var(--surface)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.sm{padding:5px 10px;font-size:13px;font-weight:500}
+.checkin{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:560px){.checkin{grid-template-columns:1fr}}
+.checkin .btn{padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.checkin .btn span{font-weight:400;font-size:12px;opacity:.85}
+.mine{padding:10px 14px;border-radius:8px;background:var(--sign-soft);font-size:14px}
+.plate{font-family:var(--f-mono);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.04em}
+td.t{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.empty{color:var(--muted);font-size:14px;padding:12px 0}
+.lot{font-size:12px;font-weight:700;padding:2px 8px;border-radius:4px}
+.lot.hq{background:var(--sign-soft);color:var(--sign)}
+.lot.green{background:var(--green-soft);color:var(--green)}
+.lot.self{background:var(--line);color:var(--fg)}
+.muted{color:var(--muted);font-size:13px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;max-width:calc(100% - 32px)}
+.flow-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
+.roles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:720px){.roles{grid-template-columns:1fr}}
+.roles ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.roles h3{margin:0 0 6px;font-size:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="p-sign" aria-hidden="true">P</div>
+    <div>
+      <h1>오갱끼데스까</h1>
+      <div class="sub">월드메모리 주차·셔틀 · 공사 기간 한시 운영 · 출근 08:30 · 출근 셔틀 08:20 · 퇴근 셔틀은 녹색주차장 차량 있을 때만</div>
+    </div>
+    <div class="clock" id="clock">--:--<small id="today">-</small></div>
+  </header>
+
+  <div class="banner" id="dbBanner" hidden></div>
+
+  <nav role="tablist">
+    <button role="tab" id="tab-today" aria-selected="true" data-tab="today">오늘 현황</button>
+    <button role="tab" id="tab-staff" aria-selected="false" data-tab="staff">직원·차량</button>
+    <button role="tab" id="tab-flow" aria-selected="false" data-tab="flow">프로세스</button>
+  </nav>
+
+  <!-- 오늘 현황 -->
+  <div id="pane-today" style="display:flex;flex-direction:column;gap:18px">
+    <div class="board">
+      <div class="tile">
+        <div class="lab">본사 주차장</div>
+        <div class="big" id="hqCount">0<small>대</small></div>
+        <div class="meter" id="hqMeter"><i style="width:0"></i></div>
+        <span class="chip ok" id="hqChip">주차 가능</span>
+        <div class="note" id="hqNote">만차 시 이평석 부장님이 만차 사인을 올립니다</div>
+      </div>
+      <div class="tile">
+        <div class="lab">신평동 녹색주차장</div>
+        <div class="big" id="greenCount">0<small>명</small></div>
+        <span class="chip info" id="greenChip">주차자 없음</span>
+        <div class="note" id="greenNote">08:20까지 주차한 직원이 있으면 셔틀이 운행합니다</div>
+      </div>
+      <div class="tile">
+        <div class="lab">출근 셔틀 08:20</div>
+        <div class="big" id="shuttleBig">확인 중</div>
+        <span class="chip warn" id="shuttleChip">08:20 판정</span>
+        <div class="note" id="shuttleNote">-</div>
+      </div>
+      <div class="tile">
+        <div class="lab" id="pmLab">퇴근 셔틀</div>
+        <div class="big" id="pmBig">미운행</div>
+        <span class="chip info" id="pmChip">녹색주차장 차량 없음</span>
+        <div class="note" id="pmNote">녹색주차장에 차량이 있을 때만 운행합니다</div>
+      </div>
+    </div>
+
+    <section class="card" aria-labelledby="h-me">
+      <h2 id="h-me">내 주차 체크</h2>
+      <div class="row">
+        <div class="grow">
+          <label class="muted" for="meSel">본인 선택 (이름 또는 차량번호로 찾기)</label>
+          <input id="meSearch" placeholder="예: 홍길동 또는 1234" autocomplete="off">
+        </div>
+        <div class="grow">
+          <label class="muted" for="meSel">&nbsp;</label>
+          <select id="meSel"><option value="">— 직원 선택 —</option></select>
+        </div>
+      </div>
+      <div class="mine" id="myStatus">본인을 선택하면 오늘 주차 상태가 표시됩니다.</div>
+      <div class="checkin">
+        <button class="btn hq" id="btnHq" type="button">본사 주차<span>본사 주차장에 주차함</span></button>
+        <button class="btn green" id="btnGreen" type="button">녹색주차장 여기 있어요<span>신평동 녹색주차장 · 셔틀 대기</span></button>
+        <button class="btn" id="btnSelf" type="button">개별 주차<span>다른 곳에 주차 · 직접 출근</span></button>
+      </div>
+      <div class="row">
+        <button class="btn sm" id="btnPmSkip" type="button" hidden>퇴근 셔틀 안 탐 (차량 이미 이동)</button>
+        <button class="btn sm" id="btnCancel" type="button" hidden>오늘 체크 취소</button>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="h-admin">
+      <h2 id="h-admin">관리 (이평석 부장 · 셔틀 담당)</h2>
+      <div class="row">
+        <button class="btn danger" id="btnFull" type="button">본사 만차 사인</button>
+        <button class="btn" id="btnShuttle" type="button">출근 셔틀 출발 확인</button>
+        <button class="btn" id="btnPm" type="button">퇴근 셔틀 출발 확인</button>
+      </div>
+      <div class="row">
+        <div class="row" style="gap:6px">
+          <label class="muted" for="capIn">본사 주차면 수</label>
+          <input id="capIn" type="number" min="1" max="500" style="width:90px">
+        </div>
+        <div class="row" style="gap:6px">
+          <label class="muted" for="pmIn">퇴근 셔틀 시각</label>
+          <input id="pmIn" type="time" style="width:130px">
+        </div>
+        <button class="btn sm" id="capSave" type="button">설정 저장</button>
+      </div>
+      <div class="muted" id="adminNote">만차 사인을 올리면 이후 출근 직원 화면에 녹색주차장/개별 주차 안내가 나옵니다. 퇴근 셔틀은 녹색주차장에 차량이 남아 있을 때만 운행합니다.</div>
+    </section>
+
+    <section class="card" aria-labelledby="h-list">
+      <h2 id="h-list">오늘 주차 명단</h2>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>시각</th><th>장소</th><th>이름</th><th>부서</th><th>차량번호</th><th>퇴근 셔틀</th></tr></thead>
+        <tbody id="parkRows"></tbody>
+      </table></div>
+      <div class="empty" id="parkEmpty">아직 체크한 직원이 없습니다. 출근 후 위의 버튼으로 주차 장소를 체크해 주세요.</div>
+    </section>
+  </div>
+
+  <!-- 직원·차량 -->
+  <div id="pane-staff" hidden style="display:flex;flex-direction:column;gap:18px">
+    <section class="card" aria-labelledby="h-add">
+      <h2 id="h-add">직원 등록 · 수정</h2>
+      <form id="empForm" class="row" autocomplete="off">
+        <input type="hidden" id="empId">
+        <div class="grow"><label class="muted" for="empName">이름 *</label><input id="empName" required></div>
+        <div class="grow"><label class="muted" for="empDept">부서</label><input id="empDept"></div>
+        <div class="grow"><label class="muted" for="empPhone">연락처</label><input id="empPhone" inputmode="tel"></div>
+        <div class="grow"><label class="muted" for="empPlate">차량번호 (없으면 비움)</label><input id="empPlate" placeholder="12가 3456"></div>
+        <div class="grow"><label class="muted" for="empCar">차종</label><input id="empCar"></div>
+        <div class="row" style="flex-basis:100%">
+          <button class="btn hq" type="submit" id="empSubmit">등록</button>
+          <button class="btn sm" type="button" id="empReset">새로 입력</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="h-bulk">
+      <h2 id="h-bulk">일괄 등록</h2>
+      <div class="muted">엑셀에서 복사해 붙여넣으세요. 한 줄에 한 명, 순서: 이름, 부서, 연락처, 차량번호, 차종 (쉼표 또는 탭 구분)</div>
+      <textarea id="bulkIn" placeholder="홍길동	영업팀	010-0000-0000	12가 3456	쏘나타"></textarea>
+      <div class="row"><button class="btn" id="bulkBtn" type="button">일괄 등록</button><span class="muted" id="bulkMsg"></span></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-staff">
+      <div class="row"><h2 id="h-staff" class="grow">직원 명단 <span class="muted" id="staffCount"></span></h2>
+        <input id="staffSearch" placeholder="이름·부서·차량번호 검색" style="max-width:260px"></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>이름</th><th>부서</th><th>연락처</th><th>차량번호</th><th>차종</th><th></th></tr></thead>
+        <tbody id="staffRows"></tbody>
+      </table></div>
+      <div class="empty" id="staffEmpty">등록된 직원이 없습니다. 위 양식이나 일괄 등록으로 첫 직원을 추가하세요.</div>
+    </section>
+  </div>
+
+  <!-- 프로세스 -->
+  <div id="pane-flow" hidden style="display:flex;flex-direction:column;gap:18px">
+    <div class="flow-wrap">
+<pre class="mermaid">
+flowchart TD
+  A([직원 출근]) --> B{본사 주차장<br/>만차 사인 있음?}
+  B -- 아니오 --> C[본사 주차<br/>웹: 본사 주차 체크]
+  B -- 예 --> E{주차 장소 선택}
+  M[이평석 부장<br/>본사 만차 확인] --> N[웹: 만차 사인 등록]
+  N -.-> B
+  E -- 신평동 녹색주차장 --> F[녹색주차장 주차<br/>웹: 여기 있어요 체크]
+  E -- 개별 주차 --> G[개별 주차<br/>웹: 개별 주차 체크]
+  F --> H{08:20까지<br/>녹색주차장 주차자 확인?}
+  H -- 예 --> I[08:20 셔틀 운행<br/>셔틀 담당: 출발 확인]
+  H -- 아니오 --> J[셔틀 미운행]
+  F -. 08:20 이후 도착 .-> K[개별 이동]
+  C --> Z([08:30 출근])
+  G --> Z
+  I --> Z
+  K --> Z
+  Z --> P{퇴근 시각<br/>녹색주차장에 차량 남아 있음?}
+  P -- 예 --> Q[퇴근 셔틀 운행<br/>본사 → 녹색주차장<br/>셔틀 담당: 출발 확인]
+  P -- 아니오 --> R[퇴근 셔틀 미운행]
+  S[녹색주차장 직원이<br/>먼저 차량 이동] --> T[웹: 퇴근 셔틀 안 탐 체크]
+  T -.-> P
+</pre>
+    </div>
+    <div class="roles">
+      <section class="card"><h3>직원</h3><ol>
+        <li>출근 전 오늘 현황에서 본사 만차 여부 확인</li>
+        <li>주차 후 본사 / 녹색주차장 / 개별 중 하나 체크</li>
+        <li>녹색주차장이면 08:20 셔틀 탑승</li>
+        <li>퇴근 시 녹색주차장 차량이면 퇴근 셔틀 탑승</li>
+        <li>조퇴·외근으로 먼저 차를 뺐으면 '퇴근 셔틀 안 탐' 체크</li>
+      </ol></section>
+      <section class="card"><h3>이평석 부장</h3><ol>
+        <li>본사 주차장이 차면 만차 사인 등록</li>
+        <li>필요 시 만차 해제 (출차 등)</li>
+        <li>본사 주차면 수 관리</li>
+      </ol></section>
+      <section class="card"><h3>셔틀 담당</h3><ol>
+        <li>08:20 판정 확인 (녹색주차장 주차자 유무)</li>
+        <li>운행 시 출발 확인 버튼</li>
+        <li>주차자가 없으면 미운행</li>
+        <li>퇴근 시각에 녹색주차장 차량이 남아 있을 때만 퇴근 셔틀 운행</li>
+      </ol></section>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+const CUT = 8*60+20;           // 08:20 출근 셔틀 판정
+const LOTS = {hq:'본사', green:'녹색주차장', self:'개별'};
+const $ = id => document.getElementById(id);
+const toMin = hm => { const [h, m] = String(hm).split(':').map(Number); return h*60 + m; };
+
+let employees = [], parks = [], day = {}, config = {hqCapacity: 30, pmTime: '18:00'}, today = '', online = false;
+
+function kst(d = new Date()){
+  const f = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+  const p = Object.fromEntries(f.formatToParts(d).map(x => [x.type, x.value]));
+  return {date:`${p.year}-${p.month}-${p.day}`, hm:`${p.hour}:${p.minute}`, min:(+p.hour)*60 + (+p.minute)};
+}
+function toast(msg){ const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 2600); }
+function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function getMe(){ try { return localStorage.getItem('wm-me') || ''; } catch { return ''; } }
+function setMe(v){ try { localStorage.setItem('wm-me', v); } catch {} }
+
+/* ---------- 서버 통신 ---------- */
+async function api(method, url, body){
+  const r = await fetch(url, {method, headers: body ? {'Content-Type': 'application/json'} : {}, body: body ? JSON.stringify(body) : undefined});
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(typeof data.detail === 'string' ? data.detail : '요청을 처리하지 못했습니다');
+  return data;
+}
+async function refresh(){
+  try {
+    const s = await api('GET', '/api/state');
+    today = s.today; config = s.config; day = s.day; parks = s.parks; employees = s.employees;
+    if (!online) { online = true; $('dbBanner').hidden = true; }
+  } catch {
+    online = false; $('dbBanner').hidden = false;
+    $('dbBanner').textContent = '서버에 연결되지 않습니다. 사내 네트워크 연결을 확인하세요. 연결되면 자동으로 다시 불러옵니다.';
+  }
+  render();
+}
+async function act(fn, okMsg){
+  try { const r = await fn(); if (okMsg) toast(typeof okMsg === 'function' ? okMsg(r) : okMsg); await refresh(); return true; }
+  catch (e) { toast(e.message || '저장하지 못했습니다. 잠시 후 다시 시도해 주세요.'); return false; }
+}
+
+/* ---------- 렌더 ---------- */
+function render(){
+  const now = kst();
+  $('clock').firstChild.nodeValue = now.hm;
+  $('today').textContent = now.date + ' KST';
+
+  const cap = Number(config.hqCapacity) || 30;
+  const hq = parks.filter(p => p.lot === 'hq');
+  const green = parks.filter(p => p.lot === 'green');
+  const greenOnTime = green.filter(p => p.min <= CUT);
+  const greenLate = green.filter(p => p.min > CUT);
+  const full = !!day.full;
+
+  $('hqCount').innerHTML = `${hq.length}<small>/ ${cap}대</small>`;
+  $('hqMeter').className = 'meter' + (full ? ' full' : '');
+  $('hqMeter').firstElementChild.style.width = Math.min(100, hq.length / cap * 100) + '%';
+  const hqChip = $('hqChip');
+  if (full) { hqChip.className = 'chip bad'; hqChip.textContent = '만차'; $('hqNote').textContent = `${day.fullHm || ''} 만차 사인 · 녹색주차장 또는 개별 주차`; }
+  else if (hq.length >= cap) { hqChip.className = 'chip warn'; hqChip.textContent = '만차 임박'; $('hqNote').textContent = '체크 대수가 주차면 수에 도달했습니다. 만차 사인 대기 중'; }
+  else { hqChip.className = 'chip ok'; hqChip.textContent = '주차 가능'; $('hqNote').textContent = '만차 시 이평석 부장님이 만차 사인을 올립니다'; }
+
+  $('greenCount').innerHTML = `${green.length}<small>명</small>`;
+  const gc = $('greenChip');
+  if (green.length) { gc.className = 'chip ok'; gc.textContent = `08:20 전 ${greenOnTime.length}명`; }
+  else { gc.className = 'chip info'; gc.textContent = '주차자 없음'; }
+  $('greenNote').textContent = greenLate.length ? `08:20 이후 도착 ${greenLate.length}명 · 개별 이동` : '08:20까지 주차한 직원이 있으면 셔틀이 운행합니다';
+
+  const sb = $('shuttleBig'), sc = $('shuttleChip'), sn = $('shuttleNote');
+  if (now.min < CUT) {
+    if (greenOnTime.length) { sb.textContent = '운행 예정'; sc.className = 'chip ok'; sc.textContent = `탑승 대기 ${greenOnTime.length}명`; }
+    else { sb.textContent = '확인 중'; sc.className = 'chip warn'; sc.textContent = '녹색주차장 주차자 없음'; }
+    sn.textContent = `판정까지 ${CUT - now.min}분 · 08:20까지 주차자가 없으면 미운행`;
+  } else if (greenOnTime.length) {
+    sb.textContent = '운행'; sc.className = 'chip ok'; sc.textContent = `탑승 ${greenOnTime.length}명`;
+    sn.textContent = day.shuttleDone ? `${day.shuttleHm} 셔틀 출발 확인됨` : '셔틀 담당: 출발 후 확인 버튼을 눌러 주세요';
+  } else {
+    sb.textContent = '미운행'; sc.className = 'chip bad'; sc.textContent = '08:20까지 주차자 없음';
+    sn.textContent = '오늘 셔틀은 운행하지 않습니다';
+  }
+
+  // 퇴근 셔틀: 녹색주차장에 차량이 남아 있을 때만 운행
+  const pmHm = config.pmTime || '18:00';
+  const pmMin = toMin(pmHm);
+  const pmRiders = green.filter(p => !p.pmSkip);
+  const pb = $('pmBig'), pc = $('pmChip'), pn = $('pmNote');
+  $('pmLab').textContent = `퇴근 셔틀 ${pmHm}`;
+  if (now.min < pmMin) {
+    if (pmRiders.length) { pb.textContent = '운행 예정'; pc.className = 'chip ok'; pc.textContent = `녹색주차장 차량 ${pmRiders.length}대`; pn.textContent = `${pmHm} 본사 출발 · 먼저 차를 뺀 직원은 '안 탐' 체크`; }
+    else { pb.textContent = '미운행 예정'; pc.className = 'chip info'; pc.textContent = '녹색주차장 차량 없음'; pn.textContent = '녹색주차장에 차량이 있을 때만 운행합니다'; }
+  } else if (pmRiders.length) {
+    pb.textContent = '운행'; pc.className = 'chip ok'; pc.textContent = `탑승 ${pmRiders.length}명`;
+    pn.textContent = day.pmDone ? `${day.pmHm} 퇴근 셔틀 출발 확인됨` : '셔틀 담당: 출발 후 확인 버튼을 눌러 주세요';
+  } else {
+    pb.textContent = '미운행'; pc.className = 'chip bad'; pc.textContent = '녹색주차장 차량 없음'; pn.textContent = '오늘 퇴근 셔틀은 운행하지 않습니다';
+  }
+
+  // 내 상태
+  const meId = getMe();
+  const me = employees.find(e => e.id === meId);
+  const mine = parks.find(p => p.empId === meId);
+  $('btnCancel').hidden = !mine;
+  $('btnPmSkip').hidden = !(mine && mine.lot === 'green');
+  if (mine && mine.lot === 'green') $('btnPmSkip').textContent = mine.pmSkip ? '퇴근 셔틀 탑승으로 되돌리기' : '퇴근 셔틀 안 탐 (차량 이미 이동)';
+  ['btnHq','btnGreen','btnSelf'].forEach(id => $(id).disabled = !me);
+  $('btnHq').disabled = !me || (full && !(mine && mine.lot === 'hq'));
+  if (!me) $('myStatus').textContent = employees.length ? '본인을 선택하면 오늘 주차 상태가 표시됩니다.' : '직원 명단이 비어 있습니다. 직원·차량 탭에서 먼저 등록해 주세요.';
+  else if (mine) $('myStatus').innerHTML = `<b>${esc(me.name)}</b> · ${mine.hm} <span class="lot ${mine.lot}">${LOTS[mine.lot]}</span> 체크 완료` + (mine.lot === 'green' ? (mine.min <= CUT ? ' · 08:20 셔틀 탑승' : ' · 셔틀 출발 후 도착, 개별 이동') + (mine.pmSkip ? ' · 퇴근 셔틀 안 탐' : ` · 퇴근 셔틀 ${pmHm} 탑승`) : '');
+  else $('myStatus').innerHTML = `<b>${esc(me.name)}</b> <span class="plate">${esc(me.plate || '차량 없음')}</span> · 아직 체크하지 않았습니다` + (full ? ' · <b>본사 만차</b>, 녹색주차장 또는 개별 주차를 선택하세요' : '');
+
+  $('btnFull').textContent = full ? '만차 해제' : '본사 만차 사인';
+  $('btnShuttle').disabled = !(now.min >= CUT && greenOnTime.length) || !!day.shuttleDone;
+  $('btnShuttle').textContent = day.shuttleDone ? `출근 셔틀 출발 확인됨 ${day.shuttleHm}` : '출근 셔틀 출발 확인';
+  $('btnPm').disabled = !(now.min >= pmMin && pmRiders.length) || !!day.pmDone;
+  $('btnPm').textContent = day.pmDone ? `퇴근 셔틀 출발 확인됨 ${day.pmHm}` : '퇴근 셔틀 출발 확인';
+  if (document.activeElement !== $('capIn')) $('capIn').value = cap;
+  if (document.activeElement !== $('pmIn')) $('pmIn').value = pmHm;
+
+  // 명단
+  $('parkEmpty').hidden = parks.length > 0;
+  $('parkRows').innerHTML = parks.map(p => {
+    const e = employees.find(x => x.id === p.empId) || {};
+    return `<tr><td class="t">${esc(p.hm)}</td><td><span class="lot ${p.lot}">${LOTS[p.lot] || p.lot}</span></td><td>${esc(e.name || '(삭제된 직원)')}</td><td>${esc(e.dept || '')}</td><td class="plate">${esc(e.plate || '-')}</td><td>${p.lot === 'green' ? (p.pmSkip ? '안 탐' : '탑승') : '-'}</td></tr>`;
+  }).join('');
+
+  renderMeOptions();
+  renderStaff();
+}
+
+function renderMeOptions(){
+  const q = $('meSearch').value.trim().toLowerCase();
+  const meId = getMe();
+  const list = employees.filter(e => !q || e.id === meId || [e.name, e.plate, e.dept].join(' ').toLowerCase().includes(q))
+    .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
+  const html = '<option value="">— 직원 선택 —</option>' + list.map(e => `<option value="${esc(e.id)}"${e.id === meId ? ' selected' : ''}>${esc(e.name)}${e.dept ? ' · ' + esc(e.dept) : ''}${e.plate ? ' · ' + esc(e.plate) : ''}</option>`).join('');
+  if ($('meSel').innerHTML !== html) $('meSel').innerHTML = html;
+}
+
+let delArm = '';
+function renderStaff(){
+  const q = $('staffSearch').value.trim().toLowerCase();
+  const list = employees.filter(e => !q || [e.name, e.dept, e.plate, e.phone, e.car].join(' ').toLowerCase().includes(q))
+    .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
+  const cars = employees.filter(e => e.plate).length;
+  $('staffCount').textContent = employees.length ? `총 ${employees.length}명 · 차량 ${cars}대` : '';
+  $('staffEmpty').hidden = employees.length > 0;
+  $('staffRows').innerHTML = list.map(e => `<tr>
+    <td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td class="t">${esc(e.phone)}</td>
+    <td class="plate">${esc(e.plate || '-')}</td><td>${esc(e.car)}</td>
+    <td><button class="btn sm" data-edit="${esc(e.id)}" type="button">수정</button>
+        <button class="btn sm danger" data-del="${esc(e.id)}" type="button">${delArm === e.id ? '삭제 확인' : '삭제'}</button></td></tr>`).join('');
+}
+
+/* ---------- 동작 ---------- */
+let flowDrawn = false;
+function showTab(tab){
+  document.querySelectorAll('nav button').forEach(x => x.setAttribute('aria-selected', x.dataset.tab === tab));
+  ['today','staff','flow'].forEach(t => $('pane-' + t).hidden = t !== tab);
+  try { localStorage.setItem('wm-tab', tab); } catch {}
+  if (tab === 'flow' && !flowDrawn && window.mermaid) { flowDrawn = true; mermaid.run({querySelector: '.mermaid'}); }
+}
+document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+$('meSearch').addEventListener('input', renderMeOptions);
+$('meSel').addEventListener('change', e => { setMe(e.target.value); render(); });
+
+function park(lot){
+  const me = employees.find(e => e.id === getMe()); if (!me) return;
+  act(() => api('POST', '/api/park', {empId: Number(me.id), lot}),
+    r => lot === 'green' ? (r.min <= CUT ? '녹색주차장 체크 완료 · 08:20 셔틀 탑승' : '체크 완료 · 셔틀 출발 후라 개별 이동해 주세요') : `${LOTS[lot]} 주차 체크 완료`);
+}
+$('btnHq').addEventListener('click', () => park('hq'));
+$('btnGreen').addEventListener('click', () => park('green'));
+$('btnSelf').addEventListener('click', () => park('self'));
+$('btnCancel').addEventListener('click', () => act(() => api('DELETE', '/api/park/' + getMe()), '오늘 체크를 취소했습니다'));
+$('btnPmSkip').addEventListener('click', () => {
+  const mine = parks.find(p => p.empId === getMe()); if (!mine) return;
+  act(() => api('POST', `/api/park/${mine.empId}/pmskip`, {pmSkip: !mine.pmSkip}), mine.pmSkip ? '퇴근 셔틀 탑승으로 되돌렸습니다' : '퇴근 셔틀 안 탐으로 체크했습니다');
+});
+
+$('btnFull').addEventListener('click', () => {
+  const on = !day.full;
+  act(() => api('POST', '/api/day', {action: on ? 'full_on' : 'full_off'}), r => on ? `${r.hm} 본사 만차 사인 등록` : '만차를 해제했습니다');
+});
+$('btnShuttle').addEventListener('click', () => act(() => api('POST', '/api/day', {action: 'shuttle'}), r => `${r.hm} 출근 셔틀 출발 확인`));
+$('btnPm').addEventListener('click', () => act(() => api('POST', '/api/day', {action: 'pm'}), r => `${r.hm} 퇴근 셔틀 출발 확인`));
+$('capSave').addEventListener('click', () => {
+  const v = Math.round(Number($('capIn').value)), pm = $('pmIn').value;
+  if (!(v >= 1 && v <= 500)) { toast('주차면 수는 1~500 사이 숫자로 입력하세요'); return; }
+  if (!/^\d{2}:\d{2}$/.test(pm)) { toast('퇴근 셔틀 시각을 입력하세요 (예: 18:00)'); return; }
+  act(() => api('POST', '/api/config', {hqCapacity: v, pmTime: pm}), `본사 ${v}면 · 퇴근 셔틀 ${pm}로 저장했습니다`);
+});
+
+function resetForm(){ $('empForm').reset(); $('empId').value = ''; $('empSubmit').textContent = '등록'; }
+$('empReset').addEventListener('click', resetForm);
+$('empForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const body = {name: $('empName').value.trim(), dept: $('empDept').value.trim(), phone: $('empPhone').value.trim(), plate: $('empPlate').value.trim(), car: $('empCar').value.trim()};
+  if (!body.name) return;
+  const id = $('empId').value;
+  const ok = await act(() => id ? api('PUT', '/api/employees/' + id, body) : api('POST', '/api/employees', body), id ? `${body.name} 정보를 수정했습니다` : `${body.name} 등록 완료`);
+  if (ok) resetForm();
+});
+
+$('staffRows').addEventListener('click', e => {
+  const ed = e.target.closest('[data-edit]'), de = e.target.closest('[data-del]');
+  if (ed) {
+    const x = employees.find(v => v.id === ed.dataset.edit); if (!x) return;
+    $('empId').value = x.id; $('empName').value = x.name || ''; $('empDept').value = x.dept || ''; $('empPhone').value = x.phone || ''; $('empPlate').value = x.plate || ''; $('empCar').value = x.car || '';
+    $('empSubmit').textContent = '수정 저장'; $('empName').focus(); window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+  if (de) {
+    const id = de.dataset.del;
+    if (delArm !== id) { delArm = id; renderStaff(); setTimeout(() => { if (delArm === id) { delArm = ''; renderStaff(); } }, 4000); return; }
+    delArm = ''; const x = employees.find(v => v.id === id);
+    act(() => api('DELETE', '/api/employees/' + id), `${x ? x.name : '직원'} 삭제 완료`);
+  }
+});
+$('staffSearch').addEventListener('input', renderStaff);
+
+$('bulkBtn').addEventListener('click', async () => {
+  const rows = $('bulkIn').value.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(line => {
+    const [name = '', dept = '', phone = '', plate = '', car = ''] = line.split(/\t|,/).map(s => s.trim());
+    return {name, dept, phone, plate, car};
+  });
+  if (!rows.length) { $('bulkMsg').textContent = '붙여넣은 내용이 없습니다'; return; }
+  $('bulkBtn').disabled = true;
+  try {
+    const r = await api('POST', '/api/employees/bulk', {rows});
+    $('bulkMsg').textContent = `${r.added}명 등록` + (r.skipped ? ` · ${r.skipped}줄 건너뜀 (머리글·이름 없음·중복 차량)` : '');
+    if (r.added) $('bulkIn').value = '';
+    await refresh();
+  } catch (e) { $('bulkMsg').textContent = e.message; }
+  $('bulkBtn').disabled = false;
+});
+
+if (window.mermaid) mermaid.initialize({startOnLoad: false, theme: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default'});
+try { const t = localStorage.getItem('wm-tab'); if (t) showTab(t); } catch {}
+refresh();
+setInterval(refresh, 5000);    // 5초마다 최신 현황 갱신
+</script>
+</body>
+</html>
