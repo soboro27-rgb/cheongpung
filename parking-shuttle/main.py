@@ -64,6 +64,11 @@ def init_db():
             shuttle_done INTEGER DEFAULT 0, shuttle_hm TEXT,
             pm_done INTEGER DEFAULT 0, pm_hm TEXT);
         CREATE TABLE IF NOT EXISTS config(key TEXT PRIMARY KEY, value TEXT);
+        CREATE TABLE IF NOT EXISTS tips(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT NOT NULL, emp_id INTEGER NOT NULL,
+            place TEXT NOT NULL, spots INTEGER, note TEXT DEFAULT '',
+            hm TEXT NOT NULL, gone INTEGER DEFAULT 0);
         """)
 
 
@@ -84,6 +89,7 @@ def cleanup(c, today):
     cutoff = (datetime.strptime(today, "%Y-%m-%d") - timedelta(days=KEEP_DAYS)).strftime("%Y-%m-%d")
     c.execute("DELETE FROM parks WHERE date < ?", (cutoff,))
     c.execute("DELETE FROM days WHERE date < ?", (cutoff,))
+    c.execute("DELETE FROM tips WHERE date < ?", (cutoff,))
     c.execute("INSERT OR REPLACE INTO config(key, value) VALUES('lastCleanup', ?)", (today,))
 
 
@@ -101,6 +107,7 @@ def state():
         day = c.execute("SELECT * FROM days WHERE date=?", (today,)).fetchone()
         parks = c.execute("SELECT * FROM parks WHERE date=? ORDER BY at", (today,)).fetchall()
         emps = c.execute("SELECT * FROM employees ORDER BY name").fetchall()
+        tips = c.execute("SELECT * FROM tips WHERE date=? ORDER BY id DESC", (today,)).fetchall()
     return {
         "today": today, "hm": hm, "min": mn,
         "config": {"hqCapacity": int(cfg["hqCapacity"]), "pmTime": cfg["pmTime"]},
@@ -111,6 +118,8 @@ def state():
         },
         "parks": [{"empId": str(p["emp_id"]), "lot": p["lot"], "at": p["at"], "hm": p["hm"],
                    "min": p["min"], "pmSkip": bool(p["pm_skip"])} for p in parks],
+        "tips": [{"id": t["id"], "empId": str(t["emp_id"]), "place": t["place"], "spots": t["spots"],
+                  "note": t["note"], "hm": t["hm"], "gone": bool(t["gone"])} for t in tips],
         "employees": [{"id": str(e["id"]), "name": e["name"], "dept": e["dept"], "phone": e["phone"],
                        "plate": e["plate"], "car": e["car"]} for e in emps],
     }
@@ -159,6 +168,55 @@ def pm_skip(emp_id: int, body: PmSkipIn):
                         (int(body.pmSkip), today, emp_id))
         if cur.rowcount == 0:
             raise HTTPException(404, "오늘 녹색주차장 체크 기록이 없습니다")
+    return {"ok": True}
+
+
+# ---------- 외부주차 자리 알림 ----------
+class TipIn(BaseModel):
+    empId: int
+    place: str
+    spots: int | None = None
+    note: str = ""
+
+
+@app.post("/api/tips")
+def add_tip(t: TipIn):
+    place, note = t.place.strip()[:60], t.note.strip()[:120]
+    if not place:
+        raise HTTPException(400, "주차 위치를 입력하세요")
+    if t.spots is not None and not 0 <= t.spots <= 99:
+        raise HTTPException(400, "남은 자리 수는 0~99 사이로 입력하세요")
+    _, today, hm, _ = now_kst()
+    with conn() as c:
+        park = c.execute("SELECT lot FROM parks WHERE date=? AND emp_id=?", (today, t.empId)).fetchone()
+        if not park or park["lot"] != "self":
+            raise HTTPException(409, "오늘 '개별 주차'로 체크한 직원만 알릴 수 있습니다")
+        c.execute("INSERT INTO tips(date, emp_id, place, spots, note, hm) VALUES(?,?,?,?,?,?)",
+                  (today, t.empId, place, t.spots, note, hm))
+    return {"ok": True}
+
+
+class TipGoneIn(BaseModel):
+    empId: int
+    gone: bool
+
+
+@app.post("/api/tips/{tip_id}/gone")
+def tip_gone(tip_id: int, body: TipGoneIn):
+    """자리가 찼음/다시 비었음 표시 — 누구나 가능(현장 확인 용도)."""
+    with conn() as c:
+        cur = c.execute("UPDATE tips SET gone=? WHERE id=?", (int(body.gone), tip_id))
+        if cur.rowcount == 0:
+            raise HTTPException(404, "알림을 찾을 수 없습니다")
+    return {"ok": True}
+
+
+@app.delete("/api/tips/{tip_id}")
+def delete_tip(tip_id: int, empId: int):
+    with conn() as c:
+        cur = c.execute("DELETE FROM tips WHERE id=? AND emp_id=?", (tip_id, empId))
+        if cur.rowcount == 0:
+            raise HTTPException(404, "본인이 올린 알림만 삭제할 수 있습니다")
     return {"ok": True}
 
 
@@ -255,6 +313,7 @@ def edit_employee(emp_id: int, e: EmpIn):
 def delete_employee(emp_id: int):
     with conn() as c:
         c.execute("DELETE FROM parks WHERE emp_id=?", (emp_id,))
+        c.execute("DELETE FROM tips WHERE emp_id=?", (emp_id,))
         c.execute("DELETE FROM employees WHERE id=?", (emp_id,))
     return {"ok": True}
 

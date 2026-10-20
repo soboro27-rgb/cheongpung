@@ -166,6 +166,19 @@ td.t{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
       </div>
     </section>
 
+    <section class="card" aria-labelledby="h-tips">
+      <h2 id="h-tips">외부주차 자리 알림</h2>
+      <div class="muted">개별 주차한 분이 근처에 빈자리를 봤다면 알려 주세요. 본사가 만차일 때 다른 직원이 참고합니다. 오늘 기록만 보입니다.</div>
+      <div id="tipList"></div>
+      <form id="tipForm" class="row" autocomplete="off" hidden>
+        <div class="grow"><label class="muted" for="tipPlace">위치 *</label><input id="tipPlace" maxlength="60" placeholder="예: 신평역 앞 공영주차장 2층"></div>
+        <div style="flex:0 0 100px"><label class="muted" for="tipSpots">남은 자리</label><input id="tipSpots" type="number" min="0" max="99" placeholder="대"></div>
+        <div class="grow"><label class="muted" for="tipNote">메모</label><input id="tipNote" maxlength="120" placeholder="예: 입구 쪽 3대, 무료"></div>
+        <button class="btn hq" type="submit">자리 있어요 알리기</button>
+      </form>
+      <div class="muted" id="tipHint"></div>
+    </section>
+
     <section class="card" aria-labelledby="h-admin">
       <h2 id="h-admin">관리 (이평석 부장 · 셔틀 담당)</h2>
       <div class="row">
@@ -290,7 +303,7 @@ const LOTS = {hq:'본사', green:'녹색주차장', self:'개별'};
 const $ = id => document.getElementById(id);
 const toMin = hm => { const [h, m] = String(hm).split(':').map(Number); return h*60 + m; };
 
-let employees = [], parks = [], day = {}, config = {hqCapacity: 30, pmTime: '18:00'}, today = '', online = false;
+let employees = [], parks = [], tips = [], day = {}, config = {hqCapacity: 30, pmTime: '18:00'}, today = '', online = false;
 
 function kst(d = new Date()){
   const f = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
@@ -312,7 +325,7 @@ async function api(method, url, body){
 async function refresh(){
   try {
     const s = await api('GET', '/api/state');
-    today = s.today; config = s.config; day = s.day; parks = s.parks; employees = s.employees;
+    today = s.today; config = s.config; day = s.day; parks = s.parks; tips = s.tips || []; employees = s.employees;
     if (!online) { online = true; $('dbBanner').hidden = true; }
   } catch {
     online = false; $('dbBanner').hidden = false;
@@ -394,6 +407,21 @@ function render(){
   else if (mine) $('myStatus').innerHTML = `<b>${esc(me.name)}</b> · ${mine.hm} <span class="lot ${mine.lot}">${LOTS[mine.lot]}</span> 체크 완료` + (mine.lot === 'green' ? (mine.min <= CUT ? ' · 08:20 셔틀 탑승' : ' · 셔틀 출발 후 도착, 개별 이동') + (mine.pmSkip ? ' · 퇴근 셔틀 안 탐' : ` · 퇴근 셔틀 ${pmHm} 탑승`) : '');
   else $('myStatus').innerHTML = `<b>${esc(me.name)}</b> <span class="plate">${esc(me.plate || '차량 없음')}</span> · 아직 체크하지 않았습니다` + (full ? ' · <b>본사 만차</b>, 녹색주차장 또는 개별 주차를 선택하세요' : '');
 
+  // 외부주차 자리 알림
+  const canTip = !!(me && mine && mine.lot === 'self');
+  $('tipForm').hidden = !canTip;
+  $('tipHint').textContent = canTip ? '' : (me ? "알리려면 먼저 '개별 주차'를 체크하세요." : '알리려면 본인을 선택하고 개별 주차를 체크하세요.');
+  const tipHtml = tips.map(t => {
+    const who = employees.find(x => x.id === t.empId) || {};
+    const own = t.empId === meId;
+    return `<div class="mine" style="margin-bottom:8px${t.gone ? ';opacity:.6' : ''}"><b>${esc(t.place)}</b> ` +
+      (t.gone ? '<span class="chip bad">자리 없어짐</span>' : `<span class="chip ok">${t.spots == null ? '자리 있음' : t.spots + '대 가능'}</span>`) +
+      `<div class="muted">${esc(t.hm)} · ${esc(who.name || '직원')}${t.note ? ' · ' + esc(t.note) : ''}</div>` +
+      `<div class="row" style="margin-top:6px"><button class="btn sm" type="button" data-tipgone="${t.id}" data-gone="${t.gone ? 0 : 1}">${t.gone ? '다시 자리 있음' : '자리 없어짐'}</button>` +
+      (own ? `<button class="btn sm danger" type="button" data-tipdel="${t.id}">삭제</button>` : '') + '</div></div>';
+  }).join('');
+  if ($('tipList').innerHTML !== tipHtml) $('tipList').innerHTML = tipHtml || '<div class="empty">오늘 올라온 알림이 없습니다.</div>';
+
   $('btnFull').textContent = full ? '만차 해제' : '본사 만차 사인';
   $('btnShuttle').disabled = !(now.min >= CUT && greenOnTime.length) || !!day.shuttleDone;
   $('btnShuttle').textContent = day.shuttleDone ? `출근 셔틀 출발 확인됨 ${day.shuttleHm}` : '출근 셔틀 출발 확인';
@@ -458,6 +486,17 @@ function park(lot){
 $('btnHq').addEventListener('click', () => park('hq'));
 $('btnGreen').addEventListener('click', () => park('green'));
 $('btnSelf').addEventListener('click', () => park('self'));
+$('tipForm').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const sp = $('tipSpots').value;
+  const ok = await act(() => api('POST', '/api/tips', {empId: Number(getMe()), place: $('tipPlace').value, spots: sp === '' ? null : Number(sp), note: $('tipNote').value}), '자리 알림을 올렸습니다');
+  if (ok) ['tipPlace','tipSpots','tipNote'].forEach(id => $(id).value = '');
+});
+$('tipList').addEventListener('click', ev => {
+  const g = ev.target.closest('[data-tipgone]'), d = ev.target.closest('[data-tipdel]');
+  if (g) act(() => api('POST', `/api/tips/${g.dataset.tipgone}/gone`, {empId: Number(getMe()), gone: g.dataset.gone === '1'}), '표시를 바꿨습니다');
+  if (d) act(() => api('DELETE', `/api/tips/${d.dataset.tipdel}?empId=${Number(getMe())}`), '알림을 삭제했습니다');
+});
 $('btnCancel').addEventListener('click', () => act(() => api('DELETE', '/api/park/' + getMe()), '오늘 체크를 취소했습니다'));
 $('btnPmSkip').addEventListener('click', () => {
   const mine = parks.find(p => p.empId === getMe()); if (!mine) return;
