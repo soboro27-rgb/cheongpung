@@ -83,6 +83,9 @@ table{border-collapse:collapse;width:100%;font-size:14px}
 th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.04em}
 td.t{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.rank td.pos{font-family:var(--f-display);font-size:20px;width:64px}
+.rank tr.p1 td.pos{color:#c9a100}.rank tr.p2 td.pos{color:#8e98a5}.rank tr.p3 td.pos{color:#b06a2c}
+.rank tr.p1 td,.rank tr.p2 td,.rank tr.p3 td{font-weight:700}
 .empty{color:var(--muted);font-size:14px;padding:12px 0}
 .lot{font-size:12px;font-weight:700;padding:2px 8px;border-radius:4px}
 .lot.hq{background:var(--sign-soft);color:var(--sign)}
@@ -208,6 +211,16 @@ td.t{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
         <button class="btn sm" id="capSave" type="button">설정 저장</button>
       </div>
       <div class="muted" id="adminNote">만차 사인을 올리면 이후 출근 직원 화면에 녹색주차장/개별 주차 안내가 나옵니다. 퇴근 셔틀은 녹색주차장에 차량이 남아 있을 때만 운행합니다.</div>
+    </section>
+
+    <section class="card" aria-labelledby="h-rank">
+      <h2 id="h-rank">🏁 본사 주차 순위</h2>
+      <div class="muted">본사 주차를 체크한 순서대로 순위가 매겨집니다. 랩타임은 등록 시각입니다.</div>
+      <div class="tbl-wrap"><table class="rank">
+        <thead><tr><th>순위</th><th>이름</th><th>부서</th><th>차량번호</th><th>랩타임</th></tr></thead>
+        <tbody id="rankRows"></tbody>
+      </table></div>
+      <div class="empty" id="rankEmpty">아직 본사에 주차한 직원이 없습니다. 첫 번째 주자는 누구?</div>
     </section>
 
     <section class="card" aria-labelledby="h-list">
@@ -439,6 +452,14 @@ function render(){
   $('btnPm').textContent = day.pmDone ? `퇴근 셔틀 출발 확인됨 ${day.pmHm}` : '퇴근 셔틀 출발 확인';
   if (document.activeElement !== $('capIn')) $('capIn').value = cap;
   if (document.activeElement !== $('pmIn')) $('pmIn').value = pmHm;
+
+  // 본사 주차 순위 (등록 시각 순)
+  const ranked = hq.slice().sort((a, b) => a.at < b.at ? -1 : a.at > b.at ? 1 : 0);
+  $('rankEmpty').hidden = ranked.length > 0;
+  $('rankRows').innerHTML = ranked.map((p, i) => {
+    const e = employees.find(x => x.id === p.empId) || {};
+    return `<tr class="${i < 3 ? 'p' + (i + 1) : ''}"><td class="pos">${i + 1}${i === 0 ? '🏆' : ''}</td><td>${esc(e.name || '(삭제된 직원)')}</td><td>${esc(e.dept || '')}</td><td class="plate">${esc(e.plate || '-')}</td><td class="t">${esc(p.hm)}</td></tr>`;
+  }).join('');
 
   // 명단
   $('parkEmpty').hidden = parks.length > 0;
