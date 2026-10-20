@@ -69,6 +69,7 @@ textarea{min-height:120px;font-family:var(--f-mono);font-size:13px}
 .checkin{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 @media (max-width:560px){.checkin{grid-template-columns:1fr}}
 .checkin .btn{padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.checkin .btn.off{grid-column:1/-1;background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
 .checkin .btn span{font-weight:400;font-size:12px;opacity:.85}
 .mine{padding:10px 14px;border-radius:8px;background:var(--sign-soft);font-size:14px}
 .plate{font-family:var(--f-mono);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -160,8 +161,8 @@ td.t{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
         <button class="btn hq" id="btnHq" type="button">본사 주차<span>본사 주차장에 주차함</span></button>
         <button class="btn green" id="btnGreen" type="button">녹색주차장 여기 있어요<span>신평동 녹색주차장 · 셔틀 대기</span></button>
         <button class="btn" id="btnSelf" type="button">개별 주차<span>다른 곳에 주차 · 직접 출근</span></button>
+        <button class="btn off" id="btnOff" type="button">휴가자는 오늘 쉽니다<span>차량 없음 · 오늘 출근하지 않음</span></button>
       </div>
-      <div class="row"><button class="btn sm" id="btnOff" type="button">휴가자는 오늘 쉽니다 (차량 없음)</button></div>
       <div class="row">
         <button class="btn sm" id="btnPmSkip" type="button" hidden>퇴근 셔틀 안 탐 (차량 이미 이동)</button>
         <button class="btn sm" id="btnCancel" type="button" hidden>오늘 체크 취소</button>
