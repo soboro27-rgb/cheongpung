@@ -82,6 +82,7 @@ td.t{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
 .lot.hq{background:var(--sign-soft);color:var(--sign)}
 .lot.green{background:var(--green-soft);color:var(--green)}
 .lot.self{background:var(--line);color:var(--fg)}
+.lot.off{background:var(--warn-soft);color:var(--warn)}
 .muted{color:var(--muted);font-size:13px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;max-width:calc(100% - 32px)}
 .flow-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
@@ -160,6 +161,7 @@ td.t{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
         <button class="btn green" id="btnGreen" type="button">녹색주차장 여기 있어요<span>신평동 녹색주차장 · 셔틀 대기</span></button>
         <button class="btn" id="btnSelf" type="button">개별 주차<span>다른 곳에 주차 · 직접 출근</span></button>
       </div>
+      <div class="row"><button class="btn sm" id="btnOff" type="button">휴가자는 오늘 쉽니다 (차량 없음)</button></div>
       <div class="row">
         <button class="btn sm" id="btnPmSkip" type="button" hidden>퇴근 셔틀 안 탐 (차량 이미 이동)</button>
         <button class="btn sm" id="btnCancel" type="button" hidden>오늘 체크 취소</button>
@@ -299,7 +301,7 @@ flowchart TD
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
 <script>
 const CUT = 8*60+20;           // 08:20 출근 셔틀 판정
-const LOTS = {hq:'본사', green:'녹색주차장', self:'개별'};
+const LOTS = {hq:'본사', green:'녹색주차장', self:'개별', off:'휴가'};
 const $ = id => document.getElementById(id);
 const toMin = hm => { const [h, m] = String(hm).split(':').map(Number); return h*60 + m; };
 
@@ -401,10 +403,10 @@ function render(){
   $('btnCancel').hidden = !mine;
   $('btnPmSkip').hidden = !(mine && mine.lot === 'green');
   if (mine && mine.lot === 'green') $('btnPmSkip').textContent = mine.pmSkip ? '퇴근 셔틀 탑승으로 되돌리기' : '퇴근 셔틀 안 탐 (차량 이미 이동)';
-  ['btnHq','btnGreen','btnSelf'].forEach(id => $(id).disabled = !me);
+  ['btnHq','btnGreen','btnSelf','btnOff'].forEach(id => $(id).disabled = !me);
   $('btnHq').disabled = !me || (full && !(mine && mine.lot === 'hq'));
   if (!me) $('myStatus').textContent = employees.length ? '본인을 선택하면 오늘 주차 상태가 표시됩니다.' : '직원 명단이 비어 있습니다. 직원·차량 탭에서 먼저 등록해 주세요.';
-  else if (mine) $('myStatus').innerHTML = `<b>${esc(me.name)}</b> · ${mine.hm} <span class="lot ${mine.lot}">${LOTS[mine.lot]}</span> 체크 완료` + (mine.lot === 'green' ? (mine.min <= CUT ? ' · 08:20 셔틀 탑승' : ' · 셔틀 출발 후 도착, 개별 이동') + (mine.pmSkip ? ' · 퇴근 셔틀 안 탐' : ` · 퇴근 셔틀 ${pmHm} 탑승`) : '');
+  else if (mine) $('myStatus').innerHTML = `<b>${esc(me.name)}</b> · ${mine.hm} <span class="lot ${mine.lot}">${LOTS[mine.lot]}</span> ${mine.lot === 'off' ? '등록 · 오늘 쉽니다' : '체크 완료'}` + (mine.lot === 'green' ? (mine.min <= CUT ? ' · 08:20 셔틀 탑승' : ' · 셔틀 출발 후 도착, 개별 이동') + (mine.pmSkip ? ' · 퇴근 셔틀 안 탐' : ` · 퇴근 셔틀 ${pmHm} 탑승`) : '');
   else $('myStatus').innerHTML = `<b>${esc(me.name)}</b> <span class="plate">${esc(me.plate || '차량 없음')}</span> · 아직 체크하지 않았습니다` + (full ? ' · <b>본사 만차</b>, 녹색주차장 또는 개별 주차를 선택하세요' : '');
 
   // 여기 자리있어요! (외부주차 자리알림)
@@ -481,11 +483,12 @@ $('meSel').addEventListener('change', e => { setMe(e.target.value); render(); })
 function park(lot){
   const me = employees.find(e => e.id === getMe()); if (!me) return;
   act(() => api('POST', '/api/park', {empId: Number(me.id), lot}),
-    r => lot === 'green' ? (r.min <= CUT ? '녹색주차장 체크 완료 · 08:20 셔틀 탑승' : '체크 완료 · 셔틀 출발 후라 개별 이동해 주세요') : `${LOTS[lot]} 주차 체크 완료`);
+    r => lot === 'green' ? (r.min <= CUT ? '녹색주차장 체크 완료 · 08:20 셔틀 탑승' : '체크 완료 · 셔틀 출발 후라 개별 이동해 주세요') : lot === 'off' ? '오늘 쉬는 것으로 등록했습니다' : `${LOTS[lot]} 주차 체크 완료`);
 }
 $('btnHq').addEventListener('click', () => park('hq'));
 $('btnGreen').addEventListener('click', () => park('green'));
 $('btnSelf').addEventListener('click', () => park('self'));
+$('btnOff').addEventListener('click', () => park('off'));
 $('tipForm').addEventListener('submit', async ev => {
   ev.preventDefault();
   const sp = $('tipSpots').value;

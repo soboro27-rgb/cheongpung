@@ -22,7 +22,7 @@ KEEP_DAYS = int(os.environ.get("KEEP_DAYS", "30"))
 KST = timezone(timedelta(hours=9))
 CUT = 8 * 60 + 20  # 08:20 출근 셔틀 판정
 DEFAULTS = {"hqCapacity": "30", "pmTime": "18:00"}
-LOTS = {"hq", "green", "self"}
+LOTS = {"hq", "green", "self", "off"}  # off = 휴가·휴무(차량 없음)
 
 app = FastAPI(title="오갱끼데스까")
 
