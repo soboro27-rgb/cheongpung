@@ -167,7 +167,7 @@ td.t{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
     </section>
 
     <section class="card" aria-labelledby="h-tips">
-      <h2 id="h-tips">외부주차 자리 알림</h2>
+      <h2 id="h-tips">여기 자리있어요! (외부주차 자리알림)</h2>
       <div class="muted">개별 주차한 분이 근처에 빈자리를 봤다면 알려 주세요. 본사가 만차일 때 다른 직원이 참고합니다. 오늘 기록만 보입니다.</div>
       <div id="tipList"></div>
       <form id="tipForm" class="row" autocomplete="off" hidden>
@@ -407,7 +407,7 @@ function render(){
   else if (mine) $('myStatus').innerHTML = `<b>${esc(me.name)}</b> · ${mine.hm} <span class="lot ${mine.lot}">${LOTS[mine.lot]}</span> 체크 완료` + (mine.lot === 'green' ? (mine.min <= CUT ? ' · 08:20 셔틀 탑승' : ' · 셔틀 출발 후 도착, 개별 이동') + (mine.pmSkip ? ' · 퇴근 셔틀 안 탐' : ` · 퇴근 셔틀 ${pmHm} 탑승`) : '');
   else $('myStatus').innerHTML = `<b>${esc(me.name)}</b> <span class="plate">${esc(me.plate || '차량 없음')}</span> · 아직 체크하지 않았습니다` + (full ? ' · <b>본사 만차</b>, 녹색주차장 또는 개별 주차를 선택하세요' : '');
 
-  // 외부주차 자리 알림
+  // 여기 자리있어요! (외부주차 자리알림)
   const canTip = !!(me && mine && mine.lot === 'self');
   $('tipForm').hidden = !canTip;
   $('tipHint').textContent = canTip ? '' : (me ? "알리려면 먼저 '개별 주차'를 체크하세요." : '알리려면 본인을 선택하고 개별 주차를 체크하세요.');
