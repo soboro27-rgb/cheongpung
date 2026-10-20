@@ -458,7 +458,7 @@ function render(){
   $('rankEmpty').hidden = ranked.length > 0;
   $('rankRows').innerHTML = ranked.map((p, i) => {
     const e = employees.find(x => x.id === p.empId) || {};
-    return `<tr class="${i < 3 ? 'p' + (i + 1) : ''}"><td class="pos">${i + 1}${i === 0 ? '🏆' : ''}</td><td>${esc(e.name || '(삭제된 직원)')}</td><td>${esc(e.dept || '')}</td><td class="plate">${esc(e.plate || '-')}</td><td class="t">${esc(p.hm)}</td></tr>`;
+    return `<tr class="${i < 3 ? 'p' + (i + 1) : ''}"><td class="pos">${['🥇', '🥈', '🥉'][i] || ''} ${i + 1}</td><td>${esc(e.name || '(삭제된 직원)')}</td><td>${esc(e.dept || '')}</td><td class="plate">${esc(e.plate || '-')}</td><td class="t">${esc(p.hm)}</td></tr>`;
   }).join('');
 
   // 명단
