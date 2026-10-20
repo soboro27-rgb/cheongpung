@@ -51,6 +51,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .tile .big{font-family:var(--f-display);font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}
 .tile .big small{font-family:var(--f-body);font-size:15px;color:var(--muted);font-weight:500;margin-left:4px}
 .tile .note{font-size:13px;color:var(--muted)}
+.cup{vertical-align:-4px;flex:none}
 .top3 ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .top3 li{display:flex;align-items:baseline;gap:6px;font-size:14px;min-width:0}
 .top3 li .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
@@ -343,6 +344,11 @@ function kst(d = new Date()){
 }
 function toast(msg){ const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 2600); }
 function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+const CUP_COLORS = [['#ffd84a', '#c9a100'], ['#e3e8ef', '#8e98a5'], ['#e0955a', '#a15f26']];
+function cup(i){
+  const c = CUP_COLORS[i]; if (!c) return '';
+  return `<svg class="cup" viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="${i + 1}위 트로피"><path d="M6 3h12v5a6 6 0 0 1-12 0z" fill="${c[0]}" stroke="${c[1]}" stroke-width="1.2"/><path d="M6 5H3.5v2a3.5 3.5 0 0 0 3 3.4M18 5h2.5v2a3.5 3.5 0 0 1-3 3.4" fill="none" stroke="${c[1]}" stroke-width="1.4"/><path d="M12 14v4M8 21h8l-1-3H9z" fill="${c[0]}" stroke="${c[1]}" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+}
 function getMe(){ try { return localStorage.getItem('wm-me') || ''; } catch { return ''; } }
 function setMe(v){ try { localStorage.setItem('wm-me', v); } catch {} }
 
@@ -465,12 +471,12 @@ function render(){
   const ranked = hq.slice().sort((a, b) => a.at < b.at ? -1 : a.at > b.at ? 1 : 0);
   $('top3List').innerHTML = [0, 1, 2].map(i => {
     const p = ranked[i], e = p ? (employees.find(x => x.id === p.empId) || {}) : null;
-    return `<li><span>${['🥇', '🥈', '🥉'][i]}</span>` + (p ? `<span class="nm">${esc(e.name || '(삭제된 직원)')}</span><span class="tm">${esc(p.hm)}</span>` : '<span class="nm muted">대기 중</span>') + '</li>';
+    return `<li><span>${cup(i)}</span>` + (p ? `<span class="nm">${esc(e.name || '(삭제된 직원)')}</span><span class="tm">${esc(p.hm)}</span>` : '<span class="nm muted">대기 중</span>') + '</li>';
   }).join('');
   $('rankEmpty').hidden = ranked.length > 0;
   $('rankRows').innerHTML = ranked.map((p, i) => {
     const e = employees.find(x => x.id === p.empId) || {};
-    return `<tr class="${i < 3 ? 'p' + (i + 1) : ''}"><td class="pos">${['🥇', '🥈', '🥉'][i] || ''} ${i + 1}</td><td>${esc(e.name || '(삭제된 직원)')}</td><td>${esc(e.dept || '')}</td><td class="plate">${esc(e.plate || '-')}</td><td class="t">${esc(p.hm)}</td></tr>`;
+    return `<tr class="${i < 3 ? 'p' + (i + 1) : ''}"><td class="pos">${cup(i)} ${i + 1}</td><td>${esc(e.name || '(삭제된 직원)')}</td><td>${esc(e.dept || '')}</td><td class="plate">${esc(e.plate || '-')}</td><td class="t">${esc(p.hm)}</td></tr>`;
   }).join('');
 
   // 명단
