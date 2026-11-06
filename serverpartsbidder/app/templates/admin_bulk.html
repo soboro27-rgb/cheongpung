@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>비딩 엑셀 일괄 등록</h1>
+<div class="card">
+  <p>우리 양식 또는 <b>퀵솔 원본 엑셀</b>(Brand · Part Number · Description · QTY · Sell Price 열)을 그대로 올리면 됩니다. 첫 번째 시트를 읽습니다. 확인 화면에서 '등록'을 눌러야 실제로 올라갑니다.</p>
+  <form method="post" action="/admin/bids-bulk/preview" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:12px">
+    <div class="fields">
+      <label for="bf">엑셀 파일<input id="bf" type="file" name="file" accept=".xlsx" required></label>
+      <label for="bpa">업체 계정<select id="bpa" name="partner_id"><option value="0">(계정 없음 — 아래 소싱처 이름 사용)</option>
+        {% for p in partners %}<option value="{{ p.id }}" {{ 'selected' if partner and partner.id==p.id }}>{{ p.company }} ({{ p.login_id }})</option>{% endfor %}</select></label>
+      <label for="bs">소싱처 (계정 없을 때)<input id="bs" name="source" value="퀵솔"></label>
+      <label for="bcu">공급가 통화 (양식에 없을 때)<select id="bcu" name="currency"><option>USD</option><option>KRW</option></select></label>
+    </div>
+    <div class="fields">
+      <label for="bm">마진 (%)<input id="bm" name="margin_pct" value="{{ '%g'|format(price.margin_pct) }}" inputmode="decimal"></label>
+      <label for="bx">환율 (원/USD)<input id="bx" name="fx_rate" value="{{ '%g'|format(price.fx_rate) }}" inputmode="decimal"></label>
+      <label for="bc">개당 부대비용 (원)<input id="bc" name="cost_per_unit" value="{{ '%g'|format(price.cost_per_unit) }}" inputmode="numeric"></label>
+    </div>
+    <div class="fields">
+      <label for="bst">오픈 시각 (비우면 지금)<input id="bst" type="datetime-local" name="start"></label>
+      <label for="bh">진행 시간 (시간)<input id="bh" type="number" step="0.5" name="hours" value="{{ defaults.hours or 48 }}"></label>
+      <label for="bp">거래고객 선공개 (시간)<input id="bp" type="number" step="0.5" name="priority_hours" value="{{ defaults.priority or 3 }}"></label>
+    </div>
+    <div class="row"><button class="btn">미리보기</button><a class="small" href="/admin/bids-bulk/template">우리 양식 받기</a></div>
+  </form>
+  <p class="small muted">고객 시작가 = (공급가 × 환율 + 부대비용) × (1 + 마진%), 1,000원 단위 올림. 공급가가 BID/CALL이면 시작가 없이 올라갑니다. 퀵솔 원본은 분류를 품목명으로 추정합니다.</p>
+</div>
+
+{% if rows is not none %}
+  {% if err %}<p class="note">{{ err }}</p>{% endif %}
+  {% if sched %}<p>일정: 오픈 <b class="num">{{ sched.start }}</b> · 선공개 종료 <b class="num">{{ sched.priority }}</b> · 우리 마감 <b class="num">{{ sched.end }}</b></p>{% endif %}
+  <p class="small">가격 기준: 마진 <b>{{ '%g'|format(price.margin_pct) }}%</b> · 환율 <b>{{ '{:,.0f}'.format(price.fx_rate) }}원</b> · 부대비용 <b>{{ '{:,.0f}'.format(price.cost_per_unit) }}원</b>{% if partner %} · 업체 계정 <b>{{ partner.company }}</b>{% endif %}</p>
+  <div class="tbl"><table>
+    <thead><tr><th>행</th><th>분류</th><th>품목명 (고객에게 보임)</th><th class="r">수량</th><th class="r">공급가</th><th class="r">고객 시작가</th><th>소싱처 · 품번</th><th>파트너 마감</th><th>확인</th></tr></thead>
+    <tbody>{% for r in rows %}
+      <tr class="{{ 'err' if r.error }}"><td class="num">{{ r.row }}</td><td class="small">{{ r.category }}</td><td>{{ r.title }}</td>
+        <td class="r num">{{ r.quantity or '' }}</td>
+        <td class="r num">{% if r.partner_price %}{{ ('$' ~ '{:,.2f}'.format(r.partner_price)) if r.currency=='USD' else r.partner_price|won }}{% else %}<span class="muted">BID</span>{% endif %}</td>
+        <td class="r num"><b>{{ r.price|won if r.price else '-' }}</b></td>
+        <td class="small">{{ r.source }} <span class="mono">{{ r.source_ref }}</span></td><td class="num small">{{ r.partner_deadline or '' }}</td>
+        <td>{{ r.error or '등록' }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% set n = rows|rejectattr('error')|list|length %}
+  {% if n %}
+  <form method="post" action="/admin/bids-bulk/confirm" class="row">
+    <input type="hidden" name="rows_json" value="{{ rows_json|safe }}">
+    <input type="hidden" name="sched_json" value="{{ sched_json|safe }}">
+    <button class="btn accent">비딩 {{ n }}건 등록</button>
+    <span class="small muted">등록 즉시 관심 고객(선공개 기간엔 거래고객만)에게 알림톡이 나갑니다.</span>
+  </form>
+  {% endif %}
+{% endif %}
+{% endblock %}

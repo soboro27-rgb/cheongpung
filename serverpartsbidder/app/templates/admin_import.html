@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>기존 고객 엑셀 등록</h1>
+<div class="card">
+  <p>2CPU 판매표로 거래했던 고객을 한 번에 등록합니다. 등록된 고객은 <b>바로 승인</b>, <b>거래이력 있음</b>(비딩 선공개 대상), 관심품목 <b>전체</b>로 시작합니다.</p>
+  <p class="small muted">열: {{ ['회사명','담당자','휴대폰','이메일','사업자번호','메모']|join(' · ') }} — 담당자·휴대폰은 필수. 로그인 아이디는 휴대폰 번호, 임시 비밀번호는 6자리 숫자로 만들어 초대 알림톡에 넣습니다.</p>
+  <form method="post" action="/admin/users/import/preview" enctype="multipart/form-data" class="row">
+    <input type="file" name="file" id="cf" accept=".xlsx" required style="max-width:320px">
+    <button class="btn">미리보기</button>
+    <a class="small" href="/admin/users/import/template">양식 받기</a>
+  </form>
+</div>
+{% if rows is not none %}
+  {% if err %}<p class="note">{{ err }}</p>{% endif %}
+  <div class="tbl"><table>
+    <thead><tr><th>행</th><th>회사</th><th>담당자</th><th>휴대폰</th><th>이메일</th><th>메모</th><th>확인</th></tr></thead>
+    <tbody>{% for r in rows %}
+      <tr class="{{ 'err' if r.error }}"><td class="num">{{ r.row }}</td><td>{{ r.company }}</td><td>{{ r.name }}</td><td class="num">{{ r.phone }}</td><td>{{ r.email }}</td><td class="small">{{ r.memo }}</td><td>{{ r.error or '등록' }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% set n = rows|rejectattr('error')|list|length %}
+  {% if n %}
+  <form method="post" action="/admin/users/import/confirm" class="row">
+    <input type="hidden" name="rows_json" value="{{ rows_json|safe }}">
+    <label class="check"><input type="checkbox" name="send_invite" value="1" id="si" checked> 초대 알림톡 보내기 (아이디·임시 비밀번호 포함)</label>
+    <button class="btn accent">{{ n }}명 등록</button>
+  </form>
+  {% endif %}
+{% endif %}
+{% endblock %}

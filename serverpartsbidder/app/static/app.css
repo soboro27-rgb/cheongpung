@@ -1,0 +1,84 @@
+/* 서버파츠비더 — 랙 장비 라벨 느낌: 잉크 네이비 + 신호 주황, 숫자는 고정폭 */
+:root{
+  --ink:#16202c; --ink-2:#2a3646; --bg:#f3f5f7; --surface:#fff; --line:#d9dee4; --muted:#5f6b78;
+  --accent:#e2621b; --accent-soft:#fdeee4; --ok:#22795a; --ok-soft:#e2f2ea; --warn:#a86a00; --warn-soft:#fbf1d9;
+  --bad:#b23a3a; --bad-soft:#f8e4e4; --info:#2c5d93; --info-soft:#e3edf8;
+  --sans:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  --mono:"IBM Plex Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 var(--sans)}
+a{color:var(--info)}
+.top{background:var(--ink);color:#fff}
+.top .in{max-width:1180px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:20px;min-height:56px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:18px;color:#fff;text-decoration:none;display:flex;align-items:center;gap:8px}
+.brand i{width:10px;height:22px;background:var(--accent);display:inline-block}
+.brand small{font:500 11px var(--mono);color:#9fb0c2;letter-spacing:.08em}
+.top nav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto;align-items:center}
+.top nav a{color:#cfd8e2;text-decoration:none;padding:6px 10px;border-radius:4px;font-size:14px}
+.top nav a:hover,.top nav a.on{background:var(--ink-2);color:#fff}
+.top nav .who{color:#9fb0c2;font-size:13px;padding:0 6px}
+main{max-width:1180px;margin:0 auto;padding:28px max(16px,env(safe-area-inset-right,0px)) 64px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:20px}
+h1{font-size:24px;margin:0;text-wrap:balance}
+h2{font-size:18px;margin:0}
+h3{font-size:15px;margin:0}
+.flash{background:var(--info-soft);color:var(--info);border:1px solid #bcd0e8;padding:10px 14px;border-radius:6px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.spread{justify-content:space-between}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:820px){.grid2,.grid3{grid-template-columns:1fr}}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.num,.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.badge.stock,.badge.on_sale,.badge.approved,.badge.sent,.badge.confirmed,.badge.won{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.badge.bid,.badge.active,.badge.requested,.badge.queued{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.badge.pending,.badge.pending_result,.badge.not_configured,.badge.prio{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.badge.failed,.badge.lost,.badge.cancelled,.badge.rejected,.badge.sold_out{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--line);flex-wrap:wrap}
+.tabs a{padding:10px 16px;text-decoration:none;color:var(--muted);font-weight:500;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tabs a.on{color:var(--ink);border-color:var(--accent)}
+.tabs a b{font-family:var(--mono);font-weight:500;font-size:12px;margin-left:4px;color:var(--accent)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{padding:5px 12px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--ink);font-size:13px;background:var(--surface)}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tbl{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{background:#eef1f4;font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+tr.err td{background:var(--bad-soft)}
+tr.hl td{background:var(--ok-soft)}
+.title-cell a{color:var(--ink);font-weight:500;text-decoration:none}
+.title-cell a:hover{text-decoration:underline}
+form.inline{display:inline}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+label.check{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:14px}
+input,select,textarea{font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);width:100%}
+input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--accent)}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.btn{display:inline-block;font:inherit;font-weight:700;font-size:14px;padding:9px 16px;border-radius:6px;border:1px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn.accent{background:var(--accent);border-color:var(--accent)}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.sm{padding:4px 10px;font-size:12px;font-weight:500}
+.btn.danger{background:transparent;color:var(--bad);border-color:var(--bad)}
+.stat{display:flex;flex-direction:column;gap:2px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px;text-decoration:none;color:var(--ink)}
+.stat b{font:500 26px var(--mono)}
+.stat span{font-size:13px;color:var(--muted)}
+.stat.alert{border-color:var(--accent);background:var(--accent-soft)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.price{font:500 22px var(--mono)}
+.big{font:500 30px var(--mono);color:var(--accent)}
+.kv{display:grid;grid-template-columns:7em 1fr;gap:6px 12px;font-size:14px;margin:0}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0}
+.note{background:var(--warn-soft);color:#6b4a00;border-radius:6px;padding:10px 14px;font-size:13px}
+.internal{background:#eef1f4;border:1px dashed #9aa7b5;border-radius:6px;padding:12px 14px;font-size:13px}
+.internal::before{content:"내부 전용";display:block;font:500 11px var(--mono);color:var(--muted);letter-spacing:.06em;margin-bottom:4px}
+.empty{padding:40px 16px;text-align:center;color:var(--muted)}
+pre.msg{white-space:pre-wrap;font:13px/1.5 var(--sans);margin:0;max-width:40ch}
+.auth{max-width:440px;margin:24px auto;width:100%}

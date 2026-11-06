@@ -1,0 +1,10 @@
+# DB·세션키·알림톡 키·재고 사본은 저장소에 올리지 않음
+data/
+stock/
+*.db
+secret_key.txt
+alimtalk.json
+__pycache__/
+*.pyc
+.env
+*.log

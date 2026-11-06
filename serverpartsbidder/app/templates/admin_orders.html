@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>구매요청</h1>
+<div class="filters">
+  {% for k, v in [('requested','미처리'),('confirmed','확정'),('cancelled','취소'),('all','전체')] %}
+    <a class="chip {{ 'on' if status==k }}" href="/admin/orders?status={{ k }}">{{ v }}</a>{% endfor %}
+</div>
+{% if orders %}
+<div class="tbl"><table>
+  <thead><tr><th>#</th><th>요청일</th><th>회사</th><th>담당자</th><th>휴대폰</th><th>품목</th><th class="r">수량</th><th class="r">개당</th><th class="r">합계</th><th>요청사항</th><th>상태</th><th></th></tr></thead>
+  <tbody>{% for o in orders %}
+    <tr><td class="num">{{ o.id }}</td><td class="num small">{{ o.created_at|dt }}</td><td>{{ o.user.company }}</td><td>{{ o.user.name }}</td><td class="num">{{ o.user.phone }}</td>
+      <td class="title-cell"><a href="/item/{{ o.listing_id }}">{{ o.listing.title }}</a></td>
+      <td class="r num">{{ o.quantity }}</td><td class="r num">{{ o.unit_price|won }}</td><td class="r num">{{ (o.unit_price * o.quantity)|won }}</td>
+      <td class="small">{{ o.note }}</td><td><span class="badge {{ o.status }}">{{ STATUS[o.status] }}</span></td>
+      <td style="white-space:nowrap">{% if o.status == 'requested' %}
+        <form class="inline" method="post" action="/admin/orders/{{ o.id }}"><button class="btn sm accent" name="action" value="confirm">확정</button></form>
+        <form class="inline" method="post" action="/admin/orders/{{ o.id }}"><button class="btn sm danger" name="action" value="cancel">취소</button></form>{% endif %}</td></tr>
+  {% endfor %}</tbody>
+</table></div>
+<p class="small muted">확정하면 그 고객은 '거래이력 있음'이 되어 다음 비딩부터 선공개 대상이 됩니다. 재고 수량은 재고원본 갱신으로 반영됩니다.</p>
+{% else %}<div class="card empty">해당 구매요청이 없습니다.</div>{% endif %}
+{% endblock %}

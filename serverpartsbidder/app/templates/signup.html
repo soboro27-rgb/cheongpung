@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="card auth" style="max-width:620px">
+  <h1>가입 신청</h1>
+  <p class="muted small">사업자 고객 전용입니다. 확인 후 승인되면 알림톡으로 알려드립니다.</p>
+  <form method="post" action="/signup" style="display:flex;flex-direction:column;gap:12px">
+    <div class="fields">
+      <label for="co">회사명<input id="co" name="company" required></label>
+      <label for="nm">담당자 이름<input id="nm" name="name" required></label>
+      <label for="ph">휴대폰 (로그인 아이디)<input id="ph" name="phone" inputmode="tel" required placeholder="010-0000-0000"></label>
+      <label for="em">이메일<input id="em" name="email" type="email"></label>
+      <label for="bz">사업자번호<input id="bz" name="biz_no" placeholder="000-00-00000"></label>
+      <label for="pw">비밀번호 (6자 이상)<input id="pw" type="password" name="password" minlength="6" required autocomplete="new-password"></label>
+    </div>
+    <fieldset style="border:1px solid var(--line);border-radius:6px;padding:12px">
+      <legend class="small muted">관심 분류 (알림 받을 분류, 나중에 세부 조건 추가 가능)</legend>
+      <div class="row">
+        <label class="check"><input type="checkbox" name="interests" value="전체" id="i-all"> 전체</label>
+        {% for c in CATEGORIES %}<label class="check"><input type="checkbox" name="interests" value="{{ c }}" id="i{{ loop.index }}"> {{ c }}</label>{% endfor %}
+      </div>
+    </fieldset>
+    <label class="check"><input type="checkbox" name="agree" value="1" id="agree" checked> 입고·비딩 소식을 카카오 알림톡으로 받겠습니다</label>
+    <button class="btn accent">가입 신청</button>
+  </form>
+</div>
+{% endblock %}

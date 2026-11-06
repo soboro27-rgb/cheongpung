@@ -22,6 +22,7 @@
 | **whcheck** | `onpre/whcheck` | 미배포 (로컬만) | 알림톡 배송주소 검증 완료, 실제 Solapi 연동·배포 전 | 배송주소, 주소확인, 알림톡 |
 | **estimate** | `onpre/estimate` | - (로컬 CLI) | 입찰단가 산출 리뉴얼 기획 중. 기초단가 DB 구축이 선행과제 | 입찰, 단가산출, 낙찰 |
 | **kakao-skill-server** | `kakao-skill-server` | kakao-skill-server-0ec6.onrender.com | ✅ 완성. 코레테일 카톡채널 "반초" 챗봇(폴백 블록 → 스킬데이터) 연결 완료, 실제 문의→자동응답+SMS알림 동작 확인 (2026-07-07) | (라우팅 로직 자체가 키워드 매칭 엔진, routing.json 수정으로 확장) |
+| **서버파츠비더 (ServerPartsBidder)** | `serverpartsbidder` | 로컬 서버 (포트 8060, `서버실행.bat`) — 사외 공개는 포트개방 필요 | ✅ 플랫폼 생성 완료 (2026-11-06). 자사재고 즉시판매 + 퀵솔 등 외부소싱 비딩, 알림톡은 키 설정 후 발송. 사용설명.md 참고 | 서버파츠, 비딩, 즉시판매, 퀵솔 |
 
 **경로 규칙**: 웹에 배포되는 프로젝트는 repo 루트에 직접 위치 (`dolbom-it`, `inspect01`, `idc-server-collect`, `it-asset-platform`, `mgit-platform`). `onpre/` 폴더는 노트북에서 로컬 실행만 하는 것들 전용 — 2026-07-07에 dolbom-it, inspect01을 onpre에서 루트로 이동하고 `render.yaml`의 `rootDir`도 함께 수정함.
 

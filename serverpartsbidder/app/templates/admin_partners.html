@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>비딩 업체 계정</h1>
+<p class="muted small">퀵솔 같은 외부 소싱 업체가 직접 로그인해 비딩 품목을 올리는 계정입니다. 업체가 올린 건은 '검토 대기'로 들어오고, 우리가 마진을 반영한 시작가로 공개해야 고객에게 보입니다. 업체는 고객 정보·고객 입찰가·우리 마진을 볼 수 없습니다.</p>
+
+{% if created %}
+<div class="card" style="border-color:var(--accent);background:var(--accent-soft)">
+  <h2>{{ created.company }} 계정 정보</h2>
+  <dl class="kv">
+    <dt>접속 주소</dt><dd class="mono">/login (사외는 포트 개방 후 공인 주소)</dd>
+    <dt>아이디</dt><dd class="mono">{{ created.login_id }}</dd>
+    <dt>비밀번호</dt><dd class="mono" style="font-size:18px">{{ created.password }}</dd>
+  </dl>
+  <p class="small">이 비밀번호는 지금 한 번만 보입니다. 업체에 전달하고, 로그인 후 바꾸라고 안내해 주세요. 잊어버리면 '비밀번호 재발급'.</p>
+</div>
+{% endif %}
+
+<section class="card">
+  <h2>새 업체 계정 만들기</h2>
+  <form method="post" action="/admin/partners" style="display:flex;flex-direction:column;gap:12px">
+    <div class="fields">
+      <label for="pc">업체명<input id="pc" name="company" required placeholder="퀵솔 (Quiksol)"></label>
+      <label for="pl">로그인 아이디 (영문·숫자)<input id="pl" name="login_id" required placeholder="quiksol" pattern="[A-Za-z0-9_\-]{4,}"></label>
+      <label for="pn">담당자<input id="pn" name="name"></label>
+      <label for="pp">연락처<input id="pp" name="phone"></label>
+      <label for="pe">이메일<input id="pe" name="email" type="email"></label>
+    </div>
+    <div><button class="btn accent">계정 만들기</button> <span class="small muted">비밀번호는 자동으로 만들어 한 번 보여드립니다.</span></div>
+  </form>
+</section>
+
+{% if partners %}
+<div class="tbl"><table>
+  <thead><tr><th>업체</th><th>아이디</th><th>담당자</th><th>연락처 · 이메일</th><th class="r">등록 건</th><th class="r">검토 대기</th><th class="r">진행중</th><th class="r">낙찰</th><th>상태</th><th></th></tr></thead>
+  <tbody>{% for p in partners %}{% set c = counts.get(p.id, {}) %}
+    <tr><td>{{ p.company }}</td><td class="mono">{{ p.login_id }}</td><td>{{ p.name }}</td>
+      <td class="small">{{ p.internal_memo or '' }} {{ p.email or '' }}</td>
+      <td class="r num">{{ c.get('all', 0) }}</td>
+      <td class="r num">{% if c.get('review') %}<a href="/admin/listings?kind=bid&status=review">{{ c.review }}</a>{% else %}0{% endif %}</td>
+      <td class="r num">{{ c.get('active', 0) }}</td><td class="r num">{{ c.get('won', 0) }}</td>
+      <td><span class="badge {{ p.status }}">{{ '사용중' if p.status=='approved' else '정지' }}</span></td>
+      <td style="white-space:nowrap">
+        <form class="inline" method="post" action="/admin/partners/{{ p.id }}"><button class="btn sm ghost" name="action" value="reset">비밀번호 재발급</button></form>
+        {% if p.status == 'approved' %}<form class="inline" method="post" action="/admin/partners/{{ p.id }}"><button class="btn sm danger" name="action" value="disable">정지</button></form>
+        {% else %}<form class="inline" method="post" action="/admin/partners/{{ p.id }}"><button class="btn sm" name="action" value="enable">다시 열기</button></form>{% endif %}
+      </td></tr>
+  {% endfor %}</tbody>
+</table></div>
+{% else %}<div class="card empty">아직 업체 계정이 없습니다.</div>{% endif %}
+{% endblock %}

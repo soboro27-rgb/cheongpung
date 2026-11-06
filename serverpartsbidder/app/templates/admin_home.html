@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="row spread">
+  <h1>관리 대시보드</h1>
+  <div class="row">
+    <a class="btn accent" href="/admin/bids-bulk">비딩 엑셀 등록</a>
+    <a class="btn ghost" href="/admin/listings/new">비딩 1건 등록</a>
+  </div>
+</div>
+
+<div class="stats">
+  <a class="stat {{ 'alert' if stats.pending_users }}" href="/admin/users?status=pending"><b>{{ stats.pending_users }}</b><span>가입 승인 대기</span></a>
+  <a class="stat {{ 'alert' if stats.orders }}" href="/admin/orders"><b>{{ stats.orders }}</b><span>구매요청 미처리</span></a>
+  <a class="stat {{ 'alert' if stats.review }}" href="/admin/listings?kind=bid&status=review"><b>{{ stats.review }}</b><span>업체 등록 검토 대기</span></a>
+  <a class="stat {{ 'alert' if stats.pending_result }}" href="/admin/listings?kind=bid&status=pending_result"><b>{{ stats.pending_result }}</b><span>비딩 결과 입력 대기</span></a>
+  <a class="stat" href="/admin/listings?kind=bid&status=active"><b>{{ stats.active_bids }}</b><span>진행중 비딩</span></a>
+  <a class="stat" href="/admin/listings?kind=stock&status=on_sale"><b>{{ stats.on_sale }}</b><span>즉시판매 품목</span></a>
+  <a class="stat" href="/admin/users?status=approved"><b>{{ stats.customers }}</b><span>승인 고객 (거래이력 {{ stats.history }})</span></a>
+  <a class="stat {{ 'alert' if stats.noti_unsent }}" href="/admin/notify"><b>{{ stats.noti_unsent }}</b><span>알림톡 미발송</span></a>
+</div>
+
+<section class="card">
+  <div class="row spread">
+    <h2>비딩 진행 현황</h2>
+    <a class="small" href="/admin/listings?kind=bid">전체 보기</a>
+  </div>
+  {% if todo_bids %}
+  <div class="tbl"><table>
+    <thead><tr><th>#</th><th>상태</th><th>품목</th><th>출처</th><th class="r">수량</th><th class="r">입찰</th><th class="r">최고 단가</th><th>우리 마감</th><th>파트너 마감</th></tr></thead>
+    <tbody>{% for l in todo_bids %}{% set t = top_bid(l) %}
+      <tr><td class="num">{{ l.id }}</td>
+        <td><span class="badge {{ l.status }}">{{ STATUS[l.status] }}</span>{% if l.status=='active' and l.priority_until and now < l.priority_until %} <span class="badge prio">선공개</span>{% endif %}</td>
+        <td class="title-cell"><a href="/admin/bids/{{ l.id }}">{{ l.title }}</a></td>
+        <td class="small">{{ l.source }}</td>
+        <td class="r num">{{ l.quantity }}</td><td class="r num">{{ l.bids|length }}</td>
+        <td class="r num">{{ t.unit_price|won if t else '-' }}</td>
+        <td class="num">{{ l.bid_end|dt }}</td><td class="num">{{ l.partner_deadline|dt }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="muted">진행중이거나 결과 대기인 비딩이 없습니다.</p>{% endif %}
+</section>
+
+<section class="card">
+  <h2>비딩 시작가 기본값</h2>
+  <p class="small muted">업체 공급가 × 환율 + 개당 부대비용 → 마진을 붙여 1,000원 단위로 올린 값이 고객 시작가가 됩니다. 등록·공개할 때 건별로 바꿀 수 있고, 마지막에 쓴 값이 다음 기본값이 됩니다.</p>
+  <form method="post" action="/admin/settings" class="row">
+    <label for="sm">마진 (%)<input id="sm" name="margin_pct" value="{{ '%g'|format(price.margin_pct) }}" inputmode="decimal" style="width:110px"></label>
+    <label for="sf">환율 (원/USD)<input id="sf" name="fx_rate" value="{{ '%g'|format(price.fx_rate) }}" inputmode="decimal" style="width:130px"></label>
+    <label for="sc">개당 부대비용 (원)<input id="sc" name="cost_per_unit" value="{{ '%g'|format(price.cost_per_unit) }}" inputmode="numeric" style="width:150px"></label>
+    <button class="btn sm" style="align-self:flex-end">저장</button>
+  </form>
+</section>
+
+<section class="card">
+  <div class="row spread">
+    <h2>자사 재고 동기화</h2>
+    <form method="post" action="/admin/sync"><button class="btn sm">지금 동기화</button></form>
+  </div>
+  <p class="small muted">재고 파일이 바뀌면 1분 안에 자동 반영되고, 다시 판매중이 된 품목은 관심 고객에게 알림톡이 나갑니다. 파일의 '메모' 열은 가져오지 않습니다.</p>
+  <dl class="kv">
+    <dt>원본</dt><dd class="mono small">{{ stock_csv }}</dd>
+    <dt>마지막 반영</dt><dd>{{ state.last_sync.strftime('%Y-%m-%d %H:%M') if state.last_sync else '아직 없음' }}</dd>
+    {% if state.last_sync_result %}{% set r = state.last_sync_result %}
+    <dt>결과</dt><dd>{% if r.error %}{{ r.error }}{% else %}{{ r.rows }}행 · 신규 {{ r.added }} · 변경 {{ r.updated }} · 재입고 {{ r.restocked }} · 알림 {{ r.notified }}건{% if r.first_run %} (첫 반영이라 알림 생략){% endif %}{% endif %}</dd>
+    {% endif %}
+  </dl>
+</section>
+{% endblock %}

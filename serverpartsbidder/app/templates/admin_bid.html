@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block body %}
+<p class="small"><a href="/admin/listings?kind=bid">← 비딩 목록</a></p>
+<div class="row spread">
+  <div>
+    <div class="row"><span class="badge {{ l.status }}">{{ STATUS[l.status] }}</span><span class="badge">{{ l.category }}</span>
+      {% if l.status=='active' and l.priority_until and now < l.priority_until %}<span class="badge prio">선공개 ~{{ l.priority_until|dt }}</span>{% endif %}</div>
+    <h1>#{{ l.id }} {{ l.title }}</h1>
+  </div>
+  <div class="row"><a class="btn ghost" href="/item/{{ l.id }}">고객 화면</a><a class="btn ghost" href="/admin/listings/{{ l.id }}/edit">수정 · 연장 · 취소</a></div>
+</div>
+
+{% if l.status == 'review' %}
+<section class="card" style="border-color:var(--accent)">
+  <h2>업체 등록 건 검토 → 공개</h2>
+  <p class="small muted">{{ l.partner.company if l.partner else l.source }}가 올린 건입니다. 품목명·분류를 고객용으로 다듬고, 마진을 반영한 시작가로 공개하세요.</p>
+  <form method="post" action="/admin/bids/{{ l.id }}/publish" style="display:flex;flex-direction:column;gap:12px">
+    <div class="fields">
+      <label for="rc">분류<select id="rc" name="category">{% for c in CATEGORIES %}<option {{ 'selected' if l.category==c }}>{{ c }}</option>{% endfor %}</select></label>
+      <label for="rt" style="grid-column:span 2">품목명 (고객에게 보임)<input id="rt" name="title" value="{{ l.title }}"></label>
+    </div>
+    <label for="rd">설명 (고객에게 보임)<textarea id="rd" name="description" rows="2" placeholder="신품 벌크, 납기 2주 등">{{ l.description or '' }}</textarea></label>
+    <div class="fields">
+      <label>업체 공급가<input value="{% if l.partner_price %}{{ ('$' ~ '{:,.2f}'.format(l.partner_price)) if l.partner_currency=='USD' else l.partner_price|won }}{% else %}BID (가격 없음){% endif %}" readonly></label>
+      <label for="rm">마진 (%)<input id="rm" name="margin_pct" value="{{ '%g'|format(price.margin_pct) }}" inputmode="decimal"></label>
+      <label for="rx">환율 (원/USD)<input id="rx" name="fx_rate" value="{{ '%g'|format(price.fx_rate) }}" inputmode="decimal"></label>
+      <label for="rk">개당 부대비용 (원)<input id="rk" name="cost_per_unit" value="{{ '%g'|format(price.cost_per_unit) }}" inputmode="numeric"></label>
+      <label for="rp">시작가 직접 입력 (선택)<input id="rp" name="price" inputmode="numeric" placeholder="자동: {{ preview|won if preview else '없음' }}"></label>
+    </div>
+    <p>기본값 기준 고객 시작가: <b class="price">{{ preview|won if preview else '없음 (자유 입찰)' }}</b> <span class="small muted">마진·환율을 바꾸면 공개 시 다시 계산됩니다.</span></p>
+    <div class="fields">
+      <label for="rs">오픈 시각 (비우면 지금)<input id="rs" type="datetime-local" name="start"></label>
+      <label for="rh">진행 시간 (시간)<input id="rh" type="number" step="0.5" name="hours" value="{{ defaults.hours }}"></label>
+      <label for="rq">거래고객 선공개 (시간)<input id="rq" type="number" step="0.5" name="priority_hours" value="{{ defaults.priority }}"></label>
+    </div>
+    <p class="small muted">파트너 마감 {{ l.partner_deadline|dt }} 보다 앞으로 우리 마감을 잡으세요.</p>
+    <div class="row"><button class="btn accent" name="action" value="publish">공개하기</button><button class="btn danger" name="action" value="reject">반려</button></div>
+  </form>
+</section>
+{% endif %}
+
+<div class="grid3">
+  <div class="card"><dl class="kv">
+    <dt>수량</dt><dd class="num">{{ l.quantity }}개</dd>
+    <dt>오픈</dt><dd class="num">{{ l.bid_start|dt }}</dd>
+    <dt>우리 마감</dt><dd class="num">{{ l.bid_end|dt }}</dd>
+    <dt>파트너 마감</dt><dd class="num">{{ l.partner_deadline|dt }}</dd>
+  </dl></div>
+  <div class="card internal" style="margin:0"><dl class="kv">
+    <dt>소싱처</dt><dd>{{ l.source or '-' }}</dd>
+    <dt>품번</dt><dd class="mono">{{ l.source_ref or '-' }}</dd>
+    <dt>공급가</dt><dd class="num">{% if l.partner_price %}{{ ('$' ~ '{:,.2f}'.format(l.partner_price)) if l.partner_currency=='USD' else l.partner_price|won }}{% else %}-{% endif %}</dd>
+    <dt>시작가</dt><dd class="num">{{ l.price|won if l.price else '-' }}{% if l.margin_pct is not none and l.status != 'review' %} <span class="small muted">(마진 {{ '%g'|format(l.margin_pct) }}%)</span>{% endif %}</dd>
+    <dt>알림</dt><dd>{{ sent }}건 · <a href="/admin/notify">보기</a></dd>
+  </dl></div>
+  <div class="card"><span class="muted small">고객 최고 단가</span><div class="big">{{ top.unit_price|won if top else '입찰 없음' }}</div>
+    <span class="small muted">{{ best|length }}개 업체 · {{ bids|length }}회 입찰</span></div>
+</div>
+
+<section class="card">
+  <h2>입찰 현황 (업체별 최고가)</h2>
+  {% if best %}
+  <div class="tbl"><table>
+    <thead><tr><th>순위</th><th>회사</th><th>담당자</th><th>휴대폰</th><th class="r">개당 희망가</th><th class="r">수량</th><th class="r">합계</th><th>시각</th></tr></thead>
+    <tbody>{% for b in best %}
+      <tr class="{{ 'hl' if l.winning_bid_id == b.id }}"><td class="num">{{ loop.index }}</td><td>{{ b.user.company }}</td><td>{{ b.user.name }}{% if b.user.has_history %} <span class="badge">거래고객</span>{% endif %}</td>
+        <td class="num">{{ b.user.phone }}</td><td class="r num">{{ b.unit_price|won }}</td><td class="r num">{{ b.quantity }}</td>
+        <td class="r num">{{ (b.unit_price * b.quantity)|won }}</td><td class="num small">{{ b.created_at|dt }} ({{ b.seq }}차)</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="muted">아직 입찰이 없습니다.</p>{% endif %}
+</section>
+
+<section class="card" id="calc">
+  <h2>파트너 응찰가 계산</h2>
+  <p class="small muted">고객 최고 단가 ÷ (1 + 마진%) − 개당 부대비용 → ÷ 환율 = 파트너 응찰 단가(USD)</p>
+  <form method="post" action="/admin/bids/{{ l.id }}/calc" style="display:flex;flex-direction:column;gap:12px">
+    <div class="fields">
+      <label for="fx">환율 (원/USD)<input id="fx" name="fx_rate" value="{{ l.fx_rate or '' }}" inputmode="decimal" placeholder="1380"></label>
+      <label for="mg">마진 (%)<input id="mg" name="margin_pct" value="{{ l.margin_pct or '' }}" inputmode="decimal" placeholder="10"></label>
+      <label for="co">개당 부대비용 (원)<input id="co" name="cost_per_unit" value="{{ l.cost_per_unit or '' }}" inputmode="numeric" placeholder="운송·통관"></label>
+      <label for="pb">실제 응찰한 단가 (USD)<input id="pb" name="partner_bid_usd" value="{{ l.partner_bid_usd or '' }}" inputmode="decimal"></label>
+    </div>
+    <div class="row"><button class="btn">저장</button>
+      <span>계산값: <b class="num">{{ ('$%.2f'|format(calc)) if calc is not none else '환율과 입찰이 있어야 계산됩니다' }}</b>
+      {% if calc is not none %}<span class="small muted">× {{ l.quantity }}개 = ${{ '%.2f'|format(calc * l.quantity) }}</span>{% endif %}</span>
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <h2>파트너 결과 입력</h2>
+  {% if l.status in ['pending_result'] or (l.status == 'active' and now >= l.bid_end) %}
+    <p class="small muted">결과를 넣으면 입찰한 모든 고객에게 알림톡이 나갑니다.</p>
+    <form method="post" action="/admin/bids/{{ l.id }}/result" class="row">
+      <select name="winning_bid_id" id="wb" style="max-width:360px" aria-label="낙찰 업체">
+        {% for b in best %}<option value="{{ b.id }}">{{ b.user.company }} · {{ b.unit_price|won }} × {{ b.quantity }}</option>{% endfor %}
+      </select>
+      <button class="btn accent" name="result" value="won">파트너 낙찰 → 고객 낙찰 확정</button>
+      <button class="btn danger" name="result" value="lost">파트너 유찰 → 미성사 안내</button>
+    </form>
+  {% elif l.status == 'active' %}
+    <p class="muted">마감({{ l.bid_end|dt }}) 후 결과를 넣을 수 있습니다.</p>
+  {% else %}
+    <p>결과: <span class="badge {{ l.status }}">{{ STATUS[l.status] }}</span>
+      {% if l.winning_bid %} — {{ l.winning_bid.user.company }} {{ l.winning_bid.user.name }}, {{ l.winning_bid.unit_price|won }} × {{ l.winning_bid.quantity }}{% endif %}</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="row spread">
+  <div>
+    <h1>서버부품 즉시판매 · 비딩</h1>
+    <p class="muted small">가격은 모두 개당, VAT 별도입니다. 관심품목을 등록하면 입고·비딩 소식을 카카오 알림톡으로 받을 수 있습니다.</p>
+  </div>
+  {% if not user %}<a class="btn accent" href="/signup">가입 신청</a>{% endif %}
+</div>
+
+<nav class="tabs">
+  <a href="/?tab=stock" class="{{ 'on' if tab=='stock' }}">즉시판매<b>{{ counts.stock }}</b></a>
+  <a href="/?tab=bid" class="{{ 'on' if tab=='bid' }}">진행중 비딩<b>{{ counts.bid }}</b></a>
+  <a href="/?tab=closed" class="{{ 'on' if tab=='closed' }}">종료된 비딩</a>
+</nav>
+
+<form class="filters" method="get">
+  <input type="hidden" name="tab" value="{{ tab }}">
+  <a class="chip {{ 'on' if not cat }}" href="/?tab={{ tab }}">전체</a>
+  {% for c in CATEGORIES %}<a class="chip {{ 'on' if cat==c }}" href="/?tab={{ tab }}&cat={{ c|urlencode }}">{{ c }}</a>{% endfor %}
+  <input type="hidden" name="cat" value="{{ cat }}">
+  <input id="q" name="q" value="{{ q }}" placeholder="예: D5 64G, Gold 6248" style="max-width:240px">
+  <button class="btn sm">검색</button>
+</form>
+
+{% if upcoming_priority %}<p class="note">거래 고객 선공개 중인 비딩이 {{ upcoming_priority }}건 있습니다. 잠시 후 전체 공개됩니다.</p>{% endif %}
+{% if locked %}
+  <div class="card empty">
+    <h2>비딩은 승인된 회원만 볼 수 있습니다</h2>
+    <p>{% if user %}가입 승인 후 이용하실 수 있습니다.{% else %}<a href="/login?next=/?tab={{ tab }}">로그인</a>하거나 <a href="/signup">가입 신청</a>해 주세요.{% endif %}</p>
+  </div>
+{% elif not items %}
+  <div class="card empty">조건에 맞는 상품이 없습니다.</div>
+{% elif tab == 'stock' %}
+  <div class="tbl"><table>
+    <thead><tr><th>분류</th><th>품목</th><th>상세</th><th class="r">재고</th><th class="r">개당 가격</th><th></th></tr></thead>
+    <tbody>
+    {% for l in items %}
+      <tr>
+        <td><span class="badge">{{ l.category }}</span></td>
+        <td class="title-cell"><a href="/item/{{ l.id }}">{{ l.title }}</a></td>
+        <td class="muted small">{{ l.description }}</td>
+        <td class="r num">{{ l.quantity }}</td>
+        <td class="r num">{{ l.price|won }}</td>
+        <td class="r"><a class="btn sm ghost" href="/item/{{ l.id }}">구매요청</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+{% else %}
+  <div class="tbl"><table>
+    <thead><tr><th>상태</th><th>분류</th><th>품목</th><th class="r">수량</th><th class="r">시작가</th><th class="r">현재 최고 단가</th><th>마감</th></tr></thead>
+    <tbody>
+    {% for l in items %}{% set t = top_bid(l) %}
+      <tr>
+        <td><span class="badge {{ l.status }}">{{ STATUS[l.status] }}</span>
+          {% if l.status=='active' and l.priority_until and now < l.priority_until %}<span class="badge prio">선공개</span>{% endif %}</td>
+        <td><span class="badge">{{ l.category }}</span></td>
+        <td class="title-cell"><a href="/item/{{ l.id }}">{{ l.title }}</a></td>
+        <td class="r num">{{ l.quantity }}</td>
+        <td class="r num muted">{{ l.price|won if l.price else '-' }}</td>
+        <td class="r num">{{ t.unit_price|won if t else '입찰 없음' }}</td>
+        <td class="num">{{ l.bid_end|dt }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+{% endif %}
+{% endblock %}

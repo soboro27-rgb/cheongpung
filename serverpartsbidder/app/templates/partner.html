@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block body %}
+{% set PSTATUS = {'review':'Under review · 검토중','active':'Open · 진행중','pending_result':'Closed, bid in prep · 응찰 준비','won':'Awarded · 성사','lost':'Not awarded · 미성사','failed':'No demand · 수요 없음','cancelled':'Declined · 미진행'} %}
+<h1>{{ user.company }}</h1>
+<p class="muted small">Upload your bid items. WorldMemory reviews each item before it opens to our buyers. · 비딩 품목을 올리면 월드메모리 검토 후 진행됩니다.</p>
+
+<section class="card">
+  <h2>Upload items · 품목 올리기</h2>
+  <form method="post" action="/partner/preview" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:12px">
+    <div class="fields">
+      <label for="pf">Excel (.xlsx)<input id="pf" type="file" name="file" accept=".xlsx" required></label>
+      <label for="pcu">Price currency · 통화<select id="pcu" name="currency"><option>USD</option><option>KRW</option></select></label>
+      <label for="pd">Your deadline · 마감<input id="pd" type="datetime-local" name="deadline"></label>
+    </div>
+    <div class="row"><button class="btn">Preview · 미리보기</button><a class="small" href="/partner/template">Template · 양식</a></div>
+  </form>
+  <p class="small muted">Columns: Brand · Part Number · Description · QTY · Sell Price (e.g. $210.00 / BID). Your usual stock list format works as is.</p>
+</section>
+
+{% if rows is not none %}
+  {% if err %}<p class="note">{{ err }}</p>{% endif %}
+  <div class="tbl"><table>
+    <thead><tr><th>Row</th><th>Item</th><th>Part Number</th><th class="r">QTY</th><th class="r">Sell Price</th><th>Deadline</th><th>Check</th></tr></thead>
+    <tbody>{% for r in rows %}
+      <tr class="{{ 'err' if r.error }}"><td class="num">{{ r.row }}</td><td>{{ r.title }}</td><td class="mono small">{{ r.source_ref }}</td>
+        <td class="r num">{{ r.quantity or '' }}</td>
+        <td class="r num">{% if r.partner_price %}{{ ('$' ~ '{:,.2f}'.format(r.partner_price)) if r.currency=='USD' else r.partner_price|won }}{% else %}BID{% endif %}</td>
+        <td class="num small">{{ r.partner_deadline or '' }}</td><td>{{ r.error or 'OK' }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% set n = rows|rejectattr('error')|list|length %}
+  {% if n %}
+  <form method="post" action="/partner/confirm"><input type="hidden" name="rows_json" value="{{ rows_json|safe }}">
+    <button class="btn accent">Submit {{ n }} items · {{ n }}건 제출</button></form>
+  {% endif %}
+{% endif %}
+
+<section class="card">
+  <h2>My items · 등록 내역</h2>
+  {% if items %}
+  <div class="tbl"><table>
+    <thead><tr><th>#</th><th>Submitted</th><th>Item</th><th>Part Number</th><th class="r">QTY</th><th class="r">Sell Price</th><th>Deadline</th><th>Status</th><th class="r">Our bid (USD/unit)</th></tr></thead>
+    <tbody>{% for l in items %}
+      <tr class="{{ 'hl' if l.status=='won' }}"><td class="num">{{ l.id }}</td><td class="num small">{{ l.created_at|dt }}</td><td>{{ l.title }}</td>
+        <td class="mono small">{{ l.source_ref or '' }}</td><td class="r num">{{ l.quantity }}</td>
+        <td class="r num">{% if l.partner_price %}{{ ('$' ~ '{:,.2f}'.format(l.partner_price)) if l.partner_currency=='USD' else l.partner_price|won }}{% else %}BID{% endif %}</td>
+        <td class="num small">{{ l.partner_deadline|dt }}</td>
+        <td><span class="badge {{ l.status }}">{{ PSTATUS.get(l.status, l.status) }}</span></td>
+        <td class="r num">{{ ('$' ~ '{:,.2f}'.format(l.partner_bid_usd)) if l.partner_bid_usd and l.status in ['pending_result','won','lost'] else '-' }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="muted">No items yet. · 아직 올린 품목이 없습니다.</p>{% endif %}
+</section>
+{% endblock %}

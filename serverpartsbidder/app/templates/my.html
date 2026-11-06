@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="row spread">
+  <h1>{{ user.company }} {{ user.name }}님</h1>
+  <span class="badge {{ user.status }}">{{ STATUS[user.status] }}</span>
+</div>
+{% if user.status == 'pending' %}<p class="note">가입 승인 대기 중입니다. 승인되면 알림톡으로 알려드립니다. 그동안 즉시판매 상품은 둘러보실 수 있습니다.</p>{% endif %}
+
+<div class="grid2">
+  <section class="card" id="interests">
+    <h2>관심품목</h2>
+    <p class="small muted">맞는 상품이 입고되거나 비딩이 열리면 알림톡을 보내드립니다. 키워드는 띄어쓰기로 나눈 단어가 모두 들어간 상품만 잡습니다. 예: <span class="mono">D5 64G</span>, <span class="mono">Gold 62</span></p>
+    {% if user.interests %}
+    <div class="tbl"><table><tbody>
+      {% for i in user.interests %}
+      <tr><td>{{ i.category }}</td><td class="mono">{{ i.keyword or '(전부)' }}</td>
+        <td class="r"><form class="inline" method="post" action="/my/interest/{{ i.id }}/delete"><button class="btn sm ghost">삭제</button></form></td></tr>
+      {% endfor %}
+    </tbody></table></div>
+    {% else %}<p class="muted">등록된 관심품목이 없습니다.</p>{% endif %}
+    <form method="post" action="/my/interest" class="row">
+      <select name="category" id="ic" style="max-width:150px"><option>전체</option>{% for c in CATEGORIES %}<option>{{ c }}</option>{% endfor %}</select>
+      <input name="keyword" id="ik" placeholder="키워드 (선택)" style="max-width:200px">
+      <button class="btn sm">추가</button>
+    </form>
+  </section>
+
+  <section class="card" id="settings">
+    <h2>설정</h2>
+    <form method="post" action="/my/settings" style="display:flex;flex-direction:column;gap:12px">
+      <label class="check"><input type="checkbox" name="alimtalk_ok" value="1" id="ao" {{ 'checked' if user.alimtalk_ok }}> 카카오 알림톡 받기</label>
+      <label for="np">새 비밀번호 (바꿀 때만)<input id="np" type="password" name="new_password" minlength="6" autocomplete="new-password"></label>
+      <button class="btn">저장</button>
+    </form>
+    <p class="small muted">아이디(휴대폰): <span class="mono">{{ user.phone }}</span></p>
+  </section>
+</div>
+
+<section class="card">
+  <h2>내 비딩</h2>
+  {% if bid_rows %}
+  <div class="tbl"><table>
+    <thead><tr><th>품목</th><th>상태</th><th class="r">내 최근 희망가</th><th class="r">수량</th><th>마감</th></tr></thead>
+    <tbody>{% for b in bid_rows %}{% set l = b.listing %}
+      <tr class="{{ 'hl' if l.status=='won' and l.winning_bid and l.winning_bid.user_id==user.id }}">
+        <td class="title-cell"><a href="/item/{{ l.id }}">{{ l.title }}</a></td>
+        <td>{% if l.status=='won' %}<span class="badge {{ 'won' if l.winning_bid.user_id==user.id else 'lost' }}">{{ '낙찰' if l.winning_bid.user_id==user.id else '타 업체 낙찰' }}</span>
+            {% else %}<span class="badge {{ l.status }}">{{ STATUS[l.status] }}</span>{% endif %}</td>
+        <td class="r num">{{ b.unit_price|won }}</td><td class="r num">{{ b.quantity }}</td><td class="num">{{ l.bid_end|dt }}</td>
+      </tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="muted">참여한 비딩이 없습니다.</p>{% endif %}
+</section>
+
+<section class="card">
+  <h2>내 구매요청</h2>
+  {% if orders %}
+  <div class="tbl"><table>
+    <thead><tr><th>요청일</th><th>품목</th><th class="r">수량</th><th class="r">개당</th><th>상태</th></tr></thead>
+    <tbody>{% for o in orders %}
+      <tr><td class="num">{{ o.created_at|dt }}</td><td class="title-cell"><a href="/item/{{ o.listing_id }}">{{ o.listing.title }}</a></td>
+        <td class="r num">{{ o.quantity }}</td><td class="r num">{{ o.unit_price|won }}</td>
+        <td><span class="badge {{ o.status }}">{{ STATUS[o.status] }}</span></td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="muted">구매요청 내역이 없습니다.</p>{% endif %}
+</section>
+{% endblock %}
